@@ -121,15 +121,15 @@ int is_solved(struct Cube st) {
 
 /* Set of all possible transformations on a cube state. */
 enum Move {
-    // face rotations - clockwise, counterclockwise
-    U, UI,
-    D, DI,
-    L, LI,
-    R, RI,
-    F, FI,
-    B, BI,
+    // face rotations
+    U, UI, U2, UI2,
+    D, DI, D2, DI2,
+    L, LI, L2, LI2,
+    R, RI, R2, RI2,
+    F, FI, F2, FI2,
+    B, BI, B2, BI2,
     
-    // cube rotations - clockwise, counterclockwise
+    // cube rotations
     X, XI,
     Y, YI,
     Z, ZI
@@ -138,9 +138,46 @@ enum Move {
 /* Returns the cube state obtained by applying the move `mv` to cube `st`.
  * Does not modify the original cube `st`. */
 struct Cube move(struct Cube st, enum Move mv) {
-    uint8_t tmp_center, tmp_edge, tmp_corner;
-
+    // half-turn transformations
+    if (mv == U2) {
+        return move(move(st, U), U);
+    }
+    else if (mv == UI2) {
+        return move(move(st, UI), UI);
+    }
+    else if (mv == D2) {
+        return move(move(st, D), D);
+    }
+    else if (mv == DI2) {
+        return move(move(st, DI), DI);
+    }
+    else if (mv == L2) {
+        return move(move(st, L), L);
+    }
+    else if (mv == LI2) {
+        return move(move(st, LI), LI);
+    }
+    else if (mv == R2) {
+        return move(move(st, R), R);
+    }
+    else if (mv == RI2) {
+        return move(move(st, RI), RI);
+    }
+    else if (mv == F2) {
+        return move(move(st, F), F);
+    }
+    else if (mv == FI2) {
+        return move(move(st, FI), FI);
+    }
+    else if (mv == B2) {
+        return move(move(st, B), B);
+    }
+    else if (mv == BI2) {
+        return move(move(st, BI), BI);
+    }
+    
     // center cubie transformations
+    uint8_t tmp_center;
     if (mv == X) {
         tmp_center = st.centers[UP].color;
         st.centers[UP].color = st.centers[FRONT].color;
@@ -169,6 +206,7 @@ struct Cube move(struct Cube st, enum Move mv) {
     }
     
     // edge and corner cubie transformations
+    uint8_t tmp_edge, tmp_corner;
     if (mv == U || mv == Y) {
         tmp_edge = st.edges[UF].color;
         st.edges[UF].color = st.edges[UR].color;
