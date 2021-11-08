@@ -141,15 +141,206 @@ enum Move {
 /* Returns the cube state obtained by applying the move `mv` to cube `st`.
  * Does not modify the original cube `st`. */
 struct Cube move(struct Cube st, enum Move mv) {
+    uint8_t tmp_center, tmp_edge, tmp_corner;
+
+    // center cubie transformations
+    if (mv == MV_X) {
+        tmp_center = st.centers[UP].color;
+        st.centers[UP].color = st.centers[FRONT].color;
+        st.centers[FRONT].color = st.centers[DOWN].color;
+        st.centers[DOWN].color = st.centers[BACK].color;
+        st.centers[BACK].color = tmp_center;
+    }
+    else if (mv == MV_XI) {
+        tmp_center = st.centers[UP].color;
+        st.centers[UP].color = st.centers[BACK].color;
+        st.centers[BACK].color = st.centers[DOWN].color;
+        st.centers[DOWN].color = st.centers[FRONT].color;
+        st.centers[FRONT].color = tmp_center;
+    }
+    else if (mv == MV_Y) {
+
+    }
+    else if (mv == MV_YI) {
+
+    }
+    else if (mv == MV_Z) {
+
+    }
+    else if (mv == MV_ZI) {
+
+    }
+    
+    // edge and corner cubie transformations
+    if (mv == MV_U || mv == MV_Y) {
+        tmp_edge = st.edges[UF].color;
+        st.edges[UF].color = st.edges[UR].color;
+        st.edges[UR].color = st.edges[UB].color;
+        st.edges[UB].color = st.edges[UL].color;
+        st.edges[UL].color = tmp_edge;
+
+        tmp_corner = st.corners[URF].color;
+        st.corners[URF].color = st.corners[URB].color;
+        st.corners[URB].color = st.corners[ULB].color;
+        st.corners[ULB].color = st.corners[ULF].color;
+        st.corners[ULF].color = tmp_corner;
+    }
+    if (mv == MV_UI || mv == MV_YI) {
+        tmp_edge = st.edges[UF].color;
+        st.edges[UF].color = st.edges[UL].color;
+        st.edges[UL].color = st.edges[UB].color;
+        st.edges[UB].color = st.edges[UR].color;
+        st.edges[UR].color = tmp_edge;
+
+        tmp_corner = st.corners[URF].color;
+        st.corners[URF].color = st.corners[ULF].color;
+        st.corners[ULF].color = st.corners[ULB].color;
+        st.corners[ULB].color = st.corners[URB].color;
+        st.corners[URB].color = tmp_corner;
+    }
+    if (mv == MV_D || mv == MV_YI) {
+        tmp_edge = st.edges[DF].color;
+        st.edges[DF].color = st.edges[DL].color;
+        st.edges[DL].color = st.edges[DB].color;
+        st.edges[DB].color = st.edges[DR].color;
+        st.edges[DR].color = tmp_edge;
+
+        tmp_corner = st.corners[DRF].color;
+        st.corners[DRF].color = st.corners[DLF].color;
+        st.corners[DLF].color = st.corners[DLB].color;
+        st.corners[DLB].color = st.corners[DRB].color;
+        st.corners[DRB].color = tmp_corner;
+    }
+    if (mv == MV_DI || mv == MV_Y) {
+        tmp_edge = st.edges[DF].color;
+        st.edges[DF].color = st.edges[DR].color;
+        st.edges[DR].color = st.edges[DB].color;
+        st.edges[DB].color = st.edges[DL].color;
+        st.edges[DL].color = tmp_edge;
+
+        tmp_corner = st.corners[DRF].color;
+        st.corners[DRF].color = st.corners[DRB].color;
+        st.corners[DRB].color = st.corners[DLB].color;
+        st.corners[DLB].color = st.corners[DLF].color;
+        st.corners[DLF].color = tmp_corner;
+    }
+    if (mv == MV_R || mv == MV_X) {
+        tmp_edge = st.edges[RF].color;
+        st.edges[RF].color = st.edges[DR].color;
+        st.edges[DR].color = st.edges[RB].color;
+        st.edges[RB].color = st.edges[UR].color;
+        st.edges[UR].color = tmp_edge;
+
+        tmp_corner = st.corners[DRF].color;
+        st.corners[DRF].color = st.corners[DRB].color;
+        st.corners[DRB].color = st.corners[URB].color;
+        st.corners[URB].color = st.corners[URF].color;
+        st.corners[URF].color = tmp_corner;
+    }
+    if (mv == MV_RI || mv == MV_XI) {
+        tmp_edge = st.edges[RF].color;
+        st.edges[RF].color = st.edges[UR].color;
+        st.edges[UR].color = st.edges[RB].color;
+        st.edges[RB].color = st.edges[DR].color;
+        st.edges[DR].color = tmp_edge;
+
+        tmp_corner = st.corners[URF].color;
+        st.corners[URF].color = st.corners[URB].color;
+        st.corners[URB].color = st.corners[DRB].color;
+        st.corners[DRB].color = st.corners[DRF].color;
+        st.corners[DRF].color = tmp_corner;
+    }
+    if (mv == MV_L || mv == MV_XI) {
+        tmp_edge = st.edges[LF].color;
+        st.edges[LF].color = st.edges[UL].color;
+        st.edges[UL].color = st.edges[LB].color;
+        st.edges[LB].color = st.edges[DL].color;
+        st.edges[DL].color = tmp_edge;
+
+        tmp_corner = st.corners[ULF].color;
+        st.corners[ULF].color = st.corners[ULB].color;
+        st.corners[ULB].color = st.corners[DLB].color;
+        st.corners[DLB].color = st.corners[DLF].color;
+        st.corners[DLF].color = tmp_corner;
+    }
+    if (mv == MV_LI || mv == MV_X) {
+        tmp_edge = st.edges[LF].color;
+        st.edges[LF].color = st.edges[DL].color;
+        st.edges[DL].color = st.edges[LB].color;
+        st.edges[LB].color = st.edges[UL].color;
+        st.edges[UL].color = tmp_edge;
+
+        tmp_corner = st.corners[DLF].color;
+        st.corners[DLF].color = st.corners[DLB].color;
+        st.corners[DLB].color = st.corners[ULB].color;
+        st.corners[ULB].color = st.corners[ULF].color;
+        st.corners[ULF].color = tmp_corner;
+    }
+    if (mv == MV_F || mv == MV_Z) {
+        tmp_edge = st.edges[UF].color;
+        st.edges[UF].color = st.edges[LF].color;
+        st.edges[LF].color = st.edges[DF].color;
+        st.edges[DF].color = st.edges[RF].color;
+        st.edges[RF].color = tmp_edge;
+
+        tmp_corner = st.corners[URF].color;
+        st.corners[URF].color = st.corners[ULF].color;
+        st.corners[ULF].color = st.corners[DLF].color;
+        st.corners[DLF].color = st.corners[DRF].color;
+        st.corners[DRF].color = tmp_corner;
+    }
+    if (mv == MV_FI || mv == MV_ZI) {
+        tmp_edge = st.edges[UF].color;
+        st.edges[UF].color = st.edges[RF].color;
+        st.edges[RF].color = st.edges[DF].color;
+        st.edges[DF].color = st.edges[LF].color;
+        st.edges[LF].color = tmp_edge;
+
+        tmp_corner = st.corners[ULF].color;
+        st.corners[ULF].color = st.corners[URF].color;
+        st.corners[URF].color = st.corners[DRF].color;
+        st.corners[DRF].color = st.corners[DLF].color;
+        st.corners[DLF].color = tmp_corner;
+    }
+    if (mv == MV_B || mv == MV_ZI) {
+        tmp_edge = st.edges[UB].color;
+        st.edges[UB].color = st.edges[RB].color;
+        st.edges[RB].color = st.edges[DB].color;
+        st.edges[DB].color = st.edges[LB].color;
+        st.edges[LB].color = tmp_edge;
+
+        tmp_corner = st.corners[ULB].color;
+        st.corners[ULB].color = st.corners[URB].color;
+        st.corners[URB].color = st.corners[DRB].color;
+        st.corners[DRB].color = st.corners[DLB].color;
+        st.corners[DLB].color = tmp_corner;
+    }
+    if (mv == MV_BI || mv == MV_Z) {
+        tmp_edge = st.edges[UB].color;
+        st.edges[UB].color = st.edges[LB].color;
+        st.edges[LB].color = st.edges[DB].color;
+        st.edges[DB].color = st.edges[RB].color;
+        st.edges[RB].color = tmp_edge;
+
+        tmp_corner = st.corners[URB].color;
+        st.corners[URB].color = st.corners[ULB].color;
+        st.corners[ULB].color = st.corners[DLB].color;
+        st.corners[DLB].color = st.corners[DRB].color;
+        st.corners[DRB].color = tmp_corner;
+    }
+    
+    return st;
+
+    /*
     switch (mv) {
-        uint8_t tmp_edge;
-        uint8_t tmp_corner;
+        uint8_t tmp_center, tmp_edge, tmp_corner;
         case MV_U:
             tmp_edge = st.edges[UF].color;
             st.edges[UF].color = st.edges[UR].color;
             st.edges[UR].color = st.edges[UB].color;
             st.edges[UB].color = st.edges[UL].color;
             st.edges[UL].color = tmp_edge;
+
             tmp_corner = st.corners[URF].color;
             st.corners[URF].color = st.corners[URB].color;
             st.corners[URB].color = st.corners[ULB].color;
@@ -162,6 +353,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[UL].color = st.edges[UB].color;
             st.edges[UB].color = st.edges[UR].color;
             st.edges[UR].color = tmp_edge;
+
             tmp_corner = st.corners[URF].color;
             st.corners[URF].color = st.corners[ULF].color;
             st.corners[ULF].color = st.corners[ULB].color;
@@ -174,6 +366,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[DL].color = st.edges[DB].color;
             st.edges[DB].color = st.edges[DR].color;
             st.edges[DR].color = tmp_edge;
+
             tmp_corner = st.corners[DRF].color;
             st.corners[DRF].color = st.corners[DLF].color;
             st.corners[DLF].color = st.corners[DLB].color;
@@ -186,6 +379,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[DR].color = st.edges[DB].color;
             st.edges[DB].color = st.edges[DL].color;
             st.edges[DL].color = tmp_edge;
+
             tmp_corner = st.corners[DRF].color;
             st.corners[DRF].color = st.corners[DRB].color;
             st.corners[DRB].color = st.corners[DLB].color;
@@ -198,6 +392,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[UL].color = st.edges[LB].color;
             st.edges[LB].color = st.edges[DL].color;
             st.edges[DL].color = tmp_edge;
+
             tmp_corner = st.corners[ULF].color;
             st.corners[ULF].color = st.corners[ULB].color;
             st.corners[ULB].color = st.corners[DLB].color;
@@ -210,6 +405,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[DL].color = st.edges[LB].color;
             st.edges[LB].color = st.edges[UL].color;
             st.edges[UL].color = tmp_edge;
+
             tmp_corner = st.corners[DLF].color;
             st.corners[DLF].color = st.corners[DLB].color;
             st.corners[DLB].color = st.corners[ULB].color;
@@ -222,6 +418,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[DR].color = st.edges[RB].color;
             st.edges[RB].color = st.edges[UR].color;
             st.edges[UR].color = tmp_edge;
+
             tmp_corner = st.corners[DRF].color;
             st.corners[DRF].color = st.corners[DRB].color;
             st.corners[DRB].color = st.corners[URB].color;
@@ -234,6 +431,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[UR].color = st.edges[RB].color;
             st.edges[RB].color = st.edges[DR].color;
             st.edges[DR].color = tmp_edge;
+
             tmp_corner = st.corners[URF].color;
             st.corners[URF].color = st.corners[URB].color;
             st.corners[URB].color = st.corners[DRB].color;
@@ -246,6 +444,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[LF].color = st.edges[DF].color;
             st.edges[DF].color = st.edges[RF].color;
             st.edges[RF].color = tmp_edge;
+
             tmp_corner = st.corners[URF].color;
             st.corners[URF].color = st.corners[ULF].color;
             st.corners[ULF].color = st.corners[DLF].color;
@@ -258,6 +457,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[RF].color = st.edges[DF].color;
             st.edges[DF].color = st.edges[LF].color;
             st.edges[LF].color = tmp_edge;
+
             tmp_corner = st.corners[ULF].color;
             st.corners[ULF].color = st.corners[URF].color;
             st.corners[URF].color = st.corners[DRF].color;
@@ -270,6 +470,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[RB].color = st.edges[DB].color;
             st.edges[DB].color = st.edges[LB].color;
             st.edges[LB].color = tmp_edge;
+
             tmp_corner = st.corners[ULB].color;
             st.corners[ULB].color = st.corners[URB].color;
             st.corners[URB].color = st.corners[DRB].color;
@@ -282,6 +483,7 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.edges[LB].color = st.edges[DB].color;
             st.edges[DB].color = st.edges[RB].color;
             st.edges[RB].color = tmp_edge;
+
             tmp_corner = st.corners[URB].color;
             st.corners[URB].color = st.corners[ULB].color;
             st.corners[ULB].color = st.corners[DLB].color;
@@ -289,8 +491,62 @@ struct Cube move(struct Cube st, enum Move mv) {
             st.corners[DRB].color = tmp_corner;
             break;
         case MV_X:
+            tmp_center = st.centers[UP].color;
+            st.centers[UP].color = st.centers[FRONT].color;
+            st.centers[FRONT].color = st.centers[DOWN].color;
+            st.centers[DOWN].color = st.centers[BACK].color;
+            st.centers[BACK].color = tmp_center;
+            tmp_edge = st.edges[UR].color;
+            st.edges[UR].color = st.edges[RF].color;
+            st.edges[RF].color = st.edges[DR].color;
+            st.edges[DR].color = st.edges[RB].color;
+            st.edges[RB].color = tmp_edge;
+
+            tmp_edge = st.edges[UL].color;
+            st.edges[UL].color = st.edges[LF].color;
+            st.edges[LF].color = st.edges[DL].color;
+            st.edges[DL].color = st.edges[LB].color;
+            st.edges[LB].color = tmp_edge;
+
+            tmp_corner = st.corners[URF].color;
+            st.corners[URF].color = st.corners[DRF].color;
+            st.corners[DRF].color = st.corners[DRB].color;
+            st.corners[DRB].color = st.corners[URB].color;
+            st.corners[URB].color = tmp_corner;
+            tmp_corner = st.corners[ULF].color;
+            st.corners[ULF].color = st.corners[DLF].color;
+            st.corners[DLF].color = st.corners[DLB].color;
+            st.corners[DLB].color = st.corners[ULB].color;
+            st.corners[ULB].color = tmp_corner;
             break;
         case MV_XI:
+            tmp_center = st.centers[UP].color;
+            st.centers[UP].color = st.centers[BACK].color;
+            st.centers[BACK].color = st.centers[DOWN].color;
+            st.centers[DOWN].color = st.centers[FRONT].color;
+            st.centers[FRONT].color = tmp_center;
+            tmp_edge = st.edges[UR].color;
+            st.edges[UR].color = st.edges[RB].color;
+            st.edges[RB].color = st.edges[DR].color;
+            st.edges[DR].color = st.edges[RF].color;
+            st.edges[RF].color = tmp_edge;
+
+            tmp_edge = st.edges[UL].color;
+            st.edges[UL].color = st.edges[LB].color;
+            st.edges[LB].color = st.edges[DL].color;
+            st.edges[DL].color = st.edges[LF].color;
+            st.edges[LF].color = tmp_edge;
+
+            tmp_corner = st.corners[URF].color;
+            st.corners[URF].color = st.corners[URB].color;
+            st.corners[URB].color = st.corners[DRB].color;
+            st.corners[DRB].color = st.corners[DRF].color;
+            st.corners[DRF].color = tmp_corner;
+            tmp_corner = st.corners[ULF].color;
+            st.corners[ULF].color = st.corners[ULB].color;
+            st.corners[ULB].color = st.corners[DLB].color;
+            st.corners[DLB].color = st.corners[DLF].color;
+            st.corners[DLF].color = tmp_corner;
             break;
         case MV_Z:
             break;
@@ -301,7 +557,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         case MV_YI:
             break;
     }
-    return st;
+    */
 }
 
 /* Writes the shortest list of moves into `mvs` which orients the cube `st` 
