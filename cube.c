@@ -121,21 +121,18 @@ int is_solved(struct Cube st) {
 
 /* Set of all possible transformations on a cube state. */
 enum Move {
-    // invalid move
-    MV_NULL = 0,
-
     // face rotations - clockwise, counterclockwise
-    MV_U, MV_UI,
-    MV_D, MV_DI,
-    MV_L, MV_LI,
-    MV_R, MV_RI,
-    MV_F, MV_FI,
-    MV_B, MV_BI,
+    U, UI,
+    D, DI,
+    L, LI,
+    R, RI,
+    F, FI,
+    B, BI,
     
     // cube rotations - clockwise, counterclockwise
-    MV_X, MV_XI,
-    MV_Y, MV_YI,
-    MV_Z, MV_ZI
+    X, XI,
+    Y, YI,
+    Z, ZI
 };
 
 /* Returns the cube state obtained by applying the move `mv` to cube `st`.
@@ -144,35 +141,35 @@ struct Cube move(struct Cube st, enum Move mv) {
     uint8_t tmp_center, tmp_edge, tmp_corner;
 
     // center cubie transformations
-    if (mv == MV_X) {
+    if (mv == X) {
         tmp_center = st.centers[UP].color;
         st.centers[UP].color = st.centers[FRONT].color;
         st.centers[FRONT].color = st.centers[DOWN].color;
         st.centers[DOWN].color = st.centers[BACK].color;
         st.centers[BACK].color = tmp_center;
     }
-    else if (mv == MV_XI) {
+    else if (mv == XI) {
         tmp_center = st.centers[UP].color;
         st.centers[UP].color = st.centers[BACK].color;
         st.centers[BACK].color = st.centers[DOWN].color;
         st.centers[DOWN].color = st.centers[FRONT].color;
         st.centers[FRONT].color = tmp_center;
     }
-    else if (mv == MV_Y) {
+    else if (mv == Y) {
 
     }
-    else if (mv == MV_YI) {
+    else if (mv == YI) {
 
     }
-    else if (mv == MV_Z) {
+    else if (mv == Z) {
 
     }
-    else if (mv == MV_ZI) {
+    else if (mv == ZI) {
 
     }
     
     // edge and corner cubie transformations
-    if (mv == MV_U || mv == MV_Y) {
+    if (mv == U || mv == Y) {
         tmp_edge = st.edges[UF].color;
         st.edges[UF].color = st.edges[UR].color;
         st.edges[UR].color = st.edges[UB].color;
@@ -185,7 +182,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[ULB].color = st.corners[ULF].color;
         st.corners[ULF].color = tmp_corner;
     }
-    if (mv == MV_UI || mv == MV_YI) {
+    if (mv == UI || mv == YI) {
         tmp_edge = st.edges[UF].color;
         st.edges[UF].color = st.edges[UL].color;
         st.edges[UL].color = st.edges[UB].color;
@@ -198,7 +195,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[ULB].color = st.corners[URB].color;
         st.corners[URB].color = tmp_corner;
     }
-    if (mv == MV_D || mv == MV_YI) {
+    if (mv == D || mv == YI) {
         tmp_edge = st.edges[DF].color;
         st.edges[DF].color = st.edges[DL].color;
         st.edges[DL].color = st.edges[DB].color;
@@ -211,7 +208,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[DLB].color = st.corners[DRB].color;
         st.corners[DRB].color = tmp_corner;
     }
-    if (mv == MV_DI || mv == MV_Y) {
+    if (mv == DI || mv == Y) {
         tmp_edge = st.edges[DF].color;
         st.edges[DF].color = st.edges[DR].color;
         st.edges[DR].color = st.edges[DB].color;
@@ -224,7 +221,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[DLB].color = st.corners[DLF].color;
         st.corners[DLF].color = tmp_corner;
     }
-    if (mv == MV_R || mv == MV_X) {
+    if (mv == R || mv == X) {
         tmp_edge = st.edges[RF].color;
         st.edges[RF].color = st.edges[DR].color;
         st.edges[DR].color = st.edges[RB].color;
@@ -237,7 +234,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[URB].color = st.corners[URF].color;
         st.corners[URF].color = tmp_corner;
     }
-    if (mv == MV_RI || mv == MV_XI) {
+    if (mv == RI || mv == XI) {
         tmp_edge = st.edges[RF].color;
         st.edges[RF].color = st.edges[UR].color;
         st.edges[UR].color = st.edges[RB].color;
@@ -250,7 +247,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[DRB].color = st.corners[DRF].color;
         st.corners[DRF].color = tmp_corner;
     }
-    if (mv == MV_L || mv == MV_XI) {
+    if (mv == L || mv == XI) {
         tmp_edge = st.edges[LF].color;
         st.edges[LF].color = st.edges[UL].color;
         st.edges[UL].color = st.edges[LB].color;
@@ -263,7 +260,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[DLB].color = st.corners[DLF].color;
         st.corners[DLF].color = tmp_corner;
     }
-    if (mv == MV_LI || mv == MV_X) {
+    if (mv == LI || mv == X) {
         tmp_edge = st.edges[LF].color;
         st.edges[LF].color = st.edges[DL].color;
         st.edges[DL].color = st.edges[LB].color;
@@ -276,7 +273,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[ULB].color = st.corners[ULF].color;
         st.corners[ULF].color = tmp_corner;
     }
-    if (mv == MV_F || mv == MV_Z) {
+    if (mv == F || mv == Z) {
         tmp_edge = st.edges[UF].color;
         st.edges[UF].color = st.edges[LF].color;
         st.edges[LF].color = st.edges[DF].color;
@@ -289,7 +286,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[DLF].color = st.corners[DRF].color;
         st.corners[DRF].color = tmp_corner;
     }
-    if (mv == MV_FI || mv == MV_ZI) {
+    if (mv == FI || mv == ZI) {
         tmp_edge = st.edges[UF].color;
         st.edges[UF].color = st.edges[RF].color;
         st.edges[RF].color = st.edges[DF].color;
@@ -302,7 +299,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[DRF].color = st.corners[DLF].color;
         st.corners[DLF].color = tmp_corner;
     }
-    if (mv == MV_B || mv == MV_ZI) {
+    if (mv == B || mv == ZI) {
         tmp_edge = st.edges[UB].color;
         st.edges[UB].color = st.edges[RB].color;
         st.edges[RB].color = st.edges[DB].color;
@@ -315,7 +312,7 @@ struct Cube move(struct Cube st, enum Move mv) {
         st.corners[DRB].color = st.corners[DLB].color;
         st.corners[DLB].color = tmp_corner;
     }
-    if (mv == MV_BI || mv == MV_Z) {
+    if (mv == BI || mv == Z) {
         tmp_edge = st.edges[UB].color;
         st.edges[UB].color = st.edges[LB].color;
         st.edges[LB].color = st.edges[DB].color;
@@ -344,25 +341,25 @@ int orient(enum Move *mvs, struct Cube st) {
         enum Move mv;
         // 1-move away
         if (st.centers[BACK].color == WHITE && st.centers[DOWN].color == RED) {
-            mv = MV_X;
+            mv = X;
         }
         else if (st.centers[FRONT].color == WHITE && st.centers[UP].color == RED) {
-            mv = MV_XI;
+            mv = XI;
         }
         else if (st.centers[LEFT].color == WHITE && st.centers[FRONT].color == RED) {
-            mv = MV_ZI;
+            mv = ZI;
         }
         else if (st.centers[RIGHT].color == WHITE && st.centers[FRONT].color == RED) {
-            mv = MV_Z;
+            mv = Z;
         }
         else if (st.centers[DOWN].color == WHITE && st.centers[LEFT].color == RED) {
-            mv = MV_YI;
+            mv = YI;
         }
         else if (st.centers[DOWN].color == WHITE && st.centers[RIGHT].color == RED) {
-            mv = MV_Y;
+            mv = Y;
         }
         else if (st.centers[UP].color == WHITE && st.centers[BACK].color == RED) {
-            mv = MV_X;
+            mv = X;
         }
         // 2-moves away ...
         // 3-moves away ...
