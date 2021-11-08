@@ -121,6 +121,9 @@ int is_solved(struct Cube st) {
 
 /* Set of all possible transformations on a cube state. */
 enum Move {
+    // no rotation 
+    NOP = 0,
+
     // face rotations
     U, UI, U2, UI2,
     D, DI, D2, DI2,
