@@ -15,38 +15,38 @@
 /* Global constants for cube data. 
  * Using type uint8_t instead of enum because it reduces cube state memory by 4x. */
 
-typedef uint8_t Color, Square, Move, Dir;
+typedef uint8_t Color, Pos, Move, Dir;
 typedef uint32_t Face;
 typedef struct { Face U, D, L, R, F, B; } Cube;
 
 /* Represents the set of colors. */
-const Color     WHITE = 1, YELLOW = 2, RED = 3, \
-                ORANGE = 4, BLUE = 5, GREEN = 6;
+const Color WHITE = 1, YELLOW = 2, RED = 3, \
+            ORANGE = 4, BLUE = 5, GREEN = 6;
 
 /* Represents the set of positions on a face. */
-const Square    CC = 0, UL = 1, UU = 2, UR = 3, RR = 4, \
-                DR = 5, DD = 6, DL = 7, LL = 8;
+const Pos   CC = 0, UL = 1, UU = 2, UR = 3, RR = 4, \
+            DR = 5, DD = 6, DL = 7, LL = 8;
 
 /* Represents the set of positions that can rotate together on a face. */
-Square          UE[3] = { UL, UU, UR },
-                DE[3] = { DL, DD, DR },
-                RE[3] = { UR, RR, DR },
-                LE[3] = { UL, LL, DL },
-                LR[3] = { LL, CC, RR },
-                UD[3] = { UU, CC, DD };
+Pos         UE[3] = { UL, UU, UR },
+            DE[3] = { DL, DD, DR },
+            RE[3] = { UR, RR, DR },
+            LE[3] = { UL, LL, DL },
+            LR[3] = { LL, CC, RR },
+            UD[3] = { UU, CC, DD };
 
 /* Represents the set of valid transformations of the cube. */
-const Move      U=1, D=2, L=3, R=4, F=5, B=6,   // face rotations
-                X=7, Y=8, Z=9,                  // cube rotations
-                NOP=0;                          // no transformation
+const Move  U=1, D=2, L=3, R=4, F=5, B=6,   // face rotations
+            X=7, Y=8, Z=9,                  // cube rotations
+            NOP=0;                          // no transformation
 
-const Dir       CW = 0, CCW = 1;    // clockwise, counterclockwise
+const Dir   CW = 0, CCW = 1;    // clockwise, counterclockwise
 
-Color readColor(Face f, Square p) {
+Color readColor(Face f, Pos p) {
     return (f >> (COLOR_BITS * p)) & 0b111;
 }
 
-Color *readColors(Face f, Square *p, Color *c, int count) {
+Color *readColors(Face f, Pos *p, Color *c, int count) {
     int i;
     for(i=0 ; i<count ; i++) {
         c[i] = readColor(f, p[i]);
@@ -54,13 +54,13 @@ Color *readColors(Face f, Square *p, Color *c, int count) {
     return c;
 }
 
-Face writeColor(Face f, Square p, Color c) {
+Face writeColor(Face f, Pos p, Color c) {
     Face clear_mask = ~(0b111 << (COLOR_BITS * p));
     Face write_mask = c << (COLOR_BITS * p);
     return f & clear_mask | write_mask;
 }
 
-Face writeColors(Face f, Square *p, Color *c, int count) {
+Face writeColors(Face f, Pos *p, Color *c, int count) {
     int i;
     for(i=0 ; i<count ; i++ ) {
         f = writeColor(f, p[i], c[i]);
@@ -69,8 +69,8 @@ Face writeColors(Face f, Square *p, Color *c, int count) {
 }
 
 Face rotateFace(Face f, Dir d) {
-    Square lsb[3] = { CC, UL, UU };
-    Square msb[3] = { CC, DL, LL };
+    Pos lsb[3] = { CC, UL, UU };
+    Pos msb[3] = { CC, DL, LL };
     Color colors[3];
     readColors(f, (d == CW ? msb : lsb), colors, 3);
 
@@ -84,18 +84,18 @@ Face rotateFace(Face f, Dir d) {
     return f;
 }
 
-void rotateEdges(Face *f, Square **e, Dir d) {
+void rotateEdge(Face *f, Pos **p, Dir d) {
     Color c0[3], c1[3], c2[3], c3[3];
 
-    readColors(f[0], e[0], c0, 3);
-    readColors(f[1], e[1], c1, 3);
-    readColors(f[2], e[2], c2, 3);
-    readColors(f[3], e[3], c3, 3);
+    readColors(f[0], p[0], c0, 3);
+    readColors(f[1], p[1], c1, 3);
+    readColors(f[2], p[2], c2, 3);
+    readColors(f[3], p[3], c3, 3);
 
-    f[0] = writeColors(f[0], e[0], (d == CW ? c1 : c3), 3);
-    f[1] = writeColors(f[1], e[1], c2, 3);
-    f[2] = writeColors(f[2], e[2], (d == CW ? c3 : c1), 3);
-    f[3] = writeColors(f[3], e[3], c0, 3);
+    f[0] = writeColors(f[0], p[0], (d == CW ? c1 : c3), 3);
+    f[1] = writeColors(f[1], p[1], c2, 3);
+    f[2] = writeColors(f[2], p[2], (d == CW ? c3 : c1), 3);
+    f[3] = writeColors(f[3], p[3], c0, 3);
 }
 
 Cube transform(Cube c, Move m, Dir d) {
@@ -104,59 +104,59 @@ Cube transform(Cube c, Move m, Dir d) {
     }
     else if (m == X) {
         Face faces[4] = { c.F, c.U, c.B, c.D };
-        Square *edges[4] = { UD, UD, UD, UD };
-        rotateEdges(faces, edges, d);
+        Pos *edges[4] = { UD, UD, UD, UD };
+        rotateEdge(faces, edges, d);
         c = transform(c, R, d);
         c = transform(c, L, 1-d);
     }
     else if (m == Y) {
         Face faces[4] = { c.R, c.F, c.L, c.B };
-        Square *edges[4] = { LR, LR, LR, LR };
-        rotateEdges(faces, edges, d);
+        Pos *edges[4] = { LR, LR, LR, LR };
+        rotateEdge(faces, edges, d);
         c = transform(c, U, d);
         c = transform(c, D, 1-d);   
     }
     else if (m == Z) {
         Face faces[4] = { c.U, c.R, c.D, c.L };
-        Square *edges[4] = { LR, UD, LR, UD };
-        rotateEdges(faces, edges, d);
+        Pos *edges[4] = { LR, UD, LR, UD };
+        rotateEdge(faces, edges, d);
         c = transform(c, F, d);
         c = transform(c, B, 1-d);
     }
     else if (m == U) {
         Face faces[4] = { c.R, c.F, c.L, c.B };
-        Square *edges[4] = { UE, UE, UE, UE };
-        rotateEdges(faces, edges, d);
+        Pos *edges[4] = { UE, UE, UE, UE };
+        rotateEdge(faces, edges, d);
         c.U = rotateFace(c.U, d);
     }
     else if (m == D) {
         Face faces[4] = { c.L, c.F, c.R, c.B };
-        Square *edges[4] = { DE, DE, DE, DE };
-        rotateEdges(faces, edges, d);
+        Pos *edges[4] = { DE, DE, DE, DE };
+        rotateEdge(faces, edges, d);
         c.D = rotateFace(c.D, d);
     }
     else if (m == R) {
         Face faces[4] = { c.U, c.B, c.D, c.F };
-        Square *edges[4] = { RE, RE, RE, RE };
-        rotateEdges(faces, edges, d);
+        Pos *edges[4] = { RE, RE, RE, RE };
+        rotateEdge(faces, edges, d);
         c.R = rotateFace(c.R, d);
     }
     else if (m == L) {
         Face faces[4] = { c.U, c.F, c.D, c.B };
-        Square *edges[4] = { LE, LE, LE, LE };
-        rotateEdges(faces, edges, d);
+        Pos *edges[4] = { LE, LE, LE, LE };
+        rotateEdge(faces, edges, d);
         c.L = rotateFace(c.L, d);
     }
     else if (m == F) {
         Face faces[4] = { c.U, c.R, c.D, c.L };
-        Square *edges[4] = { DE, LE, UE, RE };
-        rotateEdges(faces, edges, d);
+        Pos *edges[4] = { DE, LE, UE, RE };
+        rotateEdge(faces, edges, d);
         c.F = rotateFace(c.F, d);
     }
     else if (m == B) {
         Face faces[4] = { c.U, c.L, c.D, c.R };
-        Square *edges[4] = { UE, LE, DE, RE };
-        rotateEdges(faces, edges, d);
+        Pos *edges[4] = { UE, LE, DE, RE };
+        rotateEdge(faces, edges, d);
         c.B = rotateFace(c.B, d);
     }
 
@@ -187,9 +187,9 @@ int isCubeSolved(Cube c) {
 
 Face faceFactory(Color c) {
     Face f;
-    Square squares[9] = { CC, UL, UU, UR, RR, DR, DD, DL, LL };
+    Pos p[9] = { CC, UL, UU, UR, RR, DR, DD, DL, LL };
     Color colors[9] = { c, c, c, c, c, c, c, c, c };
-    return writeColors(f, squares, colors, 9);
+    return writeColors(f, p, colors, 9);
 }
 
 Cube cubeFactory() {
