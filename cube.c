@@ -7,9 +7,7 @@
 /* This source file implements the state and behavior of a Rubik's cube. */
 
 /* TODO:
- * 1. Complete move() function.
- *    i.  Edge and corner translations.
- *    ii. X/Y/Z slice translations.
+ * 1. Factory functions
  * 2. Cube state save and load functions.
  * 3. Replace 0b111 instances using COLOR_BITS.
  * 4. Documentation about how constants relate to state. */ 
@@ -17,7 +15,7 @@
 /* Global constants for cube data. 
  * Using type uint8_t instead of enum because it reduces cube state memory by 4x. */
 
-typedef uint8_t Color, Square, Move;
+typedef uint8_t Color, Square, Move, Dir;
 typedef uint32_t Face;
 typedef struct { Face U, D, L, R, F, B; } Cube;
 
@@ -25,144 +23,152 @@ typedef struct { Face U, D, L, R, F, B; } Cube;
 const Color     WHITE = 1, YELLOW = 2, RED = 3, \
                 ORANGE = 4, BLUE = 5, GREEN = 6;
 
-/* Represents the set of square positions on a face. */
+/* Represents the set of positions on a face. */
 const Square    CC = 0, UL = 1, UU = 2, UR = 3, RR = 4, \
                 DR = 5, DD = 6, DL = 7, LL = 8;
 
-/* Represents the set of valid transformations of the cube. */
-const Move      U = 1,  UI = 2,     // face rotations
-                D = 3,  DI = 4,
-                L = 5,  LI = 6,
-                R = 7,  RI = 8,
-                F = 9,  FI = 10,
-                B = 11, BI = 12,
-                X = 13, XI = 14,    // cube rotations
-                Y = 15, YI = 16,
-                Z = 17, ZI = 18,
-                NOP = 0;            // no rotation
+/* Represents the set of positions that can rotate together on a face. */
+const Square    UE[3] = { UL, UU, UR },
+                DE[3] = { DL, DD, DR },
+                RE[3] = { UR, RR, DR },
+                LE[3] = { UL, LL, DL },
+                LR[3] = { LL, CC, RR },
+                UD[3] = { UU, CC, DD };
 
-Color readSquare(Face f, Square p) {
+/* Represents the set of valid transformations of the cube. */
+const Move      U=1, D=2, L=3, R=4, F=5, B=6,   // face rotations
+                X=7, Y=8, Z=9,                  // cube rotations
+                NOP=0;                          // no transformation
+
+const Dir       CW = 0, CCW = 1;    // clockwise, counterclockwise
+
+Color readColor(Face f, Square p) {
     return (f >> (COLOR_BITS * p)) & 0b111;
 }
 
-Face writeSquare(Face f, Square p, Color c) {
+Color *readColors(Face f, Square *p, Color *c, int count) {
+    int i;
+    for(i=0 ; i<count ; i++) {
+        c[i] = readColor(f, p[i]);
+    }
+    return c;
+}
+
+Face writeColor(Face f, Square p, Color c) {
     Face clear_mask = ~(0b111 << (COLOR_BITS * p));
     Face write_mask = c << (COLOR_BITS * p);
     return f & clear_mask | write_mask;
 }
 
-Face writeSquares(Face f, Square *p, Color *c, int count) {
+Face writeColors(Face f, Square *p, Color *c, int count) {
     int i;
-    for (i=0 ; i < count ; i++ ) {
-        f = writeSquare(f, p[i], c[i]);
+    for(i=0 ; i<count ; i++ ) {
+        f = writeColor(f, p[i], c[i]);
     }
     return f;
 }
 
-Face rotateFaceClockwise(Face f) {
-    Square old_squares[] = { CC, DL, LL };
-    Square new_squares[] = { CC, UL, UU };
-    
+Face rotateFace(Face f, Dir d) {
+    Square lsb[3] = { CC, UL, UU };
+    Square msb[3] = { CC, DL, LL };
     Color colors[3];
-    int i;
-    for(i=0 ; i<3; i++) {
-        colors[i] = readSquare(f, old_squares[i]);
-    }
-    
-    f = f << (2*COLOR_BITS) | f >> (32 - (2*COLOR_BITS));
-    f = writeSquares(f, new_squares, colors, 3);
+    readColors(f, (d == CW ? msb : lsb), colors, 3);
 
+    if (d == CW) {
+        f = f << (2*COLOR_BITS) | f >> (32 - (2*COLOR_BITS));
+    }
+    else {
+        f = f >> (2*COLOR_BITS) | f << (32 - (2*COLOR_BITS));
+    }
+    f = writeColors(f, (d == CW ? lsb : msb), colors, 3);
     return f;
 }
 
-Face rotateFaceCClockwise(Face f) {
-    Square old_squares[] = { CC, UL, UU };
-    Square new_squares[] = { CC, DL, LL };
-    
-    Color colors[3];
-    int i;
-    for(i=0 ; i<3; i++) {
-        colors[i] = readSquare(f, old_squares[i]);
-    }
-    
-    f = f >> (2*COLOR_BITS) | f << (32 - (2*COLOR_BITS));
-    f = writeSquares(f, new_squares, colors, 3);
+void rotateEdges(Face *f, Square **e, Dir d) {
+    Color c0[3], c1[3], c2[3], c3[3];
 
-    return f;
+    readColors(f[0], e[0], c0, 3);
+    readColors(f[1], e[1], c1, 3);
+    readColors(f[2], e[2], c2, 3);
+    readColors(f[3], e[3], c3, 3);
+
+    writeColors(f[0], e[0], (d == CW ? c1 : c3), 3);
+    writeColors(f[1], e[1], c2, 3);
+    writeColors(f[2], e[2], (d == CW ? c3 : c1), 3);
+    writeColors(f[3], e[3], c0, 3);
 }
 
-Cube transform(Cube c, Move mv) {
-    // no transformation
-    if (mv == NOP) {
-        return c;
-    }
-
-    // face rotations, edge and corner translations
-    if (mv == U || mv == Y) {
-        c.U = rotateFaceClockwise(c.U);
-    }
-    else if (mv == UI || mv == YI) {
-        c.U = rotateFaceCClockwise(c.U);
-    }
-    else if (mv == D || mv == YI) {
-        c.D = rotateFaceClockwise(c.D);
-    }
-    else if (mv == DI || mv == Y) {
-        c.D = rotateFaceCClockwise(c.D);
-    }
-    else if (mv == L || mv == XI) {
-        c.L = rotateFaceClockwise(c.L);
-    }
-    else if (mv == LI || mv == X) {
-        c.L = rotateFaceCClockwise(c.L);
-    }
-    else if (mv == R || mv == X) {
-        c.R = rotateFaceClockwise(c.R);
-    }
-    else if (mv == RI || mv == XI) {
-        c.R = rotateFaceCClockwise(c.R);
-    }
-    else if (mv == F || mv == Z) {
-        c.F = rotateFaceClockwise(c.F);
-    }
-    else if (mv == FI || mv == ZI) {
-        c.F = rotateFaceCClockwise(c.F);
-    }
-    else if (mv == B || mv == ZI) {
-        c.B = rotateFaceClockwise(c.B);
-    }
-    else if (mv == BI || mv == Z) {
-        c.B = rotateFaceCClockwise(c.B);
-    }
-
-    // middle slice translations
-    if (mv == X) {
-
-    }
-    else if (mv == XI) {
-
-    }
-    else if (mv == Y) {
-
-    }
-    else if (mv == YI) {
-
-    }
-    else if (mv == Z) {
-
-    }
-    else if (mv == ZI) {
-
+Cube transform(Cube c, Move m, Dir d) {
+    switch (m) {
+        case NOP:
+            return c;
+        case X:
+            Face faces[4] = { c.F, c.U, c.B, c.D };
+            Square *edges[4] = { UD, UD, UD, UD };
+            rotateEdges(faces, edges, d);
+            c = transform(c, R, d);
+            c = transform(c, L, 1-d);
+            break;
+        case Y:
+            Face faces[4] = { c.R, c.F, c.L, c.B };
+            Square *edges[4] = { LR, LR, LR, LR };
+            rotateEdges(faces, edges, d);
+            c = transform(c, U, d);
+            c = transform(c, D, 1-d);
+            break;
+        case Z:
+            Face faces[4] = { c.U, c.R, c.D, c.L };
+            Square *edges[4] = { LR, UD, LR, UD };
+            rotateEdges(faces, edges, d);
+            c = transform(c, F, d);
+            c = transform(c, B, 1-d);
+            break;
+        case U:
+            Face faces[4] = { c.R, c.F, c.L, c.B };
+            Square *edges[4] = { UE, UE, UE, UE };
+            rotateEdges(faces, edges, d);
+            c.U = rotateFace(c.U, d);
+            break;
+        case D:
+            Face faces[4] = { c.L, c.F, c.R, c.B };
+            Square *edges[4] = { DE, DE, DE, DE };
+            rotateEdges(faces, edges, d);
+            c.D = rotateFace(c.D, d);
+            break;
+        case R:
+            Face faces[4] = { c.U, c.B, c.D, c.F };
+            Square *edges[4] = { RE, RE, RE, RE };
+            rotateEdges(faces, edges, d);
+            c.R = rotateFace(c.R, d);
+            break;
+        case L:
+            Face faces[4] = { c.U, c.F, c.D, c.B };
+            Square *edges[4] = { LE, LE, LE, LE };
+            rotateEdges(faces, edges, d);
+            c.L = rotateFace(c.L, d);
+            break;
+        case F:
+            Face faces[4] = { c.U, c.R, c.D, c.L };
+            Square *edges[4] = { DE, LE, UE, RE };
+            rotateEdges(faces, edges, d);
+            c.F = rotateFace(c.F, d);
+            break;
+        case B:
+            Face faces[4] = { c.U, c.L, c.D, c.R };
+            Square *edges[4] = { UE, LE, DE, RE };
+            rotateEdges(faces, edges, d);
+            c.B = rotateFace(c.B, d);
+            break;
     }
 
     return c;
 }
 
 int isFaceSolved(Face f) {
-    Color c = readSquare(f, CC);
+    Color c = readColor(f, CC);
     int i;
     for (i=1; i<9; i++) {
-        if (c != readSquare(f, i)) {
+        if (c != readColor(f, i)) {
             return 0;
         }
     }
@@ -181,43 +187,43 @@ int isCubeSolved(Cube c) {
 }
 
 void printFace(Face f) {
-    printf("%d %d %d\n", readSquare(f, UL), readSquare(f, UU), readSquare(f, UR));
-    printf("%d %d %d\n", readSquare(f, LL), readSquare(f, CC), readSquare(f, RR));
-    printf("%d %d %d\n", readSquare(f, DL), readSquare(f, DD), readSquare(f, DR));
+    printf("%d %d %d\n", readColor(f, UL), readColor(f, UU), readColor(f, UR));
+    printf("%d %d %d\n", readColor(f, LL), readColor(f, CC), readColor(f, RR));
+    printf("%d %d %d\n", readColor(f, DL), readColor(f, DD), readColor(f, DR));
 }
 
 void printCube(Cube c) {
     printf("  U     L     F     R     B     D  ");
 
-    printf("%d %d %d | ", readSquare(c.U, UL), readSquare(c.U, UU), readSquare(c.U, UR));
-    printf("%d %d %d | ", readSquare(c.L, UL), readSquare(c.L, UU), readSquare(c.L, UR));
-    printf("%d %d %d | ", readSquare(c.F, UL), readSquare(c.F, UU), readSquare(c.F, UR));
-    printf("%d %d %d | ", readSquare(c.R, UL), readSquare(c.R, UU), readSquare(c.R, UR));
-    printf("%d %d %d | ", readSquare(c.B, UL), readSquare(c.B, UU), readSquare(c.B, UR));
-    printf("%d %d %d \n", readSquare(c.D, UL), readSquare(c.D, UU), readSquare(c.D, UR));
+    printf("%d %d %d | ", readColor(c.U, UL), readColor(c.U, UU), readColor(c.U, UR));
+    printf("%d %d %d | ", readColor(c.L, UL), readColor(c.L, UU), readColor(c.L, UR));
+    printf("%d %d %d | ", readColor(c.F, UL), readColor(c.F, UU), readColor(c.F, UR));
+    printf("%d %d %d | ", readColor(c.R, UL), readColor(c.R, UU), readColor(c.R, UR));
+    printf("%d %d %d | ", readColor(c.B, UL), readColor(c.B, UU), readColor(c.B, UR));
+    printf("%d %d %d \n", readColor(c.D, UL), readColor(c.D, UU), readColor(c.D, UR));
 
-    printf("%d %d %d | ", readSquare(c.U, LL), readSquare(c.U, CC), readSquare(c.U, RR));
-    printf("%d %d %d | ", readSquare(c.L, LL), readSquare(c.L, CC), readSquare(c.L, RR));
-    printf("%d %d %d | ", readSquare(c.F, LL), readSquare(c.F, CC), readSquare(c.F, RR));
-    printf("%d %d %d | ", readSquare(c.R, LL), readSquare(c.R, CC), readSquare(c.R, RR));
-    printf("%d %d %d | ", readSquare(c.B, LL), readSquare(c.B, CC), readSquare(c.B, RR));
-    printf("%d %d %d \n", readSquare(c.D, LL), readSquare(c.D, CC), readSquare(c.D, RR));
+    printf("%d %d %d | ", readColor(c.U, LL), readColor(c.U, CC), readColor(c.U, RR));
+    printf("%d %d %d | ", readColor(c.L, LL), readColor(c.L, CC), readColor(c.L, RR));
+    printf("%d %d %d | ", readColor(c.F, LL), readColor(c.F, CC), readColor(c.F, RR));
+    printf("%d %d %d | ", readColor(c.R, LL), readColor(c.R, CC), readColor(c.R, RR));
+    printf("%d %d %d | ", readColor(c.B, LL), readColor(c.B, CC), readColor(c.B, RR));
+    printf("%d %d %d \n", readColor(c.D, LL), readColor(c.D, CC), readColor(c.D, RR));
 
-    printf("%d %d %d | ", readSquare(c.U, DL), readSquare(c.U, DD), readSquare(c.U, DR));
-    printf("%d %d %d | ", readSquare(c.L, DL), readSquare(c.L, DD), readSquare(c.L, DR));
-    printf("%d %d %d | ", readSquare(c.F, DL), readSquare(c.F, DD), readSquare(c.F, DR));
-    printf("%d %d %d | ", readSquare(c.R, DL), readSquare(c.R, DD), readSquare(c.R, DR));
-    printf("%d %d %d | ", readSquare(c.B, DL), readSquare(c.B, DD), readSquare(c.B, DR));
-    printf("%d %d %d \n", readSquare(c.D, DL), readSquare(c.D, DD), readSquare(c.D, DR));
+    printf("%d %d %d | ", readColor(c.U, DL), readColor(c.U, DD), readColor(c.U, DR));
+    printf("%d %d %d | ", readColor(c.L, DL), readColor(c.L, DD), readColor(c.L, DR));
+    printf("%d %d %d | ", readColor(c.F, DL), readColor(c.F, DD), readColor(c.F, DR));
+    printf("%d %d %d | ", readColor(c.R, DL), readColor(c.R, DD), readColor(c.R, DR));
+    printf("%d %d %d | ", readColor(c.B, DL), readColor(c.B, DD), readColor(c.B, DR));
+    printf("%d %d %d \n", readColor(c.D, DL), readColor(c.D, DD), readColor(c.D, DR));
 }
 
 int main() {
     Face u, d, l, r, f, b;
-    writeSquare(u, CC, WHITE);
+    writeColor(u, CC, WHITE);
 
     Face f1 = 51396313;
-    Face f2 = rotateFaceClockwise(f1);
-    Face f3 = rotateFaceCClockwise(f1);
+    Face f2 = rotateFace(f1, CW);
+    Face f3 = rotateFace(f1, CCW);
     printFace(f1);
     printf("\nClockwise:\n");
     printFace(f2);
