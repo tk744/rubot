@@ -7,7 +7,7 @@
 /* This source file implements the state and behavior of a Rubik's cube. */
 
 /* TODO:
- * 1. Factory functions
+ * 1. Fix transform() function - problem with rotateEdge pointers probably.
  * 2. Cube state save and load functions.
  * 3. Replace 0b111 instances using COLOR_BITS.
  * 4. Documentation about how constants relate to state. */ 
@@ -28,7 +28,7 @@ const Square    CC = 0, UL = 1, UU = 2, UR = 3, RR = 4, \
                 DR = 5, DD = 6, DL = 7, LL = 8;
 
 /* Represents the set of positions that can rotate together on a face. */
-const Square    UE[3] = { UL, UU, UR },
+Square          UE[3] = { UL, UU, UR },
                 DE[3] = { DL, DD, DR },
                 RE[3] = { UR, RR, DR },
                 LE[3] = { UL, LL, DL },
@@ -92,73 +92,72 @@ void rotateEdges(Face *f, Square **e, Dir d) {
     readColors(f[2], e[2], c2, 3);
     readColors(f[3], e[3], c3, 3);
 
-    writeColors(f[0], e[0], (d == CW ? c1 : c3), 3);
-    writeColors(f[1], e[1], c2, 3);
-    writeColors(f[2], e[2], (d == CW ? c3 : c1), 3);
-    writeColors(f[3], e[3], c0, 3);
+    f[0] = writeColors(f[0], e[0], (d == CW ? c1 : c3), 3);
+    f[1] = writeColors(f[1], e[1], c2, 3);
+    f[2] = writeColors(f[2], e[2], (d == CW ? c3 : c1), 3);
+    f[3] = writeColors(f[3], e[3], c0, 3);
 }
 
 Cube transform(Cube c, Move m, Dir d) {
-    switch (m) {
-        case NOP:
-            return c;
-        case X:
-            Face faces[4] = { c.F, c.U, c.B, c.D };
-            Square *edges[4] = { UD, UD, UD, UD };
-            rotateEdges(faces, edges, d);
-            c = transform(c, R, d);
-            c = transform(c, L, 1-d);
-            break;
-        case Y:
-            Face faces[4] = { c.R, c.F, c.L, c.B };
-            Square *edges[4] = { LR, LR, LR, LR };
-            rotateEdges(faces, edges, d);
-            c = transform(c, U, d);
-            c = transform(c, D, 1-d);
-            break;
-        case Z:
-            Face faces[4] = { c.U, c.R, c.D, c.L };
-            Square *edges[4] = { LR, UD, LR, UD };
-            rotateEdges(faces, edges, d);
-            c = transform(c, F, d);
-            c = transform(c, B, 1-d);
-            break;
-        case U:
-            Face faces[4] = { c.R, c.F, c.L, c.B };
-            Square *edges[4] = { UE, UE, UE, UE };
-            rotateEdges(faces, edges, d);
-            c.U = rotateFace(c.U, d);
-            break;
-        case D:
-            Face faces[4] = { c.L, c.F, c.R, c.B };
-            Square *edges[4] = { DE, DE, DE, DE };
-            rotateEdges(faces, edges, d);
-            c.D = rotateFace(c.D, d);
-            break;
-        case R:
-            Face faces[4] = { c.U, c.B, c.D, c.F };
-            Square *edges[4] = { RE, RE, RE, RE };
-            rotateEdges(faces, edges, d);
-            c.R = rotateFace(c.R, d);
-            break;
-        case L:
-            Face faces[4] = { c.U, c.F, c.D, c.B };
-            Square *edges[4] = { LE, LE, LE, LE };
-            rotateEdges(faces, edges, d);
-            c.L = rotateFace(c.L, d);
-            break;
-        case F:
-            Face faces[4] = { c.U, c.R, c.D, c.L };
-            Square *edges[4] = { DE, LE, UE, RE };
-            rotateEdges(faces, edges, d);
-            c.F = rotateFace(c.F, d);
-            break;
-        case B:
-            Face faces[4] = { c.U, c.L, c.D, c.R };
-            Square *edges[4] = { UE, LE, DE, RE };
-            rotateEdges(faces, edges, d);
-            c.B = rotateFace(c.B, d);
-            break;
+    if (m == NOP) {
+        return c;
+    }
+    else if (m == X) {
+        Face faces[4] = { c.F, c.U, c.B, c.D };
+        Square *edges[4] = { UD, UD, UD, UD };
+        rotateEdges(faces, edges, d);
+        c = transform(c, R, d);
+        c = transform(c, L, 1-d);
+    }
+    else if (m == Y) {
+        Face faces[4] = { c.R, c.F, c.L, c.B };
+        Square *edges[4] = { LR, LR, LR, LR };
+        rotateEdges(faces, edges, d);
+        c = transform(c, U, d);
+        c = transform(c, D, 1-d);   
+    }
+    else if (m == Z) {
+        Face faces[4] = { c.U, c.R, c.D, c.L };
+        Square *edges[4] = { LR, UD, LR, UD };
+        rotateEdges(faces, edges, d);
+        c = transform(c, F, d);
+        c = transform(c, B, 1-d);
+    }
+    else if (m == U) {
+        Face faces[4] = { c.R, c.F, c.L, c.B };
+        Square *edges[4] = { UE, UE, UE, UE };
+        rotateEdges(faces, edges, d);
+        c.U = rotateFace(c.U, d);
+    }
+    else if (m == D) {
+        Face faces[4] = { c.L, c.F, c.R, c.B };
+        Square *edges[4] = { DE, DE, DE, DE };
+        rotateEdges(faces, edges, d);
+        c.D = rotateFace(c.D, d);
+    }
+    else if (m == R) {
+        Face faces[4] = { c.U, c.B, c.D, c.F };
+        Square *edges[4] = { RE, RE, RE, RE };
+        rotateEdges(faces, edges, d);
+        c.R = rotateFace(c.R, d);
+    }
+    else if (m == L) {
+        Face faces[4] = { c.U, c.F, c.D, c.B };
+        Square *edges[4] = { LE, LE, LE, LE };
+        rotateEdges(faces, edges, d);
+        c.L = rotateFace(c.L, d);
+    }
+    else if (m == F) {
+        Face faces[4] = { c.U, c.R, c.D, c.L };
+        Square *edges[4] = { DE, LE, UE, RE };
+        rotateEdges(faces, edges, d);
+        c.F = rotateFace(c.F, d);
+    }
+    else if (m == B) {
+        Face faces[4] = { c.U, c.L, c.D, c.R };
+        Square *edges[4] = { UE, LE, DE, RE };
+        rotateEdges(faces, edges, d);
+        c.B = rotateFace(c.B, d);
     }
 
     return c;
@@ -186,6 +185,25 @@ int isCubeSolved(Cube c) {
     return 1;
 }
 
+Face faceFactory(Color c) {
+    Face f;
+    Square squares[9] = { CC, UL, UU, UR, RR, DR, DD, DL, LL };
+    Color colors[9] = { c, c, c, c, c, c, c, c, c };
+    return writeColors(f, squares, colors, 9);
+}
+
+Cube cubeFactory() {
+    Cube c = {
+        faceFactory(YELLOW),
+        faceFactory(WHITE),
+        faceFactory(RED),
+        faceFactory(ORANGE),
+        faceFactory(BLUE),
+        faceFactory(GREEN)
+    };
+    return c;
+}
+
 void printFace(Face f) {
     printf("%d %d %d\n", readColor(f, UL), readColor(f, UU), readColor(f, UR));
     printf("%d %d %d\n", readColor(f, LL), readColor(f, CC), readColor(f, RR));
@@ -193,7 +211,7 @@ void printFace(Face f) {
 }
 
 void printCube(Cube c) {
-    printf("  U     L     F     R     B     D  ");
+    printf("  U       L       F       R       B       D  \n");
 
     printf("%d %d %d | ", readColor(c.U, UL), readColor(c.U, UU), readColor(c.U, UR));
     printf("%d %d %d | ", readColor(c.L, UL), readColor(c.L, UU), readColor(c.L, UR));
@@ -218,17 +236,23 @@ void printCube(Cube c) {
 }
 
 int main() {
-    Face u, d, l, r, f, b;
-    writeColor(u, CC, WHITE);
+    Cube c = cubeFactory();
+    printCube(c);
 
-    Face f1 = 51396313;
-    Face f2 = rotateFace(f1, CW);
-    Face f3 = rotateFace(f1, CCW);
-    printFace(f1);
-    printf("\nClockwise:\n");
-    printFace(f2);
-    printf("\nCClockwise:\n");
-    printFace(f3);
-    printf("\nSolved: %d\n", isFaceSolved(f1));
-    printf("%d bytes required to store cube state.", sizeof(Cube));
+    Cube c1 = transform(c, D, CCW);
+    printCube(c1);
+
+    // Face u, d, l, r, f, b;
+    // writeColor(u, CC, WHITE);
+
+    // Face f1 = 51396313;
+    // Face f2 = rotateFace(f1, CW);
+    // Face f3 = rotateFace(f1, CCW);
+    // printFace(f1);
+    // printf("\nClockwise:\n");
+    // printFace(f2);
+    // printf("\nCClockwise:\n");
+    // printFace(f3);
+    // printf("\nSolved: %d\n", isFaceSolved(f1));
+    // printf("%d bytes required to store cube state.", sizeof(Cube));
 }
