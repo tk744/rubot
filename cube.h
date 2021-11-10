@@ -2,20 +2,17 @@
 
 /* RUBIK'S CUBE CONSTANTS */
 
-#define NUM_FACES 6
-
-/* MODEL REPRESENTATION CONSTANTS */
-
-#define COLOR_BITS 3
-#define NUM_MOVES (ZI+1)
+#define NUM_FACES 6         // number of faces/colors on a cube
+#define NUM_POSITIONS 9     // number of positions on a face
+#define NUM_MOVES 18        // number of supported moves
 
 /* TYPE DEFINITIONS */
 
-/* Encoding for all valid transformations of a cube. */
-typedef uint8_t Move;
-
 /* 3-bit encoding for 6 colors. */
 typedef uint8_t Color;
+
+/* Encoding for all valid transformations of a cube. */
+typedef uint8_t Move;
 
 /* Encoding for 9 positions on a face. */
 typedef uint8_t Pos;
@@ -29,6 +26,8 @@ typedef struct { Face f[6]; } Cube;
 
 /* ENUMERATIONS */
 
+const Color WHITE=1, YELLOW=2, RED=3, ORANGE=4, BLUE=5, GREEN=6;
+
 /* Guaranteed that base moves start at 0 for array indexing. 
  * Guaranteed that values on the intervals [U,Z] and [UI,ZI] are continuous.
  * Guaranteed that values on the interval [0, NUM_MOVES] are continuous. */
@@ -41,8 +40,6 @@ const Move  U=0, UI=9,   // face rotations
             X=6, XI=15,  // cube rotations
             Y=7, YI=16,
             Z=8, ZI=17;
-
-const Color WHITE=1, YELLOW=2, RED=3, ORANGE=4, BLUE=5, GREEN=6;
 
 /* Guaranteed to start at 0 for array indexing. */
 const Pos   CC=0, UL=1, UU=2, UR=3, RR=4, DR=5, DD=6, DL=7, LL=8;

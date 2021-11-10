@@ -6,9 +6,14 @@
  * This source file implements the state and behavior of a Rubik's cube.
  * 
  * TODO:
- * 1. fix rotateLines(). Direction and inverse are broken.
- * 2. write saveCube() and loadCube() functions.
+ * 1. write saveCube() and loadCube() functions.
  */
+
+/* MODEL REPRESENTATION CONSTANTS */
+
+#define COLOR_BITS 3    // bits required to store a color value
+#define LINE_SIZE 3     // number of positions in a line
+#define RING_SIZE 4     // number of lines in a ring
 
 /* TYPE DEFINITIONS & ENUMERATIONS */
 
@@ -16,6 +21,20 @@
  * Useful for symmetric transformation functions. */
 typedef uint8_t Dir;
 static Dir CW = 0, CCW = 1;
+
+/* Ring encoded as parallel array of faces and lines. */
+typedef struct {
+    Move f[RING_SIZE];  // face indexes
+    Pos *l[RING_SIZE];  // lines
+} Ring;
+
+typedef Pos Line[LINE_SIZE];
+static Line UE = { UL, UU, UR },
+            DE = { DL, DD, DR },
+            RE = { UR, RR, DR },
+            LE = { UL, LL, DL },
+            LR = { LL, CC, RR },
+            UD = { UU, CC, DD };
 
 /* FUNCTION IMPLEMENTATION */
 
@@ -76,7 +95,62 @@ static Face writeColors(Face f, Pos *p, Color *c, int count) {
 // }
 
 static Dir getDir(Move m) {
-    return (U <= m && m <= B) ? CW : CCW;
+    return (U <= m && m <= Z) ? CW : CCW;
+}
+
+static Ring getBaseRing(Cube c, Move m) {
+    if (m == U || m == UI) {
+        Ring r = {{ F, L, B, R }, { UE, UE, UE, UE }};
+        return r;
+    }
+    else if (m == D || m == DI) {
+        Ring r = {{ F, R, B, L }, { DE, DE, DE, DE }};
+        return r;
+    }
+    else if (m == R || m == RI) {
+        Ring r = {{ F, U, B, D }, { RE, RE, RE, RE }};
+        return r;
+    }
+    else if (m == L || m == LI) {
+        Ring r = {{ F, D, B, U }, { LE, LE, LE, LE }};
+        return r;     
+    }
+    else if (m == F || m == FI) {
+        Ring r = {{ U, R, D, L }, { DE, LE, UE, RE }};
+        return r;        
+    }
+    else if (m == B || m == BI) {
+        Ring r = {{ U, L, D, R }, { UE, LE, DE, RE }};
+        return r;        
+    }
+    else if (m == X || m == XI) {
+        Ring r = {{ F, U, B, D }, { UD, UD, UD, UD }};
+        return r;     
+    }
+    else if (m == Y || m == YI) {
+        Ring r = {{ F, L, B, R }, { LR, LR, LR, LR }};
+        return r;        
+    }
+    else if (m == Z || m == ZI) {
+        Ring r = {{ U, R, D, L }, { LR, UD, LR, UD }};
+        return r;        
+    }
+}
+
+static Ring getRing(Cube c, Move m) {
+    Ring r = getBaseRing(c, m);
+
+    if (getDir(m) == CW) {
+        Move tmp_f = r.f[1];
+        r.f[1] = r.f[3];
+        r.f[3] = tmp_f;
+
+        Pos *tmp_l = r.l[1];
+        r.l[1] = r.l[3];
+        r.l[3] = tmp_l;
+    }
+
+    return r;
 }
 
 static Face rotateFace(Face f, Dir d) {
@@ -95,7 +169,7 @@ static Face rotateFace(Face f, Dir d) {
     return f;
 }
 
-static Cube rotateFaces(Cube c, Move m) {
+static Cube transformFaces(Cube c, Move m) {
     Dir d = getDir(m);
     
     if (U <= m && m <= B) {
@@ -126,156 +200,49 @@ static Cube rotateFaces(Cube c, Move m) {
     return c;
 }
 
-// Face rotateLine(Face *f, Pos **l, Dir d) {
-//     // Color c0[3], c1[3], c2[3], c3[3];
+static Cube transformRings(Cube c, Move m) {
+    Ring r = getRing(c, m);
 
-//     // readColors(f[0], l[0], c0, 3);
-//     // readColors(f[1], l[1], c1, 3);
-//     // readColors(f[2], l[2], c2, 3);
-//     // readColors(f[3], l[3], c3, 3);
-
-//     // f[0] = writeColors(f[0], l[0], (d == CW ? c1 : c3), 3);
-//     // f[1] = writeColors(f[1], l[1], c2, 3);
-//     // f[2] = writeColors(f[2], l[2], (d == CW ? c3 : c1), 3);
-//     // f[3] = writeColors(f[3], l[3], c0, 3);
-
-//     // return f;   
-
-//     static int LINES_PER_RING = 4;
-//     static int COLORS_PER_LINE = 3;
-
-//     Color c[3];
-//     int i;
-//     for(i=0; i<LINES_PER_RING; i++) {
-//         int j = (((d == CW) || (i % 2) ? i : LINES_PER_RING-i) + 1) % LINES_PER_RING;
-//         f[i] = writeColors(f[i], l[i], readColors(f[j], l[j], c, COLORS_PER_LINE), COLORS_PER_LINE);
-//     }
-//     return f;
-// }
-
-// struct Ring {
-//     Face f[4];
-//     Pos *l[4];
-// };
-
-// Face *rotateRing(Face *f, Pos **l, Dir d) {
-
-//     return f;
-// }
-
-static Cube rotateLines(Cube c, Move m) {
-    Dir d = getDir(m);
-
-    static int LINES = 4;   // number of lines in rotation
-
-    /* Represents the linear positions that are swapped between faces in a rotation. */
-    static Pos  UE[3] = { UL, UU, UR },
-                DE[3] = { DL, DD, DR },
-                RE[3] = { UR, RR, DR },
-                LE[3] = { UL, LL, DL },
-                LR[3] = { LL, CC, RR },
-                UD[3] = { UU, CC, DD };
-
-    // parallel arrays for rotation line per face
-    // TODO: make this a struct
-    Move x[LINES];  // faces with rotating lines
-    Pos *l[LINES];  // lines corresponding to faces
-
-    // struct {
-    //     Move x[LINES];
-    //     Pos *l[LINES];
-    // } rotation;
+    Color tmp[LINE_SIZE]; // temp array for swapping first and last line colors
+    Color buffer[LINE_SIZE]; // buffer array for reading line colors
+    int i;
+    for(i=0; i<RING_SIZE; i++) {
+        // save first line for last swap
+        if (!i) readColors(c.f[r.f[i]], r.l[i], tmp, LINE_SIZE); 
+        // compute swap index
+        int j = (i + 1) % RING_SIZE;
+        // write new line to buffer
+        readColors(c.f[r.f[j]], r.l[j], buffer, LINE_SIZE);
+        // write replace old line with new line
+        c.f[r.f[i]] = writeColors(c.f[r.f[i]], r.l[i], (i < RING_SIZE-1 ? buffer : tmp), LINE_SIZE);
+    }
 
     if (m == X || m == XI) {
-        c = rotateLines(c, (d == CW ? R : RI));
-        c = rotateLines(c, (d == CW ? LI : L));
-        x[0] = F; l[0] = UD;
-        x[1] = U; l[1] = UD;
-        x[2] = B; l[2] = UD;
-        x[3] = D; l[3] = UD;
+        c = transformRings(c, (getDir(m) == CW ? R : RI));
+        c = transformRings(c, (getDir(m) == CW ? LI : L));
     }
     else if (m == Y || m == YI) {
-        c = rotateLines(c, (d == CW ? U : UI));
-        c = rotateLines(c, (d == CW ? DI : D));
-        x[0] = R; l[0] = LR;
-        x[1] = F; l[1] = LR;
-        x[2] = L; l[2] = LR;
-        x[3] = B; l[3] = LR;
+        c = transformRings(c, (getDir(m) == CW ? U : UI));
+        c = transformRings(c, (getDir(m) == CW ? DI : D));
     }
     else if (m == Z || m == ZI) {
-        c = rotateLines(c, (d == CW ? F : FI));
-        c = rotateLines(c, (d == CW ? BI : B));
-        x[0] = U; l[0] = LR;
-        x[1] = R; l[1] = UD;
-        x[2] = D; l[2] = LR;
-        x[3] = L; l[3] = UD;        
-    }
-    else if (m == U || m == UI) {
-        x[0] = L; l[0] = UE;
-        x[1] = F; l[1] = UE;
-        x[2] = R; l[2] = UE;
-        x[3] = B; l[3] = UE;
-    }
-    else if (m == D || m == DI) {
-        x[0] = R; l[0] = DE;
-        x[1] = F; l[1] = DE;
-        x[2] = L; l[2] = DE;
-        x[3] = B; l[3] = DE;
-    }
-    else if (m == R || m == RI) {
-        x[0] = D; l[0] = RE;
-        x[1] = B; l[1] = RE;
-        x[2] = U; l[2] = RE;
-        x[3] = F; l[3] = RE;
-    }
-    else if (m == L || m == LI) {
-        x[0] = U; l[0] = LE;
-        x[1] = B; l[1] = LE;
-        x[2] = D; l[2] = LE;
-        x[3] = F; l[3] = LE;
-    }
-    else if (m == F || m == FI) {
-        x[0] = U; l[0] = DE;
-        x[1] = L; l[1] = RE;
-        x[2] = D; l[2] = UE;
-        x[3] = R; l[3] = LE;
-    }
-    else if (m == B || m == BI) {
-        x[0] = U; l[0] = UE;
-        x[1] = L; l[1] = LE;
-        x[2] = D; l[2] = DE;
-        x[3] = R; l[3] = RE;
-    }
-
-    Color tmp[3], buffer[3]; // buffer for reading colors
-    int i;
-    for(i=0; i<LINES; i++) {
-        // save first read for last swap
-        if (!i) readColors(c.f[x[i]], l[i], tmp, 3); 
-
-        // compute swap index
-        int j = ((((d == CW) || (i % 2)) ? i : LINES-i) + 1) % LINES;
-
-        // write new line to buffer
-        readColors(c.f[x[j]], l[j], buffer, 3);
-
-        // write replace old line with new line
-        c.f[x[i]] = writeColors(c.f[x[i]], l[i], (i < LINES-1 ? buffer : tmp), 3);
+        c = transformRings(c, (getDir(m) == CW ? F : FI));
+        c = transformRings(c, (getDir(m) == CW ? BI : B));        
     }
 
     return c;
 }
 
 Cube transform(Cube c, Move m) {
-    c = rotateFaces(c, m);
-    c = rotateLines(c, m);
+    c = transformFaces(c, m);
+    c = transformRings(c, m);
     return c;
 }
 
 static int isFaceSolved(Face f) {
     Color c = readColor(f, CC);
     int i;
-    for (i=1; i<9; i++) {
+    for (i=1; i<NUM_POSITIONS; i++) {
         if (c != readColor(f, i)) {
             return 0;
         }
@@ -285,7 +252,7 @@ static int isFaceSolved(Face f) {
 
 int isSolved(Cube c) {
     int i;
-    for (i=0; i<6; i++) {
+    for (i=0; i<NUM_FACES; i++) {
         if (!isFaceSolved(c.f[i])) {
             return 0;
         }
@@ -296,7 +263,7 @@ int isSolved(Cube c) {
 static Face faceFactory(Color c) {
     Face f;
     int i;
-    for(i=0; i<9; i++) {
+    for(i=0; i<NUM_POSITIONS; i++) {
         f = writeColor(f, i, c);
     }
     return f;
@@ -389,10 +356,18 @@ void printCube(Cube c) {
     printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
 }
 
+// char *saveCube(Cube c, char *str) {
+
+// }
+
+// Cube loadCube(char *str) {
+
+// }
+
 int main() {
     printf("%d bytes required to store cube state.\n", sizeof(Cube));
 
-    Move moves[] = { U, DI, X };
+    Move moves[] = { U, U, DI, DI, R, R, LI, LI, F, F, BI, BI };
     Cube c = cubeFactory();
 
     printCube(c);
