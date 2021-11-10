@@ -6,6 +6,12 @@
  * This source file implements the state and behavior of a Rubik's cube. 
  */
 
+/* MODEL REPRESENTATION CONSTANTS */
+
+#define COLOR_BITS 3
+
+/* FUNCTION IMPLEMENTATION */
+
 Color readColor(Face f, Pos p) {
     return (f >> (COLOR_BITS * p)) & 0b111;
 }
@@ -269,51 +275,86 @@ Cube scramble(Cube c, Move *m, int n) {
     }
 }
 
-void printFace(Face f) {
-    printf("%d %d %d\n", readColor(f, UL), readColor(f, UU), readColor(f, UR));
-    printf("%d %d %d\n", readColor(f, LL), readColor(f, CC), readColor(f, RR));
-    printf("%d %d %d\n", readColor(f, DL), readColor(f, DD), readColor(f, DR));
+static void printColor(Color c) {
+    static char *symbol = "▣";
+    if (c == WHITE) {
+        printf("\033[0;37m");
+    }
+    else if (c == YELLOW) {
+        printf("\033[0;33m");
+    }
+    else if (c == RED) {
+        printf("\033[0;31m");
+    }
+    else if (c == ORANGE) {
+        printf("\e[0;35m");
+    }
+    else if (c == BLUE) {
+        printf("\033[0;34m");
+    }
+    else if (c == GREEN) {
+        printf("\033[0;32m");
+    }
+    printf(symbol);
+    printf("\033[0m");
 }
 
 void printCube(Cube c) {
-    printf("  U       L       F       R       B       D  \n");
+    Face order[NUM_FACES] = { U, L, F, R, B, D };
+    printf("┌──┤U├──┬──┤L├──┬──┤F├──┬──┤R├──┬──┤B├──┬──┤D├──┐\n");
 
-    printf("%d %d %d | ", readColor(c.f[U], UL), readColor(c.f[U], UU), readColor(c.f[U], UR));
-    printf("%d %d %d | ", readColor(c.f[L], UL), readColor(c.f[L], UU), readColor(c.f[L], UR));
-    printf("%d %d %d | ", readColor(c.f[F], UL), readColor(c.f[F], UU), readColor(c.f[F], UR));
-    printf("%d %d %d | ", readColor(c.f[R], UL), readColor(c.f[R], UU), readColor(c.f[R], UR));
-    printf("%d %d %d | ", readColor(c.f[B], UL), readColor(c.f[B], UU), readColor(c.f[B], UR));
-    printf("%d %d %d \n", readColor(c.f[D], UL), readColor(c.f[D], UU), readColor(c.f[D], UR));
+    Color l, m, r;
+    int i, j;
+    for (i=0 ; i<3; i++) {
+        printf("│");
+        for (j=0 ; j<NUM_FACES; j++) {
+            if (i == 0) {
+                l = readColor(c.f[order[j]], UL);
+                m = readColor(c.f[order[j]], UU);
+                r = readColor(c.f[order[j]], UR);
+            }
+            else if (i == 1) {
+                l = readColor(c.f[order[j]], LL);
+                m = readColor(c.f[order[j]], CC);
+                r = readColor(c.f[order[j]], RR);
+            }
+            else if (i == 2) {
+                l = readColor(c.f[order[j]], DL);
+                m = readColor(c.f[order[j]], DD);
+                r = readColor(c.f[order[j]], DR);
+            }
 
-    printf("%d %d %d | ", readColor(c.f[U], LL), readColor(c.f[U], CC), readColor(c.f[U], RR));
-    printf("%d %d %d | ", readColor(c.f[L], LL), readColor(c.f[L], CC), readColor(c.f[L], RR));
-    printf("%d %d %d | ", readColor(c.f[F], LL), readColor(c.f[F], CC), readColor(c.f[F], RR));
-    printf("%d %d %d | ", readColor(c.f[R], LL), readColor(c.f[R], CC), readColor(c.f[R], RR));
-    printf("%d %d %d | ", readColor(c.f[B], LL), readColor(c.f[B], CC), readColor(c.f[B], RR));
-    printf("%d %d %d \n", readColor(c.f[D], LL), readColor(c.f[D], CC), readColor(c.f[D], RR));
-
-    printf("%d %d %d | ", readColor(c.f[U], DL), readColor(c.f[U], DD), readColor(c.f[U], DR));
-    printf("%d %d %d | ", readColor(c.f[L], DL), readColor(c.f[L], DD), readColor(c.f[L], DR));
-    printf("%d %d %d | ", readColor(c.f[F], DL), readColor(c.f[F], DD), readColor(c.f[F], DR));
-    printf("%d %d %d | ", readColor(c.f[R], DL), readColor(c.f[R], DD), readColor(c.f[R], DR));
-    printf("%d %d %d | ", readColor(c.f[B], DL), readColor(c.f[B], DD), readColor(c.f[B], DR));
-    printf("%d %d %d \n", readColor(c.f[D], DL), readColor(c.f[D], DD), readColor(c.f[D], DR));
+            printf(" ");
+            printColor(l);
+            printf(" ");
+            printColor(m);
+            printf(" ");
+            printColor(r);
+            printf(" ");
+            
+            if (j<NUM_FACES-1) {
+                printf("│");
+            }
+        }
+        printf("│\n");
+    }
+    printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
 }
 
 int main() {
     Cube c = cubeFactory();
     printCube(c);
 
-    Cube c1 = transform(c, R, CW);
+    Cube c1 = transform(c, L, CW);
     printCube(c1);
 
-    Cube c2 = transform(c1, R, CW);
+    Cube c2 = transform(c1, U, CW);
     printCube(c2);
 
-    Cube c3 = transform(c2, R, CW);
+    Cube c3 = transform(c2, B, CW);
     printCube(c3);
 
-    Cube c4 = transform(c3, R, CW);
+    Cube c4 = transform(c3, D, CW);
     printCube(c4);
 
     // Face u, d, l, r, f, b;
