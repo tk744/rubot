@@ -1,70 +1,10 @@
-#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include "cube.h"
 
-/* This source file implements the state and behavior of a Rubik's cube. */
-
-/* Model representation constants. */
-
-#define COLOR_BITS 3
-
-/* Face (0-5) and Move (0-8) values. */
-
-#define U 0
-#define D 1
-#define L 2
-#define R 3
-#define F 4
-#define B 5
-#define X 6
-#define Y 7
-#define Z 8
-
-/* Type Definitions. */
-
-/* Global constants for cube data. 
- * Using type uint8_t instead of enum because it reduces cube state memory by 4x.  */
-
-typedef uint8_t Color, Pos;
-typedef uint32_t Face;
-typedef struct { Face f[6]; } Cube;
-
-typedef uint8_t Move, Dir;
-
-
-/* TODO:
- * 1. Fix transform() function - problem with rotateEdge pointers probably.
- * 2. Cube state save and load functions.
- * 3. Replace 0b111 instances using COLOR_BITS.
- * 4. Documentation about how constants relate to state. */
-
-
-/* Represents the set of colors. */
-const Color WHITE = 1, YELLOW = 2, RED = 3, \
-            ORANGE = 4, BLUE = 5, GREEN = 6;
-
-/* Represents the set of positions on a face. */
-const Pos   CC = 0, UL = 1, UU = 2, UR = 3, RR = 4, \
-            DR = 5, DD = 6, DL = 7, LL = 8;
-
-/* Represents the set of positions in a line that can rotate together on a face. */
-Pos         UE[3] = { UL, UU, UR },
-            DE[3] = { DL, DD, DR },
-            RE[3] = { UR, RR, DR },
-            LE[3] = { UL, LL, DL },
-            LR[3] = { LL, CC, RR },
-            UD[3] = { UU, CC, DD };
-
-/* Represents the set of valid transformations of the cube. */
-// const Move  U=1, D=2, L=3, R=4, F=5, B=6,   // face rotations
-//             X=7, Y=8, Z=9,                  // cube rotations
-//             NOP=0;                          // no transformation
-
-const Dir   CW = 0, CCW = 1;    // clockwise, counterclockwise
-
-
-
+/**
+ * This source file implements the state and behavior of a Rubik's cube. 
+ */
 
 Color readColor(Face f, Pos p) {
     return (f >> (COLOR_BITS * p)) & 0b111;
@@ -172,92 +112,101 @@ static Cube rotateFaces(Cube c, Move m, Dir d) {
 // }
 
 static Cube rotateLines(Cube c, Move m, Dir d) {
-    uint8_t x[4];
-    Pos *l[4];
+    static int LINES = 4;   // number of lines
 
-    switch (m) {
-        case X:
-            // rotation.f = { F, U, B, D };
-            // rotation.l = { UD, UD, UD, UD };
-            c = rotateLines(c, R, d);
-            c = rotateLines(c, L, 1-d);
+    /* Represents the linear positions that are swapped between faces in a rotation. */
+    static Pos  UE[3] = { UL, UU, UR },
+                DE[3] = { DL, DD, DR },
+                RE[3] = { UR, RR, DR },
+                LE[3] = { UL, LL, DL },
+                LR[3] = { LL, CC, RR },
+                UD[3] = { UU, CC, DD };
 
-            x[0] = F; l[0] = UD;
-            x[1] = U; l[1] = UD;
-            x[2] = B; l[2] = UD;
-            x[3] = D; l[3] = UD;
-            break;
-        case Y:
-            c = rotateLines(c, U, d);
-            c = rotateLines(c, D, 1-d);
-            x[0] = R; l[0] = LR;
-            x[1] = F; l[1] = LR;
-            x[2] = L; l[2] = LR;
-            x[3] = B; l[3] = LR;
-            break;
-        case Z:
-            c = rotateLines(c, F, d);
-            c = rotateLines(c, B, 1-d);
-            x[0] = U; l[0] = LR;
-            x[1] = R; l[1] = UD;
-            x[2] = D; l[2] = LR;
-            x[3] = L; l[3] = UD;
-            break;
-        case U:
-            x[0] = R; l[0] = UE;
-            x[1] = F; l[1] = UE;
-            x[2] = L; l[2] = UE;
-            x[3] = B; l[3] = UE;
-            break;
-        case D:
-            x[0] = L; l[0] = DE;
-            x[1] = F; l[1] = DE;
-            x[2] = R; l[2] = DE;
-            x[3] = B; l[3] = DE;
-            break;
-        case R:
-            x[0] = U; l[0] = RE;
-            x[1] = B; l[1] = RE;
-            x[2] = D; l[2] = RE;
-            x[3] = F; l[3] = RE;
-            break;
-        case L:
-            x[0] = U; l[0] = LE;
-            x[1] = F; l[1] = LE;
-            x[2] = D; l[2] = LE;
-            x[3] = B; l[3] = LE;
-            break;
-        case F:
-            x[0] = U; l[0] = DE;
-            x[1] = R; l[1] = LE;
-            x[2] = D; l[2] = UE;
-            x[3] = L; l[3] = RE;
-            break;
-        case B:
-            x[0] = U; l[0] = UE;
-            x[1] = L; l[1] = LE;
-            x[2] = D; l[2] = DE;
-            x[3] = R; l[3] = RE;
-            break;
+    // parallel arrays for rotation line per face
+    // TODO: make this a struct
+    Move x[LINES];  // faces with rotating lines
+    Pos *l[LINES];  // lines corresponding to faces
+
+    // struct {
+    //     Move x[LINES];
+    //     Pos *l[LINES];
+    // } rotation;
+
+    if (m == X) {
+        c = rotateLines(c, R, d);
+        c = rotateLines(c, L, 1-d);
+        x[0] = F; l[0] = UD;
+        x[1] = U; l[1] = UD;
+        x[2] = B; l[2] = UD;
+        x[3] = D; l[3] = UD;
     }
-
-    static int LINES_PER_RING = 4;
-    static int COLORS_PER_LINE = 3;
+    else if (m == Y) {
+        c = rotateLines(c, U, d);
+        c = rotateLines(c, D, 1-d);
+        x[0] = R; l[0] = LR;
+        x[1] = F; l[1] = LR;
+        x[2] = L; l[2] = LR;
+        x[3] = B; l[3] = LR;
+    }
+    else if (m == Z) {
+        c = rotateLines(c, F, d);
+        c = rotateLines(c, B, 1-d);
+        x[0] = U; l[0] = LR;
+        x[1] = R; l[1] = UD;
+        x[2] = D; l[2] = LR;
+        x[3] = L; l[3] = UD;        
+    }
+    else if (m == U) {
+        x[0] = L; l[0] = UE;
+        x[1] = F; l[1] = UE;
+        x[2] = R; l[2] = UE;
+        x[3] = B; l[3] = UE;
+    }
+    else if (m == D) {
+        x[0] = R; l[0] = DE;
+        x[1] = F; l[1] = DE;
+        x[2] = L; l[2] = DE;
+        x[3] = B; l[3] = DE;
+    }
+    else if (m == R) {
+        x[0] = D; l[0] = RE;
+        x[1] = B; l[1] = RE;
+        x[2] = U; l[2] = RE;
+        x[3] = F; l[3] = RE;
+    }
+    else if (m == L) {
+        x[0] = U; l[0] = LE;
+        x[1] = B; l[1] = LE;
+        x[2] = D; l[2] = LE;
+        x[3] = F; l[3] = LE;
+    }
+    else if (m == F) {
+        x[0] = U; l[0] = DE;
+        x[1] = L; l[1] = RE;
+        x[2] = D; l[2] = UE;
+        x[3] = R; l[3] = LE;
+    }
+    else if (m == B) {
+        x[0] = U; l[0] = UE;
+        x[1] = L; l[1] = LE;
+        x[2] = D; l[2] = DE;
+        x[3] = R; l[3] = RE;
+    }
 
     Color tmp[3], buffer[3]; // buffer for reading colors
     int i;
-    for(i=0; i<LINES_PER_RING; i++) {
+    for(i=0; i<LINES; i++) {
         // save first read for last swap
-        if (!i) readColors(c.f[x[i]], l[i], tmp, COLORS_PER_LINE); 
+        if (!i) readColors(c.f[x[i]], l[i], tmp, 3); 
 
         // compute swap index
-        int j = (((d == CW) || (i % 2) ? i : LINES_PER_RING-i) + 1) % LINES_PER_RING;
+        int j = (((d == CW) || (i % 2) ? i : LINES-i) + 1) % LINES;
 
         // write new line to buffer
-        readColors(c.f[x[j]], l[j], buffer, COLORS_PER_LINE);
+        readColors(c.f[x[j]], l[j], buffer, 3);
 
         // write replace old line with new line
-        c.f[x[i]] = writeColors(c.f[x[i]], l[i], (i < LINES_PER_RING-1 ? buffer : tmp), COLORS_PER_LINE);
+        c.f[x[i]] = writeColors(c.f[x[i]], l[i], (i < LINES-1 ? buffer : tmp), 3);
     }
 
     return c;
@@ -311,6 +260,15 @@ Cube cubeFactory() {
     return c;
 }
 
+Cube scramble(Cube c, Move *m, int n) {
+    int i;
+    for(i=0 ; i<n ; i++) {
+        m[i] = Z;   // TODO: randomize
+        int d = 0;  // TODO: randomize
+        c = transform(c, m[i], d);
+    }
+}
+
 void printFace(Face f) {
     printf("%d %d %d\n", readColor(f, UL), readColor(f, UU), readColor(f, UR));
     printf("%d %d %d\n", readColor(f, LL), readColor(f, CC), readColor(f, RR));
@@ -346,13 +304,13 @@ int main() {
     Cube c = cubeFactory();
     printCube(c);
 
-    Cube c1 = transform(c, D, CCW);
+    Cube c1 = transform(c, R, CW);
     printCube(c1);
 
-    Cube c2 = transform(c1, U, CCW);
+    Cube c2 = transform(c1, R, CW);
     printCube(c2);
 
-    Cube c3 = transform(c2, F, CW);
+    Cube c3 = transform(c2, R, CW);
     printCube(c3);
 
     Cube c4 = transform(c3, R, CW);
