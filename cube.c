@@ -3,7 +3,12 @@
 #include "cube.h"
 
 /**
- * This source file implements the state and behavior of a Rubik's cube. 
+ * This source file implements the state and behavior of a Rubik's cube.
+ * 
+ * TODO:
+ * 1. fix rotateLines(). Direction seems broken.
+ * 2. fix scramble(). How to return moves & direction and keep abstraction.
+ * 3. write saveCube() and loadCube() functions.
  */
 
 /* MODEL REPRESENTATION CONSTANTS */
