@@ -7,13 +7,16 @@
  * 
  * TODO:
  * 1. fix rotateLines(). Direction seems broken.
- * 2. fix scramble(). How to return moves & direction and keep abstraction.
+ * 2. fix scramble().
  * 3. write saveCube() and loadCube() functions.
  */
 
-/* MODEL REPRESENTATION CONSTANTS */
+/* TYPE DEFINITIONS & ENUMERATIONS */
 
-#define COLOR_BITS 3
+/* Encoding for clockwise and counterclockwise directions.
+ * Useful for symmetric transformation functions. */
+typedef uint8_t Dir;
+static Dir CW = 0, CCW = 1;
 
 /* FUNCTION IMPLEMENTATION */
 
@@ -43,6 +46,40 @@ static Face writeColors(Face f, Pos *p, Color *c, int count) {
     return f;
 }
 
+// static Move baseMove(Move m) {
+//     if (m == U || m == UI) {
+//         return U;
+//     }
+//     else if (m == D || m == DI) {
+//         return D;
+//     }
+//     else if (m == R || m == RI) {
+//         return R;
+//     }
+//     else if (m == L || m == LI) {
+//         return L;
+//     }
+//     else if (m == F || m == FI) {
+//         return F;
+//     }
+//     else if (m == B || m == BI) {
+//         return B;
+//     }
+//     else if (m == X || m == XI) {
+//         return X;
+//     }
+//     else if (m == Y || m == YI) {
+//         return Y;
+//     }
+//     else if (m == Z || m == ZI) {
+//         return Z;
+//     }
+// }
+
+static Dir getDir(Move m) {
+    return (U <= m && m <= B) ? CW : CCW;
+}
+
 static Face rotateFace(Face f, Dir d) {
     Pos lsb[3] = { CC, UL, UU };
     Pos msb[3] = { CC, DL, LL };
@@ -59,22 +96,27 @@ static Face rotateFace(Face f, Dir d) {
     return f;
 }
 
-static Cube rotateFaces(Cube c, Move m, Dir d) {
-    if (m == U || m == D || m == R || m == L || m == F || m == B) {
+static Cube rotateFaces(Cube c, Move m) {
+    Dir d = getDir(m);
+    
+    if (U <= m && m <= B) {
         c.f[m] = rotateFace(c.f[m], d);
     }
-    else if(m == X || m == Y || m == Z) {
+    else if (UI <= m && m <= BI) {
+        c.f[m-UI] = rotateFace(c.f[m-UI], d);
+    }
+    else if((X <= m && m <= Z) || (XI <= m && m <= ZI)) {
         Face f1, f2;
 
-        if(m == X) {
+        if(m == X || m == XI) {
             f1 = R;
             f2 = L;
         }
-        else if (m == Y) {
+        else if (m == Y || m == YI) {
             f1 = U;
             f2 = D;
         }
-        else if (m == Z) {
+        else if (m == Z || m == ZI) {
             f1 = F;
             f2 = B;
         }
@@ -122,7 +164,9 @@ static Cube rotateFaces(Cube c, Move m, Dir d) {
 //     return f;
 // }
 
-static Cube rotateLines(Cube c, Move m, Dir d) {
+static Cube rotateLines(Cube c, Move m) {
+    Dir d = getDir(m);
+
     static int LINES = 4;   // number of lines
 
     /* Represents the linear positions that are swapped between faces in a rotation. */
@@ -143,61 +187,61 @@ static Cube rotateLines(Cube c, Move m, Dir d) {
     //     Pos *l[LINES];
     // } rotation;
 
-    if (m == X) {
-        c = rotateLines(c, R, d);
-        c = rotateLines(c, L, 1-d);
+    if (m == X || m == XI) {
+        c = rotateLines(c, (d == CW ? R : RI));
+        c = rotateLines(c, (d == CW ? LI : L));
         x[0] = F; l[0] = UD;
         x[1] = U; l[1] = UD;
         x[2] = B; l[2] = UD;
         x[3] = D; l[3] = UD;
     }
-    else if (m == Y) {
-        c = rotateLines(c, U, d);
-        c = rotateLines(c, D, 1-d);
+    else if (m == Y || m == YI) {
+        c = rotateLines(c, (d == CW ? U : UI));
+        c = rotateLines(c, (d == CW ? DI : D));
         x[0] = R; l[0] = LR;
         x[1] = F; l[1] = LR;
         x[2] = L; l[2] = LR;
         x[3] = B; l[3] = LR;
     }
-    else if (m == Z) {
-        c = rotateLines(c, F, d);
-        c = rotateLines(c, B, 1-d);
+    else if (m == Z || m == ZI) {
+        c = rotateLines(c, (d == CW ? F : FI));
+        c = rotateLines(c, (d == CW ? BI : B));
         x[0] = U; l[0] = LR;
         x[1] = R; l[1] = UD;
         x[2] = D; l[2] = LR;
         x[3] = L; l[3] = UD;        
     }
-    else if (m == U) {
+    else if (m == U || m == UI) {
         x[0] = L; l[0] = UE;
         x[1] = F; l[1] = UE;
         x[2] = R; l[2] = UE;
         x[3] = B; l[3] = UE;
     }
-    else if (m == D) {
+    else if (m == D || m == DI) {
         x[0] = R; l[0] = DE;
         x[1] = F; l[1] = DE;
         x[2] = L; l[2] = DE;
         x[3] = B; l[3] = DE;
     }
-    else if (m == R) {
+    else if (m == R || m == RI) {
         x[0] = D; l[0] = RE;
         x[1] = B; l[1] = RE;
         x[2] = U; l[2] = RE;
         x[3] = F; l[3] = RE;
     }
-    else if (m == L) {
+    else if (m == L || m == LI) {
         x[0] = U; l[0] = LE;
         x[1] = B; l[1] = LE;
         x[2] = D; l[2] = LE;
         x[3] = F; l[3] = LE;
     }
-    else if (m == F) {
+    else if (m == F || m == FI) {
         x[0] = U; l[0] = DE;
         x[1] = L; l[1] = RE;
         x[2] = D; l[2] = UE;
         x[3] = R; l[3] = LE;
     }
-    else if (m == B) {
+    else if (m == B || m == BI) {
         x[0] = U; l[0] = UE;
         x[1] = L; l[1] = LE;
         x[2] = D; l[2] = DE;
@@ -223,13 +267,13 @@ static Cube rotateLines(Cube c, Move m, Dir d) {
     return c;
 }
 
-Cube transform(Cube c, Move m, Dir d) {
-    c = rotateFaces(c, m, d);
-    c = rotateLines(c, m, d);
+Cube transform(Cube c, Move m) {
+    c = rotateFaces(c, m);
+    c = rotateLines(c, m);
     return c;
 }
 
-int isFaceSolved(Face f) {
+static int isFaceSolved(Face f) {
     Color c = readColor(f, CC);
     int i;
     for (i=1; i<9; i++) {
@@ -250,7 +294,7 @@ int isCubeSolved(Cube c) {
     return 1;
 }
 
-Face faceFactory(Color c) {
+static Face faceFactory(Color c) {
     Face f;
     int i;
     for(i=0; i<9; i++) {
@@ -274,10 +318,10 @@ Cube cubeFactory() {
 Cube scramble(Cube c, Move *m, int n) {
     int i;
     for(i=0 ; i<n ; i++) {
-        m[i] = Z;   // TODO: randomize
-        int d = 0;  // TODO: randomize
-        c = transform(c, m[i], d);
+        m[i] = rand() % NUM_MOVES;
+        c = transform(c, m[i]);
     }
+    return c;
 }
 
 static void printColor(Color c) {
@@ -347,20 +391,19 @@ void printCube(Cube c) {
 }
 
 int main() {
+    Move moves[] = { U, DI, X };
     Cube c = cubeFactory();
+
     printCube(c);
+    int i;
+    for(i=0 ; i < sizeof(moves) / sizeof(moves[0]) ; i++) {
+        c = transform(c, moves[i]);
+        printCube(c);
+    }
 
-    Cube c1 = transform(c, L, CW);
-    printCube(c1);
-
-    Cube c2 = transform(c1, U, CW);
-    printCube(c2);
-
-    Cube c3 = transform(c2, B, CW);
-    printCube(c3);
-
-    Cube c4 = transform(c3, D, CW);
-    printCube(c4);
+    // Move smoves[10];
+    // Cube cnew = scramble(c, smoves, 10);
+    // printCube(cnew);
 
     // Face u, d, l, r, f, b;
     // writeColor(u, CC, WHITE);

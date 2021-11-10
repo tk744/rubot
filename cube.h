@@ -4,28 +4,43 @@
 
 #define NUM_FACES 6
 
+/* MODEL REPRESENTATION CONSTANTS */
+
+#define COLOR_BITS 3
+#define NUM_MOVES (ZI+1)
+
 /* TYPE DEFINITIONS */
 
-/* Encoding of valid transformations on a cube. */
-typedef uint8_t Move, Dir;
+/* Encoding for all valid transformations of a cube. */
+typedef uint8_t Move;
 
-/* 3-bit encoding of 6 colors. */
+/* 3-bit encoding for 6 colors. */
 typedef uint8_t Color;
 
-/* Encoding of 9 positions on a face. */
+/* Encoding for 9 positions on a face. */
 typedef uint8_t Pos;
 
-/* Face represented as 9 3-bit Color values sorted by Pos value. */
+/* Face encoded as 9 3-bit Color values sorted by Pos value. */
 typedef uint32_t Face;
 
-/* Cube represented as 6 faces indexed by the first 6 Move values. */
+/* Cube encoded as 6 faces.
+ * `f` can be indexed by the first 6 Move values. */
 typedef struct { Face f[6]; } Cube;
 
 /* ENUMERATIONS */
 
-/* Guaranteed to start at 0 for array indexing. */
-const Move  U=0, D=1, R=2, L=3, F=4, B=5, X=6, Y=7, Z=8;
-const Dir   CW=0, CCW=1;    // clockwise, counterclockwise
+/* Guaranteed that base moves start at 0 for array indexing. 
+ * Guaranteed that values on the intervals [U,Z] and [UI,ZI] are continuous.
+ * Guaranteed that values on the interval [0, NUM_MOVES] are continuous. */
+const Move  U=0, UI=9,   // face rotations
+            D=1, DI=10,
+            R=2, RI=11,
+            L=3, LI=12,
+            F=4, FI=13,
+            B=5, BI=14,
+            X=6, XI=15,  // cube rotations
+            Y=7, YI=16,
+            Z=8, ZI=17;
 
 const Color WHITE=1, YELLOW=2, RED=3, ORANGE=4, BLUE=5, GREEN=6;
 
@@ -94,8 +109,5 @@ Cube scramble(Cube c, Move *m, int n);
  * Returns a new cube by applying the transformation given by move `m` and direction `d` to cube `c`.
  * @param c the original cube which remains unchanged
  * @param m the move to apply
- * @param d the direction to apply the move
  */
-Cube transform(Cube c, Move m, Dir d);
-
-Move *solve(Cube c, Move *m);
+Cube transform(Cube c, Move m);
