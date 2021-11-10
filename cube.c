@@ -6,9 +6,8 @@
  * This source file implements the state and behavior of a Rubik's cube.
  * 
  * TODO:
- * 1. fix rotateLines(). Direction seems broken.
- * 2. fix scramble().
- * 3. write saveCube() and loadCube() functions.
+ * 1. fix rotateLines(). Direction and inverse are broken.
+ * 2. write saveCube() and loadCube() functions.
  */
 
 /* TYPE DEFINITIONS & ENUMERATIONS */
@@ -167,7 +166,7 @@ static Cube rotateFaces(Cube c, Move m) {
 static Cube rotateLines(Cube c, Move m) {
     Dir d = getDir(m);
 
-    static int LINES = 4;   // number of lines
+    static int LINES = 4;   // number of lines in rotation
 
     /* Represents the linear positions that are swapped between faces in a rotation. */
     static Pos  UE[3] = { UL, UU, UR },
@@ -255,7 +254,7 @@ static Cube rotateLines(Cube c, Move m) {
         if (!i) readColors(c.f[x[i]], l[i], tmp, 3); 
 
         // compute swap index
-        int j = (((d == CW) || (i % 2) ? i : LINES-i) + 1) % LINES;
+        int j = ((((d == CW) || (i % 2)) ? i : LINES-i) + 1) % LINES;
 
         // write new line to buffer
         readColors(c.f[x[j]], l[j], buffer, 3);
@@ -284,7 +283,7 @@ static int isFaceSolved(Face f) {
     return 1;
 }
 
-int isCubeSolved(Cube c) {
+int isSolved(Cube c) {
     int i;
     for (i=0; i<6; i++) {
         if (!isFaceSolved(c.f[i])) {
@@ -391,6 +390,8 @@ void printCube(Cube c) {
 }
 
 int main() {
+    printf("%d bytes required to store cube state.\n", sizeof(Cube));
+
     Move moves[] = { U, DI, X };
     Cube c = cubeFactory();
 
@@ -404,18 +405,4 @@ int main() {
     // Move smoves[10];
     // Cube cnew = scramble(c, smoves, 10);
     // printCube(cnew);
-
-    // Face u, d, l, r, f, b;
-    // writeColor(u, CC, WHITE);
-
-    // Face f1 = 51396313;
-    // Face f2 = rotateFace(f1, CW);
-    // Face f3 = rotateFace(f1, CCW);
-    // printFace(f1);
-    // printf("\nClockwise:\n");
-    // printFace(f2);
-    // printf("\nCClockwise:\n");
-    // printFace(f3);
-    // printf("\nSolved: %d\n", isFaceSolved(f1));
-    // printf("%d bytes required to store cube state.", sizeof(Cube));
 }

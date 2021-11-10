@@ -73,7 +73,7 @@ Cube loadCube(char *str);
  * Returns 1 if the cube `c` is solved, 0 otherwise.
  * @param c a cube
  */
-int isCubeSolved(Cube c);
+int isSolved(Cube c);
 
 /**
  * Returns the color on face `f` at position `p`. 
