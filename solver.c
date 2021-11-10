@@ -1,4 +1,5 @@
-#include "cube.c"
+#include <stdio.h>
+#include "cube.h"
 
 /* TODO:
  * 1. Function to orient the cube white down red forward.
@@ -14,22 +15,26 @@
  *    iv.  Reorient cube initially to minimize U/D conversions. */
 
 /* Returns a list of moves to solve a cube from an initial state `st` using the CFOP algorithm. */
-enum Move *solve(struct Cube st) {
+int solve(Cube c, Move *m) {
     return;
 }
 
-enum Move *f2l(struct Cube st) {
+int f2l(Cube c, Move *m) {
     /* Note: can use Y and YI moves to reorient bc they will be removed post-process. */
 }
 
-enum Move *oll(struct Cube st) {
+int oll(Cube c, Move *m) {
 
 }
 
-enum Move *pll(struct Cube st) {
+int pll(Cube c, Move *m) {
 
 }
 
-enum Move *trim_xyz(enum Move *mv) {
+int trim_xyz(Move *dest, Move *src) {
     // remove all cube rotations X/XI, Y/YI, Z/ZI by computing perspective change
+}
+
+int main() {
+    
 }
