@@ -108,3 +108,7 @@ Cube scramble(Cube c, Move *m, int n);
  * @param m the move to apply
  */
 Cube transform(Cube c, Move m);
+
+Cube applyMoves(Cube c, Move *m, int count);
+
+int solve(Cube c, Move *m);

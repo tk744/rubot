@@ -1,13 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include "cube.h"
-
 /**
- * This source file implements the state and behavior of a Rubik's cube.
+ * This file implements the state and behavior of a Rubik's cube.
  * 
  * TODO:
  * 1. write saveCube() and loadCube() functions.
  */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include "solver.h"
 
 /* MODEL REPRESENTATION CONSTANTS */
 
@@ -239,6 +239,14 @@ Cube transform(Cube c, Move m) {
     return c;
 }
 
+Cube applyMoves(Cube c, Move *m, int count) {
+    int i;
+    for(i=0 ; i<count ; i++) {
+        c = transform(c, m[i]);
+    }
+    return c;
+}
+
 static int isFaceSolved(Face f) {
     Color c = readColor(f, CC);
     int i;
@@ -364,20 +372,20 @@ void printCube(Cube c) {
 
 // }
 
-int main() {
-    printf("%d bytes required to store cube state.\n", sizeof(Cube));
+// int main() {
+//     printf("%d bytes required to store cube state.\n", sizeof(Cube));
 
-    Move moves[] = { U, U, DI, DI, R, R, LI, LI, F, F, BI, BI };
-    Cube c = cubeFactory();
+//     Move moves[] = { U, U, DI, DI, R, R, LI, LI, F, F, BI, BI };
+//     Cube c = cubeFactory();
 
-    printCube(c);
-    int i;
-    for(i=0 ; i < sizeof(moves) / sizeof(moves[0]) ; i++) {
-        c = transform(c, moves[i]);
-        printCube(c);
-    }
+//     printCube(c);
+//     int i;
+//     for(i=0 ; i < sizeof(moves) / sizeof(moves[0]) ; i++) {
+//         c = transform(c, moves[i]);
+//         printCube(c);
+//     }
 
-    // Move smoves[10];
-    // Cube cnew = scramble(c, smoves, 10);
-    // printCube(cnew);
-}
+//     // Move smoves[10];
+//     // Cube cnew = scramble(c, smoves, 10);
+//     // printCube(cnew);
+// }
