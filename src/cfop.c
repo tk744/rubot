@@ -18,64 +18,87 @@
 #define F2L_MAX 0
 #define OLL_MAX 0
 #define PLL_MAX 0
+#define MAX_STEPS WC_MAX+F2L_MAX+OLL_MAX+PLL_MAX
 
 #define NUM_STEPS 4
 
 typedef struct {
-    Move *m;
-    int c;
-} MoveCount;
+    Move *x;    // stack data
+    int size;   // stack size
+} MoveStack;
 
-static Cube wc(Cube c, Move *m, int *n) {
-    *n = 10;
-    return transform(c, U);
+static MoveStack stackFactory(int size) {
+    Move s[size];
+    MoveStack ms = { s, 0 }; 
+    return ms;
 }
 
-static int f2l(Cube c, Move *m) {
+static MoveStack push(MoveStack ms, Move m) {
+    ms.x[ms.size++] = m;
+    return ms;
+}
+
+static Move pop(MoveStack ms) {
+    return ms.x[--ms.size];
+}
+
+static MoveStack wc(Cube c, MoveStack ms) {
+    ms = push(ms, U);
+    return ms;
+}
+
+static MoveStack f2l(Cube c, MoveStack ms) {
     /* Note: can use Y and YI moves to reorient bc they will be removed post-process. */
+    return ms;
 }
 
-static int oll(Cube c, Move *m) {
-
+static MoveStack oll(Cube c, MoveStack ms) {
+    return ms;
 }
 
-static int pll(Cube c, Move *m) {
-
+static MoveStack pll(Cube c, MoveStack ms) {
+    return ms;
 }
 
-int trim_xyz(Move *dest, Move *src) {
+int trim_xyz(Move *dest, Move *src, int n) {
     // remove all cube rotations X/XI, Y/YI, Z/ZI by computing perspective change
 }
 
-// Cube (*wc_ptr)(Cube, Move *, int *) = wc;
-
-int solve(Cube c, Move *m) {
-
-
-
+int solve(Cube c, Move *m, int max_steps) {
     /* TODO: use function pointer array
     int i;
     for(i=0; i<NUM_STEPS ; i++) {
         Cube (*wc_ptr)(Cube, Move *, int *) = wc
     }
     */
+    
+    MoveStack ms = { m, max_steps };
 
-    return 0;
+    ms = wc(applyMoves(c, ms.x, ms.size), ms);
+    ms = f2l(applyMoves(c, ms.x, ms.size), ms);
+    ms = oll(applyMoves(c, ms.x, ms.size), ms);
+    ms = pll(applyMoves(c, ms.x, ms.size), ms);
+
+    m = ms.x;
+    return ms.size;
 }
 
 int main() {
-    Cube c = cubeFactory();
-    printCube(c);
+    Cube c0 = cubeFactory();
 
     // scramble
     Move moves[] = { U, U, DI, DI, R, R, LI, LI, F, F, BI, BI };
-    c = applyMoves(c, moves, sizeof(moves) / sizeof(moves[0]));
-    printCube(c);
+    Cube c1 = applyMoves(c0, moves, sizeof(moves) / sizeof(moves[0]));
 
-    // white cross
-    Move m[WC_MAX];
-    int count;
-    c = wc(c, m, &count);
-    printCube(c);
-    printf("%d", count);
+    // solve
+    Move solution[MAX_STEPS];
+    int steps = solve(c0, solution, MAX_STEPS);
+    Cube c2 = applyMoves(c0, solution, steps);
+
+    printf("Original cube:\n");
+    printCube(c0);
+    printf("Scrambled cube:\n");
+    printCube(c1);
+    printf("Solved cube (WIP): %d steps\n", steps);
+    printCube(c2);
 }
