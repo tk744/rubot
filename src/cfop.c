@@ -84,16 +84,17 @@ int solve(Cube c, Move *m, int max_steps) {
 }
 
 int main() {
-    Cube c0 = cubeFactory();
+    Cube c0, c1, c2;
+    c0 = cubeFactory();
 
     // scramble
     Move moves[] = { U, U, DI, DI, R, R, LI, LI, F, F, BI, BI };
-    Cube c1 = applyMoves(c0, moves, sizeof(moves) / sizeof(moves[0]));
+    c1 = applyMoves(c0, moves, sizeof(moves) / sizeof(moves[0]));
 
     // solve
     Move solution[MAX_STEPS];
     int steps = solve(c0, solution, MAX_STEPS);
-    Cube c2 = applyMoves(c0, solution, steps);
+    c2 = applyMoves(c0, solution, steps);
 
     printf("Original cube:\n");
     printCube(c0);
