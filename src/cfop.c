@@ -93,8 +93,8 @@ int main() {
 
     // solve
     Move solution[MAX_STEPS];
-    int steps = solve(c0, solution, MAX_STEPS);
-    c2 = applyMoves(c0, solution, steps);
+    int steps = solve(c1, solution, MAX_STEPS);
+    c2 = applyMoves(c1, solution, steps);
 
     printf("Original cube:\n");
     printCube(c0);
