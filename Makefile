@@ -1,9 +1,9 @@
+TARGET_EXEC = $(BUILD_DIR)/rubot
+
 # .c, .h, and .o files
 SRC_DIR := ./src
 INC_DIR := ./include
 BUILD_DIR := ./build
-
-TARGET_EXEC := $(BUILD_DIR)/rubot
 
 # Get list of all .c files
 SRCS := $(shell find $(SRC_DIR) -name '*.c')
