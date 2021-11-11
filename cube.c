@@ -371,21 +371,3 @@ void printCube(Cube c) {
 // Cube loadCube(char *str) {
 
 // }
-
-// int main() {
-//     printf("%d bytes required to store cube state.\n", sizeof(Cube));
-
-//     Move moves[] = { U, U, DI, DI, R, R, LI, LI, F, F, BI, BI };
-//     Cube c = cubeFactory();
-
-//     printCube(c);
-//     int i;
-//     for(i=0 ; i < sizeof(moves) / sizeof(moves[0]) ; i++) {
-//         c = transform(c, moves[i]);
-//         printCube(c);
-//     }
-
-//     // Move smoves[10];
-//     // Cube cnew = scramble(c, smoves, 10);
-//     // printCube(cnew);
-// }
