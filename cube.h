@@ -26,23 +26,23 @@ typedef struct { Face f[6]; } Cube;
 
 /* ENUMERATIONS */
 
-const Color WHITE=1, YELLOW=2, RED=3, ORANGE=4, BLUE=5, GREEN=6;
+const static Color  WHITE=1, YELLOW=2, RED=3, ORANGE=4, BLUE=5, GREEN=6;
 
 /* Guaranteed that base moves start at 0 for array indexing. 
  * Guaranteed that values on the intervals [U,Z] and [UI,ZI] are continuous.
  * Guaranteed that values on the interval [0, NUM_MOVES] are continuous. */
-const Move  U=0, UI=9,   // face rotations
-            D=1, DI=10,
-            R=2, RI=11,
-            L=3, LI=12,
-            F=4, FI=13,
-            B=5, BI=14,
-            X=6, XI=15,  // cube rotations
-            Y=7, YI=16,
-            Z=8, ZI=17;
+const static Move   U=0, UI=9,   // face rotations
+                    D=1, DI=10,
+                    R=2, RI=11,
+                    L=3, LI=12,
+                    F=4, FI=13,
+                    B=5, BI=14,
+                    X=6, XI=15,  // cube rotations
+                    Y=7, YI=16,
+                    Z=8, ZI=17;
 
 /* Guaranteed to start at 0 for array indexing. */
-const Pos   CC=0, UL=1, UU=2, UR=3, RR=4, DR=5, DD=6, DL=7, LL=8;
+const static Pos    CC=0, UL=1, UU=2, UR=3, RR=4, DR=5, DD=6, DL=7, LL=8;
 
 /* FUNCTIONS */
 
