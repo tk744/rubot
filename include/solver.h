@@ -111,4 +111,4 @@ Cube transform(Cube c, Move m);
 
 Cube applyMoves(Cube c, Move *m, int count);
 
-int solve(Cube c, Move *m);
+int solve(Cube c, Move *m, int max_steps);

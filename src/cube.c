@@ -1,7 +1,8 @@
 /**
  * This file implements the state and behavior of a Rubik's cube.
- * 
- * TODO:
+ */
+
+/* TODO:
  * 1. write saveCube() and loadCube() functions.
  */
 
@@ -63,36 +64,6 @@ static Face writeColors(Face f, Pos *p, Color *c, int count) {
     }
     return f;
 }
-
-// static Move baseMove(Move m) {
-//     if (m == U || m == UI) {
-//         return U;
-//     }
-//     else if (m == D || m == DI) {
-//         return D;
-//     }
-//     else if (m == R || m == RI) {
-//         return R;
-//     }
-//     else if (m == L || m == LI) {
-//         return L;
-//     }
-//     else if (m == F || m == FI) {
-//         return F;
-//     }
-//     else if (m == B || m == BI) {
-//         return B;
-//     }
-//     else if (m == X || m == XI) {
-//         return X;
-//     }
-//     else if (m == Y || m == YI) {
-//         return Y;
-//     }
-//     else if (m == Z || m == ZI) {
-//         return Z;
-//     }
-// }
 
 static Dir getDir(Move m) {
     return (U <= m && m <= Z) ? CW : CCW;
