@@ -2,113 +2,81 @@
 
 /* RUBIK'S CUBE CONSTANTS */
 
-#define NUM_FACES 6         // number of faces/colors on a cube
-#define NUM_POSITIONS 9     // number of positions on a face
-#define NUM_MOVES 18        // number of supported moves
+#define NUM_POS 9     // number of positions on a face
+#define NUM_FACES 6         // number of faces and colors on a cube
 
 /* TYPE DEFINITIONS */
 
+typedef uint8_t Id;
+
 /* 3-bit encoding for 6 colors. */
-typedef uint8_t Color;
+typedef Id ColorId;
 
-/* Encoding for all valid transformations of a cube. */
-typedef uint8_t Move;
+/* Encoding for 9 positions of a face. 
+ * Guaranteed to range on the interval [0, NUM_POS-1] for indexing. */
+typedef Id PosId;
 
-/* Encoding for 9 positions on a face. */
-typedef uint8_t Pos;
+/* Encoding for 6 faces of a cube. 
+ * Guaranteed to range on the interval [0, NUM_FACES-1] for indexing. */
+typedef Id FaceId;
 
-/* Face encoded as 9 3-bit Color values sorted by Pos value. */
+/* Face encoded as 9 3-bit ColorId values sorted by PosId value. */
 typedef uint32_t Face;
 
-/* Cube encoded as 6 faces.
- * `f` can be indexed by the first 6 Move values. */
-typedef struct { Face f[6]; } Cube;
+/* Cube encoded as 6 faces sorted by FaceId values. */
+typedef struct {
+    Face fs[6];
+} Cube;
+
+/* Move encoded as a face id, inverse-rotation flag, double-rotation flag, and cube-rotation flag. */
+typedef struct {
+    FaceId fid;     // face id: id of face(s) rotated by the move
+    int b_c : 1;    // cube flag: 0 if face-rotation, 1 if cube-rotation
+    int b_d : 1;    // double flag: 0 if quarter-rotation, 1 if half-rotation
+    int b_i : 1;    // inverse flag: 0 if clockwise, 1 if counter-clockwise
+} Move;
 
 /* ENUMERATIONS */
 
-const static Color  WHITE=1, YELLOW=2, RED=3, ORANGE=4, BLUE=5, GREEN=6;
+const static ColorId    WHITE=1, YELLOW=2, RED=3, ORANGE=4, BLUE=5, GREEN=6;
 
-/* Guaranteed that base moves start at 0 for array indexing. 
- * Guaranteed that values on the intervals [U,Z] and [UI,ZI] are continuous.
- * Guaranteed that values on the interval [0, NUM_MOVES] are continuous. */
-const static Move   U=0, UI=9,   // face rotations
-                    D=1, DI=10,
-                    R=2, RI=11,
-                    L=3, LI=12,
-                    F=4, FI=13,
-                    B=5, BI=14,
-                    X=6, XI=15,  // cube rotations
-                    Y=7, YI=16,
-                    Z=8, ZI=17;
+const static PosId      CC=0, UL=1, UU=2, UR=3, RR=4, DR=5, DD=6, DL=7, LL=8;
 
-/* Guaranteed to start at 0 for array indexing. */
-const static Pos    CC=0, UL=1, UU=2, UR=3, RR=4, DR=5, DD=6, DL=7, LL=8;
+const static FaceId     U=0, D=1, R=2, L=3, F=4, B=5;
+const static FaceId     X=7, Y=8, Z=9; // dummy ids for cube-rotation moves
+
+const static Move       M_U = { U, 0, 0, 0 }, M_UI = { U, 0, 0, 1 },
+                        M_D = { D, 0, 0, 0 }, M_DI = { D, 0, 0, 1 },
+                        M_R = { R, 0, 0, 0 }, M_RI = { R, 0, 0, 1 },
+                        M_L = { L, 0, 0, 0 }, M_LI = { L, 0, 0, 1 },
+                        M_F = { F, 0, 0, 0 }, M_FI = { F, 0, 0, 1 },
+                        M_B = { B, 0, 0, 0 }, M_BI = { B, 0, 0, 1 },
+                        M_X = { X, 1, 0, 0 }, M_XI = { X, 1, 0, 1 },
+                        M_Y = { Y, 1, 0, 0 }, M_YI = { Y, 1, 0, 1 },
+                        M_Z = { Z, 1, 0, 0 }, M_ZI = { Z, 1, 0, 1 };
 
 /* FUNCTIONS */
 
-/** 
- * Pretty-prints the cube `c` to the console.
- * @param c a cube
- */
-void printCube(Cube c);
+ColorId readColor(Cube c, FaceId fid, PosId pid);
 
-/**
- * Encodes the state of cube `c` into string `*str`. 
- * Returns `*str`.
- * @param c a cube
- * @param *str the encoded savestring that is written into
- */
-char *saveCube(Cube c, char *str);
+void readColors(Cube c, FaceId *fids, PosId *pids, ColorId *cids, int n);
 
-/**
- * Decodes the string `*str` into a cube and returns it.
- * @param *str an encoded savestring
- */
-Cube loadCube(char *str);
+Cube writeColor(Cube c, FaceId fid, PosId pid, ColorId cid);
 
-/**
- * Returns 1 if the cube `c` is solved, 0 otherwise.
- * @param c a cube
- */
+Cube writeColors(Cube c, FaceId *fids, PosId *pids, ColorId *cids, int n);
+
 int isSolved(Cube c);
 
-/**
- * Returns the color on face `f` at position `p`. 
- * @param f a face
- * @param p a position 
- */
-Color readColor(Face f, Pos p);
+Cube applyMove(Cube c, Move m);
 
-/**
- * Reads the colors at an array of positions `*p` on face `f` into array `*c`.
- * @param f a face
- * @param *p an array of positions that remains unchanged
- * @param *c an array that the colors are written into
- * @param count the length of `*p` and `*c`
- */
-Color *readColors(Face f, Pos *p, Color *c, int count);
+Cube applyMoves(Cube c, Move *ms, int n);
 
-/**
- * Returns a new solved cube.
- */
-Cube cubeFactory();
+Cube solvedCubeFactory();
 
-/**
- * Applies `n` random moves to the cube `c` to scramble it and writes those moves to array `*m`. 
- * Returns the new scrambled cube.
- * @param c a cube to be scrambled
- * @param *m an array that the moves are written into
- * @param n the number of random moves to apply
- */
-Cube scramble(Cube c, Move *m, int n);
+Cube scrambledCubeFactory(Move *ms, int n);
 
-/**
- * Returns a new cube by applying the transformation given by move `m` and direction `d` to cube `c`.
- * @param c the original cube which remains unchanged
- * @param m the move to apply
- */
-Cube transform(Cube c, Move m);
+Cube savedCubeFactory(char *str);
 
-Cube applyMoves(Cube c, Move *m, int count);
+char *saveCube(Cube c, char *str, int n);
 
-int solve(Cube c, Move *m, int max_steps);
+void printCube(Cube c);
