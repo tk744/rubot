@@ -40,16 +40,16 @@ Cube writeColors(Cube c, FaceId *fids, PosId *pids, ColorId *cids, int n) {
     return c;
 }
 
-static Cube shiftColors(Cube c, FaceId *fids, PosId *pids, int n, int stride, int inv) {
+static Cube shiftColors(Cube c, FaceId *fids, PosId *pids, int n, int stride, int b_i) {
     ColorId tmp[stride];
     ColorId cid;
 
     int i, i_c, i_n;
     for (i=0 ; i<n ; i++) {
         // get current color index
-        i_c = (!inv ? i : n-1-i);
+        i_c = (!b_i ? i : n-1-i);
         // get next color index
-        i_n = (!inv ? i+stride : n-1 - (i+stride));
+        i_n = (!b_i ? i+stride : n-1 - (i+stride));
 
         // store color from first stride into tmp
         if (i < stride) {
@@ -93,13 +93,13 @@ Cube applyMove(Cube c, Move m) {
     }
     else if (m.fid == R) {
         static FaceId rfids[12] = { D, D, D, B, B, B, U, U, U, F, F, F };
-        static PosId rpids[12] = { UR, RR, DR, UL, LL, DL, UR, RR, DR, UR, RR, DR };
+        static PosId rpids[12] = { UR, RR, DR, DL, LL, UL, UR, RR, DR, UR, RR, DR };
         static Shift rss = { rfids, rpids, 12 };
         s = rss;
     }
     else if (m.fid == L) {
         static FaceId lfids[12] = { U, U, U, B, B, B, D, D, D, F, F, F };
-        static PosId lpids[12] = { DL, LL, UL, DR, RR, UR, DL, LL, UL, DL, LL, UL };
+        static PosId lpids[12] = { UL, LL, DL, DR, RR, UR, UL, LL, DL, UL, LL, DL };
         static Shift lss = { lfids, lpids, 12 };
         s = lss;
     }
