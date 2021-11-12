@@ -1,5 +1,8 @@
 /**
  * This file implements the state and behavior of a Rubik's cube.
+ * TODO:
+ * 1. implement inv to copy reverse arrays in shiftColors() function
+ * 2. save and load functions
  */
 
 #include <stdio.h>

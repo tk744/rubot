@@ -23,48 +23,69 @@
 #define NUM_STEPS 4
 
 typedef struct {
-    Move *x;    // stack data
-    int size;   // stack size
+    Move *ms;    // stack data
+    int n;   // stack size
 } MoveStack;
 
-static MoveStack stackFactory(int size) {
-    Move s[size];
-    MoveStack ms = { s, 0 }; 
-    return ms;
+static MoveStack stackFactory(int n) {
+    Move ms[n];
+    MoveStack s = { ms, 0 }; 
+    return s;
 }
 
-static MoveStack push(MoveStack ms, Move m) {
-    ms.x[ms.size++] = m;
-    return ms;
+static MoveStack push(MoveStack s, Move m) {
+    s.ms[s.n++] = m;
+    return s;
 }
 
-static Move pop(MoveStack ms) {
-    return ms.x[--ms.size];
+static Move pop(MoveStack s) {
+    return s.ms[--s.n];
 }
 
-static MoveStack wc(Cube c, MoveStack ms) {
-    ms = push(ms, U);
-    return ms;
+static MoveStack wc(Cube c, MoveStack s) {
+    s = push(s, M_F);
+    s = push(s, M_R);
+    return s;
 }
 
-static MoveStack f2l(Cube c, MoveStack ms) {
+static MoveStack f2l(Cube c, MoveStack s) {
     /* Note: can use Y and YI moves to reorient bc they will be removed post-process. */
-    return ms;
+    return s;
 }
 
-static MoveStack oll(Cube c, MoveStack ms) {
-    return ms;
+static MoveStack oll(Cube c, MoveStack s) {
+    return s;
 }
 
-static MoveStack pll(Cube c, MoveStack ms) {
-    return ms;
+static MoveStack pll(Cube c, MoveStack s) {
+    return s;
 }
 
-int trim_xyz(Move *dest, Move *src, int n) {
-    // remove all cube rotations X/XI, Y/YI, Z/ZI by computing perspective change
+// remove instances of X, XI, Y, YI, Z, ZI
+// by computing perspective change
+int trim_xyz(Move *ms, int n) {
+    FaceId map[NUM_FACES];
+    int size = 0;
+
+    int i;
+    for(i=0 ; i<NUM_FACES ; i++) {
+        map[i] = i;
+    }
+
+    for(i=0 ; i<n ; i++) {
+        if (!ms[i].b_c) {   // apply map
+            Move m_mapped = { map[ms[i].fid], ms[i].b_c, ms[i].b_d, ms[i].b_i };
+            ms[size++] = m_mapped;
+        }
+        else {              // update map
+
+        }
+    }
+
+    return size;
 }
 
-int solve(Cube c, Move *m, int max_steps) {
+int solve(Cube c, Move *ms, int n) {
     /* TODO: use function pointer array
     int i;
     for(i=0; i<NUM_STEPS ; i++) {
@@ -72,23 +93,22 @@ int solve(Cube c, Move *m, int max_steps) {
     }
     */
     
-    MoveStack ms = { m, max_steps };
+    MoveStack s = { ms, n };
 
-    ms = wc(applyMoves(c, ms.x, ms.size), ms);
-    ms = f2l(applyMoves(c, ms.x, ms.size), ms);
-    ms = oll(applyMoves(c, ms.x, ms.size), ms);
-    ms = pll(applyMoves(c, ms.x, ms.size), ms);
+    s = wc(applyMoves(c, ms, s.n), s);
+    s = f2l(applyMoves(c, ms, s.n), s);
+    s = oll(applyMoves(c, ms, s.n), s);
+    s = pll(applyMoves(c, ms, s.n), s);
 
-    m = ms.x;
-    return ms.size;
+    return s.n;
 }
 
-int main() {
-    Cube c0, c1, c2;
-    c0 = cubeFactory();
+void demo1() {
+    Cube c1, c2, c3;
+    Cube c0 = solvedCubeFactory();
 
     // scramble
-    Move moves[] = { U, U, DI, DI, R, R, LI, LI, F, F, BI, BI };
+    Move moves[] = { M_U, M_U, M_DI, M_DI, M_R, M_R, M_LI, M_LI, M_F, M_F, M_BI, M_BI };
     c1 = applyMoves(c0, moves, sizeof(moves) / sizeof(moves[0]));
 
     // solve
@@ -102,4 +122,28 @@ int main() {
     printCube(c1);
     printf("Solved cube (WIP): %d steps\n", steps);
     printCube(c2);
+}
+
+void demo2() {
+    Cube c0 = solvedCubeFactory();
+
+    // scramble
+    Move moves[] = { M_U, M_U, M_DI, M_DI, M_R, M_R, M_LI, M_LI, M_F, M_F, M_BI, M_BI };
+    Cube c1 = applyMoves(c0, moves, sizeof(moves) / sizeof(moves[0]));
+
+    // solve
+    Move solution[MAX_STEPS];
+    int steps = solve(c1, solution, MAX_STEPS);
+    Cube c2 = applyMoves(c1, solution, steps);
+
+    printf("Original cube:\n");
+    printCube(c0);
+    printf("Scrambled cube:\n");
+    printCube(c1);
+    printf("Solved cube (WIP): %d steps\n", steps);
+    printCube(c2);
+}
+
+int main() {
+    demo1();
 }
