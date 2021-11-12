@@ -1,8 +1,8 @@
 /**
  * This file implements the state and behavior of a Rubik's cube.
  * TODO:
- * 1. implement inv to copy reverse arrays in shiftColors() function
- * 2. save and load functions
+ * 1. save and load functions.
+ * 2. random moves for scramble cube factory function.
  */
 
 #include <stdio.h>
@@ -40,42 +40,33 @@ Cube writeColors(Cube c, FaceId *fids, PosId *pids, ColorId *cids, int n) {
     return c;
 }
 
-static Id *reverseArray(Id *arr, int n) {
-    int start = 0, end = n-1;
-    int tmp;
-    while(start < end) {
-        tmp = arr[start];
-        arr[start] = arr[end];
-        arr[end] = tmp;
-        start++;
-        end--;
-    }
-    return arr;
-}
-
 static Cube shiftColors(Cube c, FaceId *fids, PosId *pids, int n, int stride, int inv) {
-    // TODO: rotate arrays for inverse
-
-    ColorId buffer[stride], tmp[stride];
+    ColorId tmp[stride];
     ColorId cid;
 
-    // store colors from first stride into tmp
-    readColors(c, fids, pids, tmp, stride);
+    int i, i_c, i_n;
+    for (i=0 ; i<n ; i++) {
+        // get current color index
+        i_c = (!inv ? i : n-1-i);
+        // get next color index
+        i_n = (!inv ? i+stride : n-1 - (i+stride));
 
-    int i, i_next;
-    for (i=0 ; i<n ; i+=stride) {
-        // compute index of next stride
-        i_next = (i+stride) % n;
+        // store color from first stride into tmp
+        if (i < stride) {
+            tmp[i] = readColor(c, fids[i_c], pids[i_c]);
+        }
 
-        // read colors from current stride into buffer
-        readColors(c, fids+i_next, pids+i_next, buffer, stride);
+        // read colors from next stride into buffer
+        if (i_n > n-1 || i_n < 0) {
+            cid = tmp[i % stride];
+        }
+        else {
+            cid = readColor(c, fids[i_n], pids[i_n]);
+        }
 
-        // write colors from buffer into next stride
-        c = writeColors(c, fids+i, pids+i, buffer, stride);
+        // write color from buffer into current stride
+        c = writeColor(c, fids[i_c], pids[i_c], cid);
     }
-
-    // write color from tmp into last stride
-    c = writeColors(c, fids+(n-stride), pids+(n-stride), tmp, stride);
 
     return c;
 }
@@ -283,30 +274,3 @@ void printCube(Cube c) {
     }
     printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
 }
-
-// int main() {
-//     Cube c0 = solvedCubeFactory();
-
-//     int n = 6, stride = 1;
-//     FaceId fids[] = { U, L, R, B, D, F };
-//     PosId pids[] = { UU, LL, RR, UU, DL, DR };
-
-//     Cube c1 = applyMove(c0, M_Z);
-//     Cube c2 = applyMove(c1, M_D);
-
-//     // scramble
-//     // Move moves[] = { M_U, M_U, M_DI, M_DI, M_R, M_R, M_LI, M_LI, M_F, M_F, M_BI, M_BI };
-//     // Cube c1 = applyMoves(c0, moves, sizeof(moves) / sizeof(moves[0]));
-//     // printf("DEBUG 1: %d %d %d\n", readColor(c1.fs[U], CC), readColor(c1.fs[U], UL), readColor(c1.fs[U], UU));
-
-//     // print
-//     printf("\nOriginal cube:\n");
-//     printCube(c0);
-//     printf("%d\n", isSolved(c0));
-//     printf("New cube:\n");
-//     printCube(c1);
-//     printf("%d\n", isSolved(c1));
-//     printf("New cube:\n");
-//     printCube(c2);
-//     printf("%d\n", isSolved(c2));
-// }
