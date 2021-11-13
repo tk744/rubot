@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "solver.h"
+#include "cube.h"
 
 /* TODO:
  * 1. Function to orient the cube white down red forward.

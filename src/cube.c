@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "solver.h"
+#include "cube.h"
 
 /* MODEL REPRESENTATION CONSTANTS */
 

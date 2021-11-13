@@ -57,10 +57,6 @@ const static Move       M_U = { U, 0, 0, 0 }, M_UI = { U, 0, 0, 1 },
 
 /* FUNCTIONS */
 
-void printMove(Move m);
-
-void printCube(Cube c);
-
 ColorId readColor(Cube c, FaceId fid, PosId pid);
 
 void readColors(Cube c, FaceId *fids, PosId *pids, ColorId *cids, int n);
@@ -78,6 +74,10 @@ Cube solvedCubeFactory();
 Cube scrambledCubeFactory(Move *ms, int n);
 
 int isSolved(Cube c);
+
+void printCube(Cube c);
+
+void printMove(Move m);
 
 int solve(Cube c, Move *ms, int n);
 
