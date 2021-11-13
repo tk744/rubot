@@ -1,3 +1,10 @@
+/**
+ * This library defines the state and behavior of a Rubik's cube.
+ */
+
+#ifndef CUBE_H
+#define CUBE_H
+
 #include <stdint.h>
 
 /* RUBIK'S CUBE CONSTANTS */
@@ -79,6 +86,6 @@ void printCube(Cube c);
 
 void printMove(Move m);
 
-int solve(Cube c, Move *ms, int n);
+void printMoves(Move *ms, int n);
 
-int trim_xyz(Cube c, Move *ms, int n);
+#endif

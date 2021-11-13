@@ -315,5 +315,13 @@ void printMove(Move m) {
     if (m.b_i) {
         printf("'");
     }
+}
+
+void printMoves(Move *ms, int n) {
+    int i;
+    for (i=0 ; i<n ; i++) {
+        printMove(ms[i]);
+        printf(" ");
+    }
     printf("\n");
 }

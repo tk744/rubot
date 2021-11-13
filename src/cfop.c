@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "cube.h"
+#include "solver.h"
 
 /* TODO:
  * 1. Function to orient the cube white down red forward.
@@ -100,87 +100,4 @@ int solve(Cube c, Move *ms, int n) {
     s = pll(applyMoves(c, ms, s.n), s);
 
     return s.n;
-}
-
-void demo1() {
-    Cube c1, c2, c3;
-    Cube c0 = solvedCubeFactory();
-
-    // scramble
-    Move moves[] = { M_U, M_U, M_DI, M_DI, M_R, M_R, M_LI, M_LI, M_F, M_F, M_BI, M_BI };
-    c1 = applyMoves(c0, moves, sizeof(moves) / sizeof(moves[0]));
-
-    // solve
-    Move solution[MAX_STEPS];
-    int steps = solve(c1, solution, MAX_STEPS);
-    c2 = applyMoves(c1, solution, steps);
-
-    printf("Original cube:\n");
-    printCube(c0);
-    printf("Scrambled cube:\n");
-    printCube(c1);
-    printf("Solved cube (WIP): %d steps\n", steps);
-    printCube(c2);
-}
-
-void demo2() {
-    Cube c0 = solvedCubeFactory();
-
-    // scramble
-    Move moves[] = { M_U, M_U, M_DI, M_DI, M_R, M_R, M_LI, M_LI, M_F, M_F, M_BI, M_BI };
-    Cube c1 = applyMoves(c0, moves, sizeof(moves) / sizeof(moves[0]));
-
-    // solve
-    Move solution[MAX_STEPS];
-    int steps = solve(c1, solution, MAX_STEPS);
-    Cube c2 = applyMoves(c1, solution, steps);
-
-    printf("Original cube:\n");
-    printCube(c0);
-    printf("Scrambled cube:\n");
-    printCube(c1);
-    printf("Solved cube (WIP): %d steps\n", steps);
-    printCube(c2);
-}
-
-void demo3() {
-    Cube c = solvedCubeFactory();
-    // printCube(c);
-    Move moves[] = { M_R, M_U, M_LI };
-    int i = 0;
-    do {
-        c = applyMoves(c, moves, sizeof(moves) / sizeof(moves[0]));
-        i++;
-    } while (!isSolved(c));
-    printf("%d steps", i);
-}
-
-void demo4() {
-    Move ms[4] = { M_B, M_LI, M_B, M_RI };
-    Cube c = solvedCubeFactory();
-    printCube(c);
-    
-    int i;
-    for (i=0; i<4 ; i++) {
-        c = applyMove(c, ms[i]);
-        printf("step %d:\n", i+1);
-        printCube(c);
-    }
-}
-
-void demo5() {
-    int n = 100;
-    Move ms[n];
-    Cube c = scrambledCubeFactory(ms, n);
-    
-    // int i;
-    // for (i=0 ; i<n ; i++) {
-    //     printMove(ms[i]);
-    // }
-
-    printCube(c);
-}
-
-int main() {
-    demo3();
 }
