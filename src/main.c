@@ -3,7 +3,7 @@
 #include "solver.h"
 #include "optimizer.h"
 
-void cube_demo() {
+void cubeDemo() {
     Cube c0 = solvedCubeFactory();
 
     int n = 15;
@@ -18,7 +18,7 @@ void cube_demo() {
     printMoves(ms, n);
 }
 
-void degree_demo() {
+void degreeDemo() {
     Move ms[] = { M_R, M_U };
     int n = sizeof(ms) / sizeof(ms[0]);
 
@@ -27,14 +27,14 @@ void degree_demo() {
     printf("Degree: %d", degree(ms, n));
 }
 
-void solver_demo() {
+void solverDemo() {
 
 }
 
-void trimxyz_demo() {
+void trimxyzDemo() {
 
 }
 
 int main() {
-    degree_demo();
+    cubeDemo();
 }
