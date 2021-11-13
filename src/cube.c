@@ -26,16 +26,14 @@ Cube writeColor(Cube c, FaceId fid, PosId pid, ColorId cid) {
 }
 
 void readColors(Cube c, FaceId *fids, PosId *pids, ColorId *cids, int n) {
-    int i;
-    for (i=0 ; i<n ; i++) {
-        cids[i] = readColor(c, fids[i], pids[i]);
+    while (n-- > 0) {
+        *cids++ = readColor(c, *fids++, *pids++);
     }
 }
 
 Cube writeColors(Cube c, FaceId *fids, PosId *pids, ColorId *cids, int n) {
-    int i;
-    for (i=0 ; i<n ; i++) {
-        c = writeColor(c, fids[i], pids[i], cids[i]);
+    while (n-- > 0) {
+        c = writeColor(c, *fids++, *pids++, *cids++);
     }
     return c;
 }
@@ -46,105 +44,94 @@ static Cube shiftColors(Cube c, FaceId *fids, PosId *pids, int n, int stride, in
 
     int i, i_c, i_n;
     for (i=0 ; i<n ; i++) {
-        // get current color index
+        // get current and next color index
         i_c = (!b_i ? i : n-1-i);
-        // get next color index
         i_n = (!b_i ? i+stride : n-1 - (i+stride));
 
         // store color from first stride into tmp
-        if (i < stride) {
-            tmp[i] = readColor(c, fids[i_c], pids[i_c]);
+        if (i<stride) {
+            *(tmp+i) = readColor(c, *(fids+i_c), *(pids+i_c));
         }
 
         // read colors from next stride into buffer
-        if (i_n > n-1 || i_n < 0) {
-            cid = tmp[i % stride];
-        }
-        else {
-            cid = readColor(c, fids[i_n], pids[i_n]);
-        }
+        cid = (i_n>n-1 || i_n<0) ? 
+            *(tmp+(i%stride)) : readColor(c, *(fids+i_n), *(pids+i_n));
 
         // write color from buffer into current stride
-        c = writeColor(c, fids[i_c], pids[i_c], cid);
+        c = writeColor(c, *(fids+i_c), *(pids+i_c), cid);
     }
 
     return c;
 }
 
 Cube applyMove(Cube c, Move m) {
-    typedef struct {
-        FaceId *fids;
-        PosId *pids;
-        int n;
-    } Shift;
+    FaceId *fids;
+    PosId *pids;
 
-    Shift s;        // shift lines of colors around cube
+    // shift lines of colors around cube
     if (m.fid == U) {
         static FaceId ufids[12] = { L, L, L, F, F, F, R, R, R, B, B, B };
         static PosId upids[12] = { UL, UU, UR, UL, UU, UR, UL, UU, UR, UL, UU, UR };
-        static Shift uss = { ufids, upids, 12 };
-        s = uss;
+        fids = ufids;
+        pids = upids;
     }
     else if (m.fid == D) {
         static FaceId dfids[12] = { R, R, R, F, F, F, L, L, L, B, B, B };
         static PosId dpids[12] = { DR, DD, DL, DR, DD, DL, DR, DD, DL, DR, DD, DL };
-        static Shift dss = { dfids, dpids, 12 };
-        s = dss;
+        fids = dfids;
+        pids = dpids;
     }
     else if (m.fid == R) {
         static FaceId rfids[12] = { D, D, D, B, B, B, U, U, U, F, F, F };
         static PosId rpids[12] = { UR, RR, DR, DL, LL, UL, UR, RR, DR, UR, RR, DR };
-        static Shift rss = { rfids, rpids, 12 };
-        s = rss;
+        fids = rfids;
+        pids = rpids;
     }
     else if (m.fid == L) {
         static FaceId lfids[12] = { U, U, U, B, B, B, D, D, D, F, F, F };
         static PosId lpids[12] = { UL, LL, DL, DR, RR, UR, UL, LL, DL, UL, LL, DL };
-        static Shift lss = { lfids, lpids, 12 };
-        s = lss;
+        fids = lfids;
+        pids = lpids;
     }
     else if (m.fid == F) {
         static FaceId ffids[12] = { R, R, R, U, U, U, L, L, L, D, D, D };
         static PosId fpids[12] = { DL, LL, UL, DR, DD, DL, UR, RR, DR, UL, UU, UR };
-        static Shift fss = { ffids, fpids, 12 };
-        s = fss;
+        fids = ffids;
+        pids = fpids;
     }
     else if (m.fid == B) {
         static FaceId bfids[12] = { L, L, L, U, U, U, R, R, R, D, D, D };
         static PosId bpids[12] = { DL, LL, UL, UL, UU, UR, UR, RR, DR, DR, DD, DL };
-        static Shift bss = { bfids, bpids, 12 };
-        s = bss;
+        fids = bfids;
+        pids = bpids;
     }
     else if (m.fid == X) {
         static FaceId xfids[12] = { D, D, D, B, B, B, U, U, U, F, F, F };
         static PosId xpids[12] = { UU, CC, DD, DD, CC, UU, UU, CC, DD, UU, CC, DD };
-        static Shift xss = { xfids, xpids, 12 };
-        s = xss;
+        fids = xfids;
+        pids = xpids;
     }
     else if (m.fid == Y) {
         static FaceId yfids[12] = { L, L, L, F, F, F, R, R, R, B, B, B };
         static PosId ypids[12] = { LL, CC, RR, LL, CC, RR, LL, CC, RR, LL, CC, RR };
-        static Shift yss = { yfids, ypids, 12 };
-        s = yss;
+        fids = yfids;
+        pids = ypids;
     }
     else if (m.fid == Z) {
         static FaceId zfids[12] = { R, R, R, U, U, U, L, L, L, D, D, D };
         static PosId zpids[12] = { DD, CC, UU, RR, CC, LL, UU, CC, DD, LL, CC, RR };
-        static Shift zss = { zfids, zpids, 12 };
-        s = zss;
+        fids = zfids;
+        pids = zpids;
     }
-    c = shiftColors(c, s.fids, s.pids, s.n, 3, m.b_i);
+    c = shiftColors(c, fids, pids, 12, 3, m.b_i);
 
-    if (!m.b_c) {   // rotate faces
-        PosId pids[NUM_POS-1] = { LL, DL, DD, DR, RR, UR, UU, UL };
-        FaceId fids[NUM_POS-1];
-        int i;
-        for (i=0 ; i<NUM_POS-1 ; i++) {
-            fids[i] = m.fid;
-        }
-        c = shiftColors(c, fids, pids, NUM_POS-1, 2, m.b_i);
+    if (!m.b_c) {   // if face rotation, rotate face
+        FaceId fid = m.fid;
+        FaceId fids[NUM_POS-1] = { fid, fid, fid, fid, fid, fid, fid, fid };
+        static PosId fr_pids[NUM_POS-1] = { LL, DL, DD, DR, RR, UR, UU, UL };
+        c = shiftColors(c, fids, fr_pids, NUM_POS-1, 2, m.b_i);
     } 
-    else {          // recursively apply moves for cube rotations
+    else {          // if cube rotation, apply appropriate face rotations
         Move m1, m2;
 
         if (m.fid == X) {
@@ -179,9 +166,8 @@ Cube applyMove(Cube c, Move m) {
 }
 
 Cube applyMoves(Cube c, Move *ms, int n) {
-    int i;
-    for (i=0 ; i<n ; i++) {
-        c = applyMove(c, ms[i]);
+    while(n-- > 0) {
+        c = applyMove(c, *ms++);
     }
     return c;
 }
@@ -192,7 +178,7 @@ Cube solvedCubeFactory() {
     int fid, pid;
     for (fid=0 ; fid<NUM_FACES ; fid++) {
         for (pid=0 ; pid<NUM_POS ; pid++) {
-            c = writeColor(c, fid, pid, cids[fid]);
+            c = writeColor(c, fid, pid, *(cids+fid));
         }
     }
     return c;
@@ -202,10 +188,10 @@ Cube scrambledCubeFactory(Move *ms, int n) {
     Cube c = solvedCubeFactory();
     int i;
     for (i=0 ; i<n ; i++) {
-        ms[i].fid = rand() % (NUM_FACES);
-        ms[i].b_c = 0;
-        ms[i].b_d = rand() % 2;
-        ms[i].b_i = rand() % 2;
+        (ms+i)->fid = rand() % (NUM_FACES);
+        (ms+i)->b_c = 0;
+        (ms+i)->b_d = rand() % 2;
+        (ms+i)->b_i = rand() % 2;
     }
     c = applyMoves(c, ms, n);
     return c;
@@ -318,9 +304,8 @@ void printMove(Move m) {
 }
 
 void printMoves(Move *ms, int n) {
-    int i;
-    for (i=0 ; i<n ; i++) {
-        printMove(ms[i]);
+    while (n-- > 0) {
+        printMove(*(ms++));
         printf(" ");
     }
     printf("\n");
