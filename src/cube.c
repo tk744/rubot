@@ -5,6 +5,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "solver.h"
 
 /* MODEL REPRESENTATION CONSTANTS */
@@ -169,6 +170,11 @@ Cube applyMove(Cube c, Move m) {
         c = applyMove(c, m2);
     }
 
+    if (m.b_d) {    // apply double move
+        Move m1 = { m.fid, m.b_c, 0, m.b_i };
+        c = applyMove(c, m1);
+    }
+
     return c;
 }
 
@@ -196,9 +202,12 @@ Cube scrambledCubeFactory(Move *ms, int n) {
     Cube c = solvedCubeFactory();
     int i;
     for (i=0 ; i<n ; i++) {
-        Move m = { NUM_FACES-1, 0, 0, 0 }; // TODO: randomize
-        c = applyMove(c, (ms[i] = m));
+        ms[i].fid = rand() % (NUM_FACES);
+        ms[i].b_c = 0;
+        ms[i].b_d = rand() % 2;
+        ms[i].b_i = rand() % 2;
     }
+    c = applyMoves(c, ms, n);
     return c;
 }
 
@@ -268,4 +277,43 @@ void printCube(Cube c) {
         printf("│\n");
     }
     printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
+}
+
+void printMove(Move m) {
+    if (m.fid == U) {
+        printf("U");
+    }
+    else if (m.fid == D) {
+        printf("D");
+    }
+    else if (m.fid == R) {
+        printf("R");
+    }
+    else if (m.fid == L) {
+        printf("L");
+    }
+    else if (m.fid == F) {
+        printf("F");
+    }
+    else if (m.fid == B) {
+        printf("B");
+    }
+    else if (m.fid == X) {
+        printf("X");
+    }
+    else if (m.fid == Y) {
+        printf("Y");
+    }
+    else if (m.fid == Z) {
+        printf("Z");
+    }
+
+    if (m.b_d) {
+        printf("2");
+    }
+
+    if (m.b_i) {
+        printf("'");
+    }
+    printf("\n");
 }

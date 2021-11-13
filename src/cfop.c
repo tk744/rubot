@@ -145,14 +145,14 @@ void demo2() {
 
 void demo3() {
     Cube c = solvedCubeFactory();
-    printCube(c);
-    Move moves[] = { M_R, M_U };
+    // printCube(c);
+    Move moves[] = { M_R, M_U, M_LI };
     int i = 0;
     do {
-        c = applyMoves(c, moves, 2);
-        printf("step %d:\n", ++i);
-        printCube(c);
+        c = applyMoves(c, moves, sizeof(moves) / sizeof(moves[0]));
+        i++;
     } while (!isSolved(c));
+    printf("%d steps", i);
 }
 
 void demo4() {
@@ -166,6 +166,19 @@ void demo4() {
         printf("step %d:\n", i+1);
         printCube(c);
     }
+}
+
+void demo5() {
+    int n = 100;
+    Move ms[n];
+    Cube c = scrambledCubeFactory(ms, n);
+    
+    // int i;
+    // for (i=0 ; i<n ; i++) {
+    //     printMove(ms[i]);
+    // }
+
+    printCube(c);
 }
 
 int main() {

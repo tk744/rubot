@@ -43,6 +43,7 @@ const static ColorId    WHITE=1, YELLOW=2, RED=3, ORANGE=4, BLUE=5, GREEN=6;
 const static PosId      CC=0, UL=1, UU=2, UR=3, RR=4, DR=5, DD=6, DL=7, LL=8;
 
 const static FaceId     U=0, D=1, R=2, L=3, F=4, B=5;
+const static FaceId     X=7, Y=8, Z=9; // dummy ids for cube-rotation moves
 
 const static Move       M_U = { U, 0, 0, 0 }, M_UI = { U, 0, 0, 1 },
                         M_D = { D, 0, 0, 0 }, M_DI = { D, 0, 0, 1 },
@@ -50,11 +51,13 @@ const static Move       M_U = { U, 0, 0, 0 }, M_UI = { U, 0, 0, 1 },
                         M_L = { L, 0, 0, 0 }, M_LI = { L, 0, 0, 1 },
                         M_F = { F, 0, 0, 0 }, M_FI = { F, 0, 0, 1 },
                         M_B = { B, 0, 0, 0 }, M_BI = { B, 0, 0, 1 },
-                        M_X = { R, 1, 0, 0 }, M_XI = { L, 1, 0, 1 },
-                        M_Y = { U, 1, 0, 0 }, M_YI = { D, 1, 0, 1 },
-                        M_Z = { F, 1, 0, 0 }, M_ZI = { B, 1, 0, 1 };
+                        M_X = { X, 1, 0, 0 }, M_XI = { X, 1, 0, 1 },
+                        M_Y = { Y, 1, 0, 0 }, M_YI = { Y, 1, 0, 1 },
+                        M_Z = { Z, 1, 0, 0 }, M_ZI = { Z, 1, 0, 1 };
 
 /* FUNCTIONS */
+
+void printMove(Move m);
 
 void printCube(Cube c);
 
