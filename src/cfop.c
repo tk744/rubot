@@ -43,8 +43,7 @@ static Move pop(MoveStack s) {
 }
 
 static MoveStack wc(Cube c, MoveStack s) {
-    s = push(s, M_F);
-    s = push(s, M_R);
+    // s = push(s, M_U);
     return s;
 }
 
@@ -63,7 +62,7 @@ static MoveStack pll(Cube c, MoveStack s) {
 
 // remove instances of X, XI, Y, YI, Z, ZI
 // by computing perspective change
-int trim_xyz(Move *ms, int n) {
+int trim_xyz(Cube c, Move *ms, int n) {
     FaceId map[NUM_FACES];
     int size = 0;
 
@@ -144,6 +143,31 @@ void demo2() {
     printCube(c2);
 }
 
+void demo3() {
+    Cube c = solvedCubeFactory();
+    printCube(c);
+    Move moves[] = { M_R, M_U };
+    int i = 0;
+    do {
+        c = applyMoves(c, moves, 2);
+        printf("step %d:\n", ++i);
+        printCube(c);
+    } while (!isSolved(c));
+}
+
+void demo4() {
+    Move ms[4] = { M_B, M_LI, M_B, M_RI };
+    Cube c = solvedCubeFactory();
+    printCube(c);
+    
+    int i;
+    for (i=0; i<4 ; i++) {
+        c = applyMove(c, ms[i]);
+        printf("step %d:\n", i+1);
+        printCube(c);
+    }
+}
+
 int main() {
-    demo1();
+    demo3();
 }

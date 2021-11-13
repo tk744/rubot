@@ -1,8 +1,7 @@
 /**
  * This file implements the state and behavior of a Rubik's cube.
  * TODO:
- * 1. save and load functions.
- * 2. random moves for scramble cube factory function.
+ * 1. random moves for scramble cube factory function.
  */
 
 #include <stdio.h>
@@ -202,10 +201,6 @@ Cube scrambledCubeFactory(Move *ms, int n) {
     }
     return c;
 }
-
-Cube savedCubeFactory(char *str);
-
-char *saveCube(Cube c, char *str, int n);
 
 int isSolved(Cube c) {
     int fid, pid, cid;
