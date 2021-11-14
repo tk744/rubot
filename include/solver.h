@@ -1,8 +1,14 @@
+/**
+ * This library solves Rubik's cubes.
+ */
+
+#ifndef SOLVER_H
+#define SOLVER_H
+
 #include "cube.h"
 
-// TODO: function of Cube c, Move *ms, int n, returns int
-typedef int Solver;
+typedef int (*Solver)(Cube, Move *, int);
 
 Solver solverFactory();
 
-
+#endif
