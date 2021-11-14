@@ -46,29 +46,28 @@ static Cube shiftColors(Cube c, FaceId *fids, PosId *pids, int n, int stride, in
     for (i=0 ; i<n ; i++) {
         // get current and next color index
         i_c = (!b_i ? i : n-1-i);
-        i_n = (!b_i ? i+stride : n-1 - (i+stride));
+        i_n = (!b_i ? i+stride : n-1-(i+stride));
 
         // store color from first stride into tmp
         if (i<stride) {
-            *(tmp+i) = readColor(c, *(fids+i_c), *(pids+i_c));
+            tmp[i] = readColor(c, fids[i_c], pids[i_c]);
         }
 
         // read colors from next stride into buffer
         cid = (i_n>n-1 || i_n<0) ? 
-            *(tmp+(i%stride)) : readColor(c, *(fids+i_n), *(pids+i_n));
+            tmp[i%stride] : readColor(c, fids[i_n], pids[i_n]);
 
         // write color from buffer into current stride
-        c = writeColor(c, *(fids+i_c), *(pids+i_c), cid);
+        c = writeColor(c, fids[i_c], pids[i_c], cid);
     }
 
     return c;
 }
 
 Cube applyMove(Cube c, Move m) {
+    // shift lines of colors around cube
     FaceId *fids;
     PosId *pids;
-
-    // shift lines of colors around cube
     if (m.fid == U) {
         static FaceId ufids[12] = { L, L, L, F, F, F, R, R, R, B, B, B };
         static PosId upids[12] = { UL, UU, UR, UL, UU, UR, UL, UU, UR, UL, UU, UR };
@@ -178,7 +177,7 @@ Cube solvedCubeFactory() {
     int fid, pid;
     for (fid=0 ; fid<NUM_FACES ; fid++) {
         for (pid=0 ; pid<NUM_POS ; pid++) {
-            c = writeColor(c, fid, pid, *(cids+fid));
+            c = writeColor(c, fid, pid, cids[fid]);
         }
     }
     return c;
@@ -188,10 +187,10 @@ Cube scrambledCubeFactory(Move *ms, int n) {
     Cube c = solvedCubeFactory();
     int i;
     for (i=0 ; i<n ; i++) {
-        (ms+i)->fid = rand() % (NUM_FACES);
-        (ms+i)->b_c = 0;
-        (ms+i)->b_d = rand() % 2;
-        (ms+i)->b_i = rand() % 2;
+        ms[i].fid = rand() % (NUM_FACES);
+        ms[i].b_c = 0;
+        ms[i].b_d = rand() % 2;
+        ms[i].b_i = rand() % 2;
     }
     c = applyMoves(c, ms, n);
     return c;

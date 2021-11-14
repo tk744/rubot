@@ -35,6 +35,6 @@ void trimxyzDemo() {
 
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     cubeDemo();
 }
