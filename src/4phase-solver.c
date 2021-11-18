@@ -154,15 +154,18 @@ static NodeMap mapFactory() {
 }
 
 static int contains(NodeMap *m, Hash k) {
-
+    // TODO
+    return 0;
 }
 
 static Node get(NodeMap *m, Hash k) {
-
+    // TODO
+    return (*m).ns[k];
 }
 
 static int insert(NodeMap *m, Node n) {
-    // insert according to v.hash;
+    // TODO: insert according to v.hash;
+    return 0;
 }
 
 static int getMoveset(Move *ms, int phase) {
@@ -228,8 +231,9 @@ int solve(Cube c, Move *ms, int n) {
         }
 
         // construct init and goal nodes
-        Node init_node = { NULL, NULL, init_cube, init_hash, 1 };
-        Node goal_node = { NULL, NULL, goal_cube, goal_hash, 2 };
+        // TODO: replace M_U with NOP
+        Node init_node = { NULL, M_U, init_cube, init_hash, 1 };
+        Node goal_node = { NULL, M_U, goal_cube, goal_hash, 2 };
 
         // initialize bi-directional BFS queue
         NodeQueue q = queueFactory();
@@ -250,14 +254,14 @@ int solve(Cube c, Move *ms, int n) {
             // iterate through phase moveset
             while(n-- > 0) {
                 // get child state by applying move to parent state
-                Move m = moveset[n];
-                Cube next_cube = applyMove(prev_node.cube, m);
+                Move mv = moveset[n];
+                Cube next_cube = applyMove(prev_node.cube, mv);
                 Hash next_hash = hash(next_cube, phase);
 
                 // explore new child state
                 if (!contains(&m, next_hash)) {
                     // get child node
-                    Node next_node = { &prev_node, m, next_cube, next_hash, prev_node.dir };
+                    Node next_node = { &prev_node, mv, next_cube, next_hash, prev_node.dir };
                     push(&q, next_node);
                     insert(&m, next_node);
                 }
