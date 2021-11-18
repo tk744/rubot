@@ -4,8 +4,8 @@
 
 #define NUM_MOVES 18
 
-#define QUEUE_SIZE 10000
-#define HASHTABLE_SIZE 10000
+#define QUEUE_SIZE 1000000
+#define MAP_SIZE 1000000
 
 // typedef struct TreeNode {
 //     struct TreeNode *parent;
@@ -20,25 +20,33 @@ typedef struct {
     int head;
 } CubeQueue;
 
-static int isEmpty(CubeQueue *cq) {
-    return (cq->head <= 0);
+static int isEmpty(CubeQueue *q) {
+    return (q->head <= 0);
 }
 
-static Cube pop(CubeQueue *cq) {
-    if (!isEmpty(cq)) {
-        return cq->cs[--cq->head];
+static Cube pop(CubeQueue *q) {
+    if (!isEmpty(q)) {
+        return q->cs[--q->head];
     }
 }
 
-static int push(CubeQueue *cq, Cube c) {
-    if (cq->head < QUEUE_SIZE) {
-        cq->cs[cq->head++] = c;
+static int push(CubeQueue *q, Cube c) {
+    if (q->head < QUEUE_SIZE) {
+        q->cs[q->head++] = c;
         return 1;
     }
     return 0;
 }
 
-static int hash(Cube c, int phase) {
+static CubeQueue queueFactory() {
+    Cube cs[QUEUE_SIZE];
+    CubeQueue q = { cs, 0 };
+    return q;
+}
+
+typedef uint32_t Hash;
+
+static Hash hash(Cube c, int phase) {
     switch (phase) {
         case 1: // edge orientations
 
@@ -56,25 +64,41 @@ static int hash(Cube c, int phase) {
 }
 
 typedef struct {
-    void *ps;
-} Map;
+    Hash *ks;
+    void **vs;
+} HashMap;
 
-static int insert(Map m, int k, Cube c, void * p) {
-
+static int contains(HashMap *m, Hash k) {
+    // TODO: collision handling
+    return (m->ks[k] == k);
 }
 
-static void *get(Map m, int k, Cube c) {
-    
+static void *get(HashMap *m, Hash k) {
+    // TODO: collision handling
+    return m->vs[k];
+}
+
+static int insert(HashMap *m, Hash k, void *v) {
+    // TODO: collision handling
+    m->ks[k] = k;
+    m->vs[k] = v;
+}
+
+static HashMap mapFactory() {
+    Hash ks[MAP_SIZE];
+    void *vs[MAP_SIZE];
+    HashMap m = { ks, vs };
+    return m;
 }
 
 int main() {
     int moves[QUEUE_SIZE];
-    CubeQueue q = { moves, 0 };
-    // printf("%d ",push(&q, 4));
-    // printf("%d ",push(&q, 6));
-    printf("%d ",pop(&q));
-    printf("%d ",pop(&q));
-    printf("%d ",pop(&q));
+    // CubeQueue q = { moves, 0 };
+    // // printf("%d ",push(&q, 4));
+    // // printf("%d ",push(&q, 6));
+    // printf("%d ",pop(&q));
+    // printf("%d ",pop(&q));
+    // printf("%d ",pop(&q));
 }
 
 static int getMoveset(Move *ms, int phase) {
@@ -125,29 +149,33 @@ static int getMoveset(Move *ms, int phase) {
 }
 
 int solve(Cube c, Move *ms, int n) {
+    int phase = 0;
+
     // define goal state
     Cube goal = solvedCubeFactory();
 
-    // BFS queue
-    Cube cs[QUEUE_SIZE] = { c, goal };
-    CubeQueue q = { cs, 2 };
+    // bi-directional BFS queues
+    CubeQueue fq = queueFactory();  // forward search queue
+    CubeQueue bq = queueFactory();  // backward search queue
+    push(&fq, c);
+    push(&bq, goal);
+    int dir = 1;    // search direction: 1 if forward, 0 if backward
 
-    // // bi-directional BFS hash tables
-    // Map parents = {}
-    // Map prev_move = {}
-    // Map direction = {}
-    // insert(&direction, c, 0);
-    // insert(&direction, goal, 1);
+    // bi-directional BFS hash tables
+    HashMap parents = {};   // maps cube to parent cube
+    HashMap moves = {};     // maps cube to parent move
+    HashMap dirs = {};      // maps cube to search direction
+    // insert(&direction, c, phase, 0);
+    // insert(&direction, goal, phase, 1);
 
-    int phase = 0;
     while (++phase <= 4) {
         if (hash(c, phase) == hash(goal, phase)) {
             continue;
         }
 
-        while(!isEmpty(&q)) {
+        while(!isEmpty(dir ? &fq : &bq)) {
             // pop current state from queue
-            Cube old_c = pop(&q);
+            Cube old_c = pop(dir ? &fq : &bq);
 
             // get phase move set
             Move moveset[NUM_MOVES];
@@ -160,7 +188,7 @@ int solve(Cube c, Move *ms, int n) {
                 Cube new_c = applyMove(old_c, m);
 
                 // // explore new state
-                // if (!contains(parents, new_c)) {
+                // if (!contains(parents, new_c, )) {
                 //     push(&q, &new_c);
                 //     insert(&parents, &new_c, old_c);
                 //     insert(&prev_move, &new_c, &m);
