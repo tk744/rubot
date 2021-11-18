@@ -15,34 +15,34 @@
 //     int heuristic;
 // } TreeNode;
 
-typedef struct {
-    Cube *cs;
-    int head;
-} CubeQueue;
+// typedef struct {
+//     Cube *cs;
+//     int head;
+// } CubeQueue;
 
-static int isEmpty(CubeQueue *q) {
-    return (q->head <= 0);
-}
+// static int isEmpty(CubeQueue *q) {
+//     return (q->head <= 0);
+// }
 
-static Cube pop(CubeQueue *q) {
-    if (!isEmpty(q)) {
-        return q->cs[--q->head];
-    }
-}
+// static Cube pop(CubeQueue *q) {
+//     if (!isEmpty(q)) {
+//         return q->cs[--q->head];
+//     }
+// }
 
-static int push(CubeQueue *q, Cube c) {
-    if (q->head < QUEUE_SIZE) {
-        q->cs[q->head++] = c;
-        return 1;
-    }
-    return 0;
-}
+// static int push(CubeQueue *q, Cube c) {
+//     if (q->head < QUEUE_SIZE) {
+//         q->cs[q->head++] = c;
+//         return 1;
+//     }
+//     return 0;
+// }
 
-static CubeQueue queueFactory() {
-    Cube cs[QUEUE_SIZE];
-    CubeQueue q = { cs, 0 };
-    return q;
-}
+// static CubeQueue queueFactory() {
+//     Cube cs[QUEUE_SIZE];
+//     CubeQueue q = { cs, 0 };
+//     return q;
+// }
 
 typedef uint32_t Hash;
 
@@ -63,33 +63,33 @@ static Hash hash(Cube c, int phase) {
     }
 }
 
-typedef struct {
-    Hash *ks;
-    void **vs;
-} HashMap;
+// typedef struct {
+//     Hash *ks;
+//     void **vs;
+// } HashMap;
 
-static int contains(HashMap *m, Hash k) {
-    // TODO: collision handling
-    return (m->ks[k] == k);
-}
+// static int contains(HashMap *m, Hash k) {
+//     // TODO: collision handling
+//     return (m->ks[k] == k);
+// }
 
-static void *get(HashMap *m, Hash k) {
-    // TODO: collision handling
-    return m->vs[k];
-}
+// static void *get(HashMap *m, Hash k) {
+//     // TODO: collision handling
+//     return m->vs[k];
+// }
 
-static int insert(HashMap *m, Hash k, void *v) {
-    // TODO: collision handling
-    m->ks[k] = k;
-    m->vs[k] = v;
-}
+// static int insert(HashMap *m, Hash k, void *v) {
+//     // TODO: collision handling
+//     m->ks[k] = k;
+//     m->vs[k] = v;
+// }
 
-static HashMap mapFactory() {
-    Hash ks[MAP_SIZE];
-    void *vs[MAP_SIZE];
-    HashMap m = { ks, vs };
-    return m;
-}
+// static HashMap mapFactory() {
+//     Hash ks[MAP_SIZE];
+//     void *vs[MAP_SIZE];
+//     HashMap m = { ks, vs };
+//     return m;
+// }
 
 int main() {
     int moves[QUEUE_SIZE];
@@ -99,6 +99,70 @@ int main() {
     // printf("%d ",pop(&q));
     // printf("%d ",pop(&q));
     // printf("%d ",pop(&q));
+}
+
+typedef struct Node {
+    struct Node *parent;
+    Move move;
+    Cube cube;
+    Hash hash;
+    int dir;
+} Node;
+
+typedef struct {
+    Node *ns;
+    int head;
+} NodeQueue;
+
+typedef struct {
+    Node *ns;
+} NodeMap;
+
+// Node nodeFactory(Cube c, Hash h) {
+//     Node n = { NULL, NULL, c, h };
+//     return n;
+// }
+
+static NodeQueue queueFactory() {
+    Node ns[QUEUE_SIZE];
+    NodeQueue q = { ns, 0 };
+    return q;
+}
+
+static int isEmpty(NodeQueue *q) {
+    return (q->head <= 0);
+}
+
+static Node pop(NodeQueue *q) {
+    if (!isEmpty(q)) {
+        return q->ns[--q->head];
+    }
+}
+
+static int push(NodeQueue *q, Node n) {
+    if (q->head < QUEUE_SIZE) {
+        q->ns[q->head++] = n;
+        return 1;
+    }
+    return 0;
+}
+
+static NodeMap mapFactory() {
+    Node ns[MAP_SIZE];
+    NodeMap m = { ns };
+    return m;
+}
+
+static int contains(NodeMap *m, Hash k) {
+
+}
+
+static Node get(NodeMap *m, Hash k) {
+
+}
+
+static int insert(NodeMap *m, Node n) {
+    // insert according to v.hash;
 }
 
 static int getMoveset(Move *ms, int phase) {
@@ -151,57 +215,117 @@ static int getMoveset(Move *ms, int phase) {
 int solve(Cube c, Move *ms, int n) {
     int phase = 0;
 
-    // define goal state
-    Cube goal = solvedCubeFactory();
+    // define init and goal states
+    Cube init_cube = c;
+    Cube goal_cube = solvedCubeFactory();
 
+    while (++phase <= 4) {
+        // generate init and goal hashes
+        Hash init_hash = hash(init_cube, phase);
+        Hash goal_hash = hash(goal_cube, phase);
+        if (init_hash == goal_hash) {
+            continue;
+        }
+
+        // construct init and goal nodes
+        Node init_node = { NULL, NULL, init_cube, init_hash, 1 };
+        Node goal_node = { NULL, NULL, goal_cube, goal_hash, 2 };
+
+        // initialize bi-directional BFS queue
+        NodeQueue q = queueFactory();
+        push(&q, init_node);
+        push(&q, goal_node);
+
+        // initialize BFS hash table
+        NodeMap m = mapFactory();
+
+        while(!isEmpty(&q)) {
+            // pop parent node from queue
+            Node prev_node = pop(&q);
+
+            // get phase moveset
+            Move moveset[NUM_MOVES];
+            int n = getMoveset(moveset, phase);
+
+            // iterate through phase moveset
+            while(n-- > 0) {
+                // get child state by applying move to parent state
+                Move m = moveset[n];
+                Cube next_cube = applyMove(prev_node.cube, m);
+                Hash next_hash = hash(next_cube, phase);
+
+                // explore new child state
+                if (!contains(&m, next_hash)) {
+                    // get child node
+                    Node next_node = { &prev_node, m, next_cube, next_hash, prev_node.dir };
+                    push(&q, next_node);
+                    insert(&m, next_node);
+                }
+                // child state explored from reverse search direction
+                else if ((get(&m, next_hash)).dir != prev_node.dir) {
+
+                }
+
+            }            
+
+        }
+
+    }
+
+/*
     // bi-directional BFS queues
     CubeQueue fq = queueFactory();  // forward search queue
     CubeQueue bq = queueFactory();  // backward search queue
     push(&fq, c);
     push(&bq, goal);
-    int dir = 1;    // search direction: 1 if forward, 0 if backward
+    int dir = 0;    // search direction: 1 if forward, 0 if backward
 
     // bi-directional BFS hash tables
-    HashMap parents = {};   // maps cube to parent cube
-    HashMap moves = {};     // maps cube to parent move
-    HashMap dirs = {};      // maps cube to search direction
+    HashMap parents = {};   // maps cube hash to parent cube hash
+    HashMap moves = {};     // maps cube hash to parent move
+    // HashMap dirs = {};      // maps cube hash to search direction
     // insert(&direction, c, phase, 0);
     // insert(&direction, goal, phase, 1);
+*/
+    // attempt 2
+    NodeQueue fq = queueFactory();  // forward search queue
+    NodeQueue bq = queueFactory();  // backward search queue
+    int dir = 0;
 
-    while (++phase <= 4) {
-        if (hash(c, phase) == hash(goal, phase)) {
-            continue;
-        }
+    // while (++phase <= 4) {
+    //     if (hash(c, phase) == hash(goal, phase)) {
+    //         continue;
+    //     }
 
-        while(!isEmpty(dir ? &fq : &bq)) {
-            // pop current state from queue
-            Cube old_c = pop(dir ? &fq : &bq);
+    //     while(!isEmpty((dir = 1-dir) ? &fq : &bq)) {
+    //         // pop current state from queue
+    //         Cube old_c = pop(dir ? &fq : &bq);
 
-            // get phase move set
-            Move moveset[NUM_MOVES];
-            int n = getMoveset(moveset, phase);
+    //         // get phase moveset
+    //         Move moveset[NUM_MOVES];
+    //         int n = getMoveset(moveset, phase);
 
-            // iterate through phase move set
-            while(n-- > 0) {
-                // apply move to current state
-                Move m = moveset[n];
-                Cube new_c = applyMove(old_c, m);
+    //         // iterate through phase moveset
+    //         while(n-- > 0) {
+    //             // apply move to current state
+    //             Move m = moveset[n];
+    //             Cube new_c = applyMove(old_c, m);
 
-                // // explore new state
-                // if (!contains(parents, new_c, )) {
-                //     push(&q, &new_c);
-                //     insert(&parents, &new_c, old_c);
-                //     insert(&prev_move, &new_c, &m);
-                //     insert(&direction, &new_c, get(&direction, old_c));
-                // }
-                // // new state already explored from opposite search direction
-                // else if (get(&direction, &new_c) != get(&direction, old_c)) {
-                //     // TODO: solved!
-                // }
-            }
-        }
+    //             // // explore new state
+    //             // if (!contains(parents, new_c, )) {
+    //             //     push(&q, &new_c);
+    //             //     insert(&parents, &new_c, old_c);
+    //             //     insert(&prev_move, &new_c, &m);
+    //             //     insert(&direction, &new_c, get(&direction, old_c));
+    //             // }
+    //             // // new state already explored from opposite search direction
+    //             // else if (get(&direction, &new_c) != get(&direction, old_c)) {
+    //             //     // TODO: solved!
+    //             // }
+    //         }
+    //     }
 
-    }
+    // }
 
     return 0;
 }
