@@ -52,12 +52,12 @@ const static PosId      CC=0, UL=1, UU=2, UR=3, RR=4, DR=5, DD=6, DL=7, LL=8;
 const static FaceId     U=0, D=1, R=2, L=3, F=4, B=5;
 const static FaceId     X=7, Y=8, Z=9; // dummy ids for cube-rotation moves
 
-const static Move       M_U = { U, 0, 0, 0 }, M_UI = { U, 0, 0, 1 },
-                        M_D = { D, 0, 0, 0 }, M_DI = { D, 0, 0, 1 },
-                        M_R = { R, 0, 0, 0 }, M_RI = { R, 0, 0, 1 },
-                        M_L = { L, 0, 0, 0 }, M_LI = { L, 0, 0, 1 },
-                        M_F = { F, 0, 0, 0 }, M_FI = { F, 0, 0, 1 },
-                        M_B = { B, 0, 0, 0 }, M_BI = { B, 0, 0, 1 },
+const static Move       M_U = { U, 0, 0, 0 }, M_UI = { U, 0, 0, 1 }, M_U2 = { U, 0, 1, 0 },
+                        M_D = { D, 0, 0, 0 }, M_DI = { D, 0, 0, 1 }, M_D2 = { D, 0, 1, 0 },
+                        M_R = { R, 0, 0, 0 }, M_RI = { R, 0, 0, 1 }, M_R2 = { R, 0, 1, 0 },
+                        M_L = { L, 0, 0, 0 }, M_LI = { L, 0, 0, 1 }, M_L2 = { L, 0, 1, 0 },
+                        M_F = { F, 0, 0, 0 }, M_FI = { F, 0, 0, 1 }, M_F2 = { F, 0, 1, 0 },
+                        M_B = { B, 0, 0, 0 }, M_BI = { B, 0, 0, 1 }, M_B2 = { B, 0, 1, 0 },
                         M_X = { X, 1, 0, 0 }, M_XI = { X, 1, 0, 1 },
                         M_Y = { Y, 1, 0, 0 }, M_YI = { Y, 1, 0, 1 },
                         M_Z = { Z, 1, 0, 0 }, M_ZI = { Z, 1, 0, 1 };
