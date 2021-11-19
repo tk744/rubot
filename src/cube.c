@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "cube.h"
 
-/* MODEL REPRESENTATION CONSTANTS */
+/* MODEL CONSTANTS */
 
 #define COLOR_BITS 3    // bits required to store a color value
 
