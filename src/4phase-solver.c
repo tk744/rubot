@@ -7,7 +7,7 @@
 /* DATA STRUCTURE CONSTANTS */
 
 #define QUEUE_SIZE 1000000
-#define MAP_SIZE 1000000
+#define MAP_SIZE 100
 
 /* TYPE DEFINITIONS */
 
@@ -22,7 +22,7 @@ typedef struct Node {
 } Node;
 
 typedef struct {
-    Node *ns;
+    Node **ns;
 } NodeMap;
 
 typedef struct {
@@ -33,32 +33,22 @@ typedef struct {
 
 /* DATA STRUCTURE FUNCTION IMPLEMENTATION */
 
-static NodeMap mapFactory() {
-    Node ns[MAP_SIZE];
-    NodeMap m = { ns };
-    return m;
+static int mapIndex(NodeMap *m, Hash k) {
+    int idx = k % MAP_SIZE;
+    for ( ; m->ns[idx] != NULL && m->ns[idx]->hash != k ; idx = (idx+1) % MAP_SIZE);
+    return idx;
 }
 
 static int contains(NodeMap *m, Hash k) {
-    // TODO: collision handling
-    return 0;
+    return (m->ns[mapIndex(m, k)] != NULL);
 }
 
-static Node get(NodeMap *m, Hash k) {
-    // TODO: collision handling
-    return m->ns[k];
+static Node *get(NodeMap *m, Hash k) {
+    return m->ns[mapIndex(m, k)];
 }
 
-static int insert(NodeMap *m, Node n) {
-    // TODO: collision handling
-    m->ns[n.hash] = n;
-    return 1;
-}
-
-static HashQueue queueFactory() {
-    Hash hs[QUEUE_SIZE];
-    HashQueue q = { hs, 0, 0 };
-    return q;
+static void insert(NodeMap *m, Node *n) {
+    m->ns[mapIndex(m, n->hash)] = n;
 }
 
 static int isEmpty(HashQueue *q) {
@@ -79,11 +69,6 @@ static int enqueue(HashQueue *q, Hash h) {
     }
     return -1;
 }
-
-// typedef struct {
-//     NodeMap m;
-//     HashQueue q;
-// } SearchBFS;
 
 /* ALGORITHM FUNCTION IMPLEMENTATION */
 
@@ -175,21 +160,23 @@ int solve(Cube c, Move *ms, int n) {
 
         // initialize BFS queue
         // stores a list of hashes in the order to be explored
-        HashQueue q = queueFactory();
+        Hash hs[QUEUE_SIZE] = {};
+        HashQueue q = { hs, 0, 0 };
         enqueue(&q, init_hash);
         enqueue(&q, goal_hash);
 
         // initialize BFS map
         // maps hashes to search nodes
-        NodeMap m = mapFactory();
-        insert(&m, init_node);
-        insert(&m, goal_node);
+        Node *ns[MAP_SIZE] = {};
+        NodeMap m = { ns };
+        insert(&m, &init_node);
+        insert(&m, &goal_node);
 
         // iterate through BFS queue
         while(!isEmpty(&q)) {
             // dequeue parent node from queue
             Hash prev_hash = dequeue(&q);
-            Node prev_node = get(&m, prev_hash);
+            Node *prev_node = get(&m, prev_hash);
 
             // get phase moveset
             Move moveset[NUM_MOVES];
@@ -199,17 +186,17 @@ int solve(Cube c, Move *ms, int n) {
             while(n-- > 0) {
                 // get child state by applying move to parent state
                 Move mv = moveset[n];
-                Cube next_cube = applyMove(prev_node.cube, mv);
+                Cube next_cube = applyMove(prev_node->cube, mv);
                 Hash next_hash = hash(next_cube, phase);
 
                 // explore new child state
                 if (!contains(&m, next_hash)) {
-                    Node next_node = { prev_hash, mv, next_cube, next_hash, prev_node.dir };
+                    Node next_node = { prev_hash, mv, next_cube, next_hash, prev_node->dir };
                     enqueue(&q, next_hash);
-                    insert(&m, next_node);
+                    insert(&m, &next_node);
                 }
                 // child state explored from reverse search direction
-                else if ((get(&m, next_hash)).dir != prev_node.dir) {
+                else if ((get(&m, next_hash))->dir != prev_node->dir) {
                     // TODO: solved this phase
                     return 1;
                 }
@@ -224,23 +211,5 @@ int solve(Cube c, Move *ms, int n) {
 }
 
 int main() {
-    Cube c = solvedCubeFactory();
 
-    HashQueue q = queueFactory();
-    printf("%d\n", isEmpty(&q));
-
-    enqueue(&q, hash(c, 10));
-    printf("%d\n", isEmpty(&q));
-
-    enqueue(&q, hash(c, 20));
-    printf("%d\n", isEmpty(&q));
-
-    printf("%d\n", dequeue(&q));
-    printf("%d\n", dequeue(&q));
-    printf("%d\n", dequeue(&q));
-
-    enqueue(&q, hash(c, 30));
-    printf("%d\n", dequeue(&q));
-
-    printf("%d %d\n", q.front, q.rear);
 }
