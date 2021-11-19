@@ -14,8 +14,8 @@
 typedef uint32_t Hash;
 
 typedef struct Node {
-    struct Node *parent;    // pointer to parent node
-    Move move;              // move applied to parent state
+    Hash prev_hash;         // pointer to previous node
+    Move prev_move;         // move applied to previous state
     Cube cube;              // cube state
     Hash hash;              // hash value of cube and phase
     int dir;                // search direction for bi-directional BFS
@@ -23,38 +23,15 @@ typedef struct Node {
 
 typedef struct {
     Node *ns;
-    int head;
-} NodeQueue;
-
-typedef struct {
-    Node *ns;
 } NodeMap;
 
+typedef struct {
+    Hash *hs;
+    int front;
+    int rear;
+} HashQueue;
+
 /* DATA STRUCTURE FUNCTION IMPLEMENTATION */
-
-static NodeQueue queueFactory() {
-    Node ns[QUEUE_SIZE];
-    NodeQueue q = { ns, 0 };
-    return q;
-}
-
-static int isEmpty(NodeQueue *q) {
-    return (q->head <= 0);
-}
-
-static Node dequeue(NodeQueue *q) {
-    if (!isEmpty(q)) {
-        return q->ns[--q->head];
-    }
-}
-
-static int enqueue(NodeQueue *q, Node n) {
-    if (q->head < QUEUE_SIZE) {
-        q->ns[q->head++] = n;
-        return 1;
-    }
-    return 0;
-}
 
 static NodeMap mapFactory() {
     Node ns[MAP_SIZE];
@@ -77,6 +54,36 @@ static int insert(NodeMap *m, Node n) {
     m->ns[n.hash] = n;
     return 1;
 }
+
+static HashQueue queueFactory() {
+    Hash hs[QUEUE_SIZE];
+    HashQueue q = { hs, 0, 0 };
+    return q;
+}
+
+static int isEmpty(HashQueue *q) {
+    return (q->front == q->rear);
+}
+
+static Hash dequeue(HashQueue *q) {
+    if (q->front < q->rear) {
+        return q->hs[q->front++];
+    }
+    return -1;
+}
+
+static int enqueue(HashQueue *q, Hash h) {
+    if (q->rear < QUEUE_SIZE) {
+        q->hs[q->rear++] = h;
+        return 1;
+    }
+    return -1;
+}
+
+// typedef struct {
+//     NodeMap m;
+//     HashQueue q;
+// } SearchBFS;
 
 /* ALGORITHM FUNCTION IMPLEMENTATION */
 
@@ -143,6 +150,7 @@ static Hash hash(Cube c, int phase) {
             
             break;
     }
+    return phase;
 }
 
 int solve(Cube c, Move *ms, int n) {
@@ -153,33 +161,35 @@ int solve(Cube c, Move *ms, int n) {
     // iterate through phases
     int phase = 0;
     while (++phase <= 4) {
-        // generate init and goal hashes
+        // create init and goal hashes
         Hash init_hash = hash(init_cube, phase);
         Hash goal_hash = hash(goal_cube, phase);
         if (init_hash == goal_hash) {
             continue;
         }
 
-        // construct init and goal nodes
+        // create init and goal nodes
         // TODO: replace M_U with NOP
-        Node init_node = { NULL, M_U, init_cube, init_hash, 1 };
-        Node goal_node = { NULL, M_U, goal_cube, goal_hash, 2 };
+        Node init_node = { 0, M_U, init_cube, init_hash, 1 };
+        Node goal_node = { 0, M_U, goal_cube, goal_hash, 2 };
 
-        // initialize BFS hash table
-        // to check in constant time if a node has already been reached
+        // initialize BFS queue
+        // stores a list of hashes in the order to be explored
+        HashQueue q = queueFactory();
+        enqueue(&q, init_hash);
+        enqueue(&q, goal_hash);
+
+        // initialize BFS map
+        // maps hashes to search nodes
         NodeMap m = mapFactory();
         insert(&m, init_node);
         insert(&m, goal_node);
 
-        // initialize BFS queue
-        NodeQueue q = queueFactory();
-        enqueue(&q, init_node);
-        enqueue(&q, goal_node);
-
         // iterate through BFS queue
         while(!isEmpty(&q)) {
             // dequeue parent node from queue
-            Node prev_node = dequeue(&q);
+            Hash prev_hash = dequeue(&q);
+            Node prev_node = get(&m, prev_hash);
 
             // get phase moveset
             Move moveset[NUM_MOVES];
@@ -194,9 +204,9 @@ int solve(Cube c, Move *ms, int n) {
 
                 // explore new child state
                 if (!contains(&m, next_hash)) {
-                    Node next_node = { &prev_node, mv, next_cube, next_hash, prev_node.dir };
+                    Node next_node = { prev_hash, mv, next_cube, next_hash, prev_node.dir };
+                    enqueue(&q, next_hash);
                     insert(&m, next_node);
-                    enqueue(&q, next_node);
                 }
                 // child state explored from reverse search direction
                 else if ((get(&m, next_hash)).dir != prev_node.dir) {
@@ -214,5 +224,23 @@ int solve(Cube c, Move *ms, int n) {
 }
 
 int main() {
-    printf("compiled without errors");
+    Cube c = solvedCubeFactory();
+
+    HashQueue q = queueFactory();
+    printf("%d\n", isEmpty(&q));
+
+    enqueue(&q, hash(c, 10));
+    printf("%d\n", isEmpty(&q));
+
+    enqueue(&q, hash(c, 20));
+    printf("%d\n", isEmpty(&q));
+
+    printf("%d\n", dequeue(&q));
+    printf("%d\n", dequeue(&q));
+    printf("%d\n", dequeue(&q));
+
+    enqueue(&q, hash(c, 30));
+    printf("%d\n", dequeue(&q));
+
+    printf("%d %d\n", q.front, q.rear);
 }
