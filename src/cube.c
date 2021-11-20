@@ -1,309 +1,185 @@
-/**
- * This file implements the state and behavior of a Rubik's cube.
- */
-
+#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include "cube.h"
 
-/* MODEL CONSTANTS */
+#define NUM_EDGES 12
+#define NUM_CORNERS 8
 
-#define COLOR_BITS 3    // bits required to store a color value
+#define EDGE_BITS 5
+#define CORNER_BITS 5
 
-/* FUNCTION IMPLEMENTATION */
+typedef unsigned char CubieId, MoveId;
 
-ColorId readColor(Cube c, FaceId fid, PosId pid) {
-    return (c.fs[fid] >> (COLOR_BITS * pid)) & 0b111;
-}
+typedef unsigned char Move;
 
-Cube writeColor(Cube c, FaceId fid, PosId pid, ColorId cid) {
-    Face clear_mask = ~(0b111 << (COLOR_BITS * pid));
-    Face write_mask = cid << (COLOR_BITS * pid);
-    c.fs[fid] = c.fs[fid] & clear_mask | write_mask;
-    return c;
-}
+static const CubieId UF=0, UB=1, UR=2, UL=3, FR=4, FL=5, DF=6, DB=7, DR=8, DL=9, BR=10, BL=11;
+static const CubieId UFR=0, UFL=1, UBR=2, UBL=3, DFR=4, DFL=5, DBR=6, DBL=7;
 
-void readColors(Cube c, FaceId *fids, PosId *pids, ColorId *cids, int n) {
-    while (n-- > 0) {
-        *cids++ = readColor(c, *fids++, *pids++);
-    }
-}
+MoveId U=1, D=2, F=4, B=8, R=16, L=32, I=64, H=128;
 
-Cube writeColors(Cube c, FaceId *fids, PosId *pids, ColorId *cids, int n) {
-    while (n-- > 0) {
-        c = writeColor(c, *fids++, *pids++, *cids++);
-    }
-    return c;
-}
+typedef struct {
+    unsigned long edges1, edges2;
+    unsigned long corners1, corners2;
+} Cube;
 
-static Cube shiftColors(Cube c, FaceId *fids, PosId *pids, int n, int stride, int b_i) {
-    ColorId tmp[stride];
-    ColorId cid;
+Cube cubeFactory() {
+    unsigned long edges1 = 0, edges2 = 0, corners1 = 0, corners2 = 0;
 
-    int i, i_c, i_n;
-    for (i=0 ; i<n ; i++) {
-        // get current and next color index
-        i_c = (!b_i ? i : n-1-i);
-        i_n = (!b_i ? i+stride : n-1-(i+stride));
-
-        // store color from first stride into tmp
-        if (i<stride) {
-            tmp[i] = readColor(c, fids[i_c], pids[i_c]);
-        }
-
-        // read colors from next stride into buffer
-        cid = (i_n>n-1 || i_n<0) ? 
-            tmp[i%stride] : readColor(c, fids[i_n], pids[i_n]);
-
-        // write color from buffer into current stride
-        c = writeColor(c, fids[i_c], pids[i_c], cid);
-    }
-
-    return c;
-}
-
-Cube applyMove(Cube c, Move m) {
-    // shift lines of colors around cube
-    FaceId *fids;
-    PosId *pids;
-    if (m.fid == U) {
-        static FaceId ufids[12] = { L, L, L, F, F, F, R, R, R, B, B, B };
-        static PosId upids[12] = { UL, UU, UR, UL, UU, UR, UL, UU, UR, UL, UU, UR };
-        fids = ufids;
-        pids = upids;
-    }
-    else if (m.fid == D) {
-        static FaceId dfids[12] = { R, R, R, F, F, F, L, L, L, B, B, B };
-        static PosId dpids[12] = { DR, DD, DL, DR, DD, DL, DR, DD, DL, DR, DD, DL };
-        fids = dfids;
-        pids = dpids;
-    }
-    else if (m.fid == R) {
-        static FaceId rfids[12] = { D, D, D, B, B, B, U, U, U, F, F, F };
-        static PosId rpids[12] = { UR, RR, DR, DL, LL, UL, UR, RR, DR, UR, RR, DR };
-        fids = rfids;
-        pids = rpids;
-    }
-    else if (m.fid == L) {
-        static FaceId lfids[12] = { U, U, U, B, B, B, D, D, D, F, F, F };
-        static PosId lpids[12] = { UL, LL, DL, DR, RR, UR, UL, LL, DL, UL, LL, DL };
-        fids = lfids;
-        pids = lpids;
-    }
-    else if (m.fid == F) {
-        static FaceId ffids[12] = { R, R, R, U, U, U, L, L, L, D, D, D };
-        static PosId fpids[12] = { DL, LL, UL, DR, DD, DL, UR, RR, DR, UL, UU, UR };
-        fids = ffids;
-        pids = fpids;
-    }
-    else if (m.fid == B) {
-        static FaceId bfids[12] = { L, L, L, U, U, U, R, R, R, D, D, D };
-        static PosId bpids[12] = { DL, LL, UL, UL, UU, UR, UR, RR, DR, DR, DD, DL };
-        fids = bfids;
-        pids = bpids;
-    }
-    else if (m.fid == X) {
-        static FaceId xfids[12] = { D, D, D, B, B, B, U, U, U, F, F, F };
-        static PosId xpids[12] = { UU, CC, DD, DD, CC, UU, UU, CC, DD, UU, CC, DD };
-        fids = xfids;
-        pids = xpids;
-    }
-    else if (m.fid == Y) {
-        static FaceId yfids[12] = { L, L, L, F, F, F, R, R, R, B, B, B };
-        static PosId ypids[12] = { LL, CC, RR, LL, CC, RR, LL, CC, RR, LL, CC, RR };
-        fids = yfids;
-        pids = ypids;
-    }
-    else if (m.fid == Z) {
-        static FaceId zfids[12] = { R, R, R, U, U, U, L, L, L, D, D, D };
-        static PosId zpids[12] = { DD, CC, UU, RR, CC, LL, UU, CC, DD, LL, CC, RR };
-        fids = zfids;
-        pids = zpids;
-    }
-    c = shiftColors(c, fids, pids, 12, 3, m.b_i);
-
-    if (!m.b_c) {   // if face rotation, rotate face
-        FaceId fid = m.fid;
-        FaceId fids[NUM_POS-1] = { fid, fid, fid, fid, fid, fid, fid, fid };
-        static PosId fr_pids[NUM_POS-1] = { LL, DL, DD, DR, RR, UR, UU, UL };
-        c = shiftColors(c, fids, fr_pids, NUM_POS-1, 2, m.b_i);
-    } 
-    else {          // if cube rotation, apply appropriate face rotations
-        Move m1, m2;
-
-        if (m.fid == X) {
-            Move xm1 = { R, 0, m.b_d, m.b_i };
-            Move xm2 = { L, 0, m.b_d, !m.b_i };
-            m1 = xm1;
-            m2 = xm2;
-        }
-        else if (m.fid == Y) {
-            Move ym1 = { U, 0, m.b_d, m.b_i };
-            Move ym2 = { D, 0, m.b_d, !m.b_i };
-            m1 = ym1;
-            m2 = ym2;
-        }
-        else if (m.fid == Z) {
-            Move zm1 = { F, 0, m.b_d, m.b_i };
-            Move zm2 = { B, 0, m.b_d, !m.b_i };
-            m1 = zm1;
-            m2 = zm2;
-        }
-
-        c = applyMove(c, m1);
-        c = applyMove(c, m2);
-    }
-
-    if (m.b_d) {    // apply double move
-        Move m1 = { m.fid, m.b_c, 0, m.b_i };
-        c = applyMove(c, m1);
-    }
-
-    return c;
-}
-
-Cube applyMoves(Cube c, Move *ms, int n) {
-    while(n-- > 0) {
-        c = applyMove(c, *ms++);
-    }
-    return c;
-}
-
-Cube solvedCubeFactory() {
-    Cube c;
-    ColorId cids[NUM_FACES] = { YELLOW, WHITE, RED, ORANGE, BLUE, GREEN };
-    int fid, pid;
-    for (fid=0 ; fid<NUM_FACES ; fid++) {
-        for (pid=0 ; pid<NUM_POS ; pid++) {
-            c = writeColor(c, fid, pid, cids[fid]);
-        }
-    }
-    return c;
-}
-
-Cube scrambledCubeFactory(Move *ms, int n) {
-    Cube c = solvedCubeFactory();
     int i;
-    for (i=0 ; i<n ; i++) {
-        ms[i].fid = rand() % (NUM_FACES);
-        ms[i].b_c = 0;
-        ms[i].b_d = rand() % 2;
-        ms[i].b_i = rand() % 2;
+    for(i=0 ; i<NUM_EDGES/2 ; i++) {
+        edges1 |= i << (EDGE_BITS * i);
     }
-    c = applyMoves(c, ms, n);
+    for(i=NUM_EDGES/2 ; i<NUM_EDGES ; i++) {
+        edges2 |= i << (EDGE_BITS * (i-NUM_EDGES/2));
+    }
+    for(i=0 ; i<NUM_CORNERS/2 ; i++) {
+        corners1 |= i << (CORNER_BITS * i);
+    }
+    for(i=NUM_CORNERS/2 ; i<NUM_CORNERS ; i++) {
+        corners2 |= i << (CORNER_BITS * (i-NUM_CORNERS/2));
+    }
+
+    // 172066848 379887846 100384 235684
+    Cube c = { edges1, edges2, corners1, corners2 };
     return c;
 }
 
-int isSolved(Cube c) {
-    int fid, pid, cid;
-    for (fid=0 ; fid<NUM_FACES ; fid++) {
-        cid = readColor(c, fid, 0);
-        for (pid=1 ; pid<NUM_POS ; pid++) {
-            if (cid != readColor(c, fid, pid)) {
-                return 0;
+Cube apply(Cube c, Move m) {
+    Cube old_c = c;
+
+    CubieId *edge_permutations;
+    CubieId *corner_permutations;
+    // int *edge_orientations, *corner_orientations;
+
+    if (m & U) {
+        static CubieId ueps[4] = { UF, UL, UB, UR };
+        // static int ueos[4]      = {};
+        static CubieId ucps[4] = { UFR, UFL, UBL, UBR };
+        // static int ucos[4]      = {};
+        edge_permutations = ueps;
+        // edge_orientations = ueos;
+        corner_permutations = ucps;
+        // corner_orientations = ucos;
+    }
+    else if (m & D) {
+        static CubieId deps[4] = { DF, DR, DB, DL };
+        // static int deos[4]      = {};
+        static CubieId dcps[4] = { DFL, DFR, DBR, DBL };
+        // static int dcos[4]      = {};
+        edge_permutations = deps;
+        // edge_orientations = deos;
+        corner_permutations = dcps;
+        // corner_orientations = dcos;
+    }
+    else if (m & F) {
+        static CubieId feps[4] = { UF, FR, DF, FL };
+        // static int feos[4]      = {};
+        static CubieId fcps[4] = { UFL, UFR, DFR, DFL };
+        // static int fcos[4]      = {};
+        edge_permutations = feps;
+        // edge_orientations = feos;
+        corner_permutations = fcps;
+        // corner_orientations = fcos;
+    }
+    else if (m & B) {
+        static CubieId beps[4] = { UB, BL, DB, BR };
+        // static int beos[4]      = {};
+        static CubieId bcps[4] = { UBR, UBL, DBL, DBR };
+        // static int bcos[4]      = {};
+        edge_permutations = beps;
+        // edge_orientations = beos;
+        corner_permutations = bcps;
+        // corner_orientations = bcos;
+    }
+    else if (m & R) {
+        static CubieId reps[4] = { UR, BR, DR, FR };
+        // static int reos[4]      = {};
+        static CubieId rcps[4] = { UFR, UBR, DBR, DFR };
+        // static int rcos[4]      = {};
+        edge_permutations = reps;
+        // edge_orientations = reos;
+        corner_permutations = rcps;
+        // corner_orientations = rcos;
+    }
+    else if (m & L) {
+        static CubieId leps[4] = { UL, FL, DL, BL };
+        // static int leos[4]      = {};
+        static CubieId lcps[4] = { UBL, UFL, DFL, DBL };
+        // static int lcos[4]      = {};
+        edge_permutations = leps;
+        // edge_orientations = leos;
+        corner_permutations = lcps;
+        // corner_orientations = lcos;
+    }
+    else {
+        return c;
+    }
+
+    if (m & I) {
+        CubieId tmp_eid = edge_permutations[1];
+        edge_permutations[1] = edge_permutations[3];
+        edge_permutations[3] = tmp_eid;
+
+        CubieId tmp_cid = corner_permutations[1];
+        corner_permutations[1] = corner_permutations[3];
+        corner_permutations[3] = tmp_cid;
+    }
+
+    if (m * H) {
+        // TODO
+    }
+
+    int i, b;
+    for (i=0 ; i<4 ; i++) {
+        for (b=0 ; b<2 ; b++) {
+            CubieId old_id, new_id;
+            old_id = b ? edge_permutations[i] : corner_permutations[i];
+            new_id = b ? edge_permutations[(i+1)%4] : corner_permutations[(i+1)%4];
+
+            unsigned long add_mask, clear_mask;
+
+            int bits = b ? EDGE_BITS : CORNER_BITS;
+            int num = (b ? NUM_EDGES : NUM_CORNERS)/2;
+
+            add_mask = b ?  ((old_id < num) ? c.edges1 : c.edges2) :
+                            ((old_id < num) ? c.corners1 : c.corners2);
+            add_mask >>= bits*(old_id % num);
+            add_mask &= ((1 << bits) -1);
+            add_mask <<= bits*(new_id % num);
+
+            clear_mask = ((1 << bits) -1);
+            clear_mask <<= bits*(new_id % num);
+
+            if (b) {
+                if (new_id < num) {
+                    c.edges1 = (c.edges1 & ~clear_mask) | add_mask;
+                }
+                else {
+                    c.edges2 = (c.edges2 & ~clear_mask) | add_mask;
+                }
+            }
+            else {
+                if (new_id < num) {
+                    c.corners1 = (c.corners1 & ~clear_mask) | add_mask;
+                }
+                else {
+                    c.corners2 = (c.corners2 & ~clear_mask) | add_mask;
+                }
             }
         }
     }
-    return 1;
+
+    return c;
 }
 
-void printCube(Cube c) {
-    static char *symbol = "▣";
-    printf("┌──┤U├──┬──┤L├──┬──┤F├──┬──┤R├──┬──┤B├──┬──┤D├──┐\n");
+int main() {
+    Cube c1 = cubeFactory();
+    Cube c2 = c1;
 
-    FaceId fids[NUM_FACES] = { U, L, F, R, B, D };
-    PosId pids[3];
-    ColorId cid;
-
-    int i, fid, pid;
-    for (i=0 ; i<3; i++) {
-        printf("│ ");
-        for (fid=0 ; fid<NUM_FACES; fid++) {
-            if (i == 0) {
-                pids[0] = UL; pids[1] = UU; pids[2] = UR;
-            }
-            else if (i == 1) {
-                pids[0] = LL; pids[1] = CC; pids[2] = RR;
-            }
-            else if (i == 2) {
-                pids[0] = DL; pids[1] = DD; pids[2] = DR;
-            }
-
-            for (pid=0 ; pid<3 ; pid++) {
-                cid = readColor(c, fids[fid], pids[pid]);
-                if (cid == WHITE) {
-                    printf("\033[0;37m");
-                }
-                else if (cid == YELLOW) {
-                    printf("\033[0;33m");
-                }
-                else if (cid == RED) {
-                    printf("\033[0;31m");
-                }
-                else if (cid == ORANGE) {
-                    printf("\e[0;35m");
-                }
-                else if (cid == BLUE) {
-                    printf("\033[0;34m");
-                }
-                else if (cid == GREEN) {
-                    printf("\033[0;32m");
-                }
-                printf(symbol);
-                printf("\033[0m ");
-            }
-            
-            if (fid<NUM_FACES-1) {
-                printf("│ ");
-            }
-        }
-        printf("│\n");
-    }
-    printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
-}
-
-void printMove(Move m) {
-    if (m.fid == U) {
-        printf("U");
-    }
-    else if (m.fid == D) {
-        printf("D");
-    }
-    else if (m.fid == R) {
-        printf("R");
-    }
-    else if (m.fid == L) {
-        printf("L");
-    }
-    else if (m.fid == F) {
-        printf("F");
-    }
-    else if (m.fid == B) {
-        printf("B");
-    }
-    else if (m.fid == X) {
-        printf("X");
-    }
-    else if (m.fid == Y) {
-        printf("Y");
-    }
-    else if (m.fid == Z) {
-        printf("Z");
+    int i;
+    for (i=0 ; i<2000000 ; i++) {
+        c2 = apply(c2, R);
     }
 
-    if (m.b_d) {
-        printf("2");
-    }
-
-    if (m.b_i) {
-        printf("'");
-    }
-}
-
-void printMoves(Move *ms, int n) {
-    while (n-- > 0) {
-        printMove(*(ms++));
-        printf(" ");
-    }
-    printf("\n");
+    printf("c1: %d %d %d %d\n", c1.edges1, c1.edges2, c1.corners1, c1.corners2);
+    printf("c2: %d %d %d %d\n", c2.edges1, c2.edges2, c2.corners1, c2.corners2);
 }
