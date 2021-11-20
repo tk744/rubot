@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include "cube.h"
 
+/*
+TODO:
+1. orientation handling in applyMove()
+2. printCube()
+3. moveToString()
+*/
+
 /* MODEL CONSTANTS */
 
 #define EDGE_BITS 5
@@ -35,67 +42,42 @@ Cube applyMove(Cube c, Move m) {
 
     CubieEnum *edge_enums;
     CubieEnum *corner_enums;
-    // int *edge_orientations, *corner_orientations;
 
     if (m & U) {
         static CubieEnum ueps[4] = { UF, UL, UB, UR };
-        // static int ueos[4]      = {};
         static CubieEnum ucps[4] = { UFR, UFL, UBL, UBR };
-        // static int ucos[4]      = {};
         edge_enums = ueps;
-        // edge_orientations = ueos;
         corner_enums = ucps;
-        // corner_orientations = ucos;
     }
     else if (m & D) {
         static CubieEnum deps[4] = { DF, DR, DB, DL };
-        // static int deos[4]      = {};
         static CubieEnum dcps[4] = { DFL, DFR, DBR, DBL };
-        // static int dcos[4]      = {};
         edge_enums = deps;
-        // edge_orientations = deos;
         corner_enums = dcps;
-        // corner_orientations = dcos;
     }
     else if (m & F) {
         static CubieEnum feps[4] = { UF, FR, DF, FL };
-        // static int feos[4]      = {};
         static CubieEnum fcps[4] = { UFL, UFR, DFR, DFL };
-        // static int fcos[4]      = {};
         edge_enums = feps;
-        // edge_orientations = feos;
         corner_enums = fcps;
-        // corner_orientations = fcos;
     }
     else if (m & B) {
         static CubieEnum beps[4] = { UB, BL, DB, BR };
-        // static int beos[4]      = {};
         static CubieEnum bcps[4] = { UBR, UBL, DBL, DBR };
-        // static int bcos[4]      = {};
         edge_enums = beps;
-        // edge_orientations = beos;
         corner_enums = bcps;
-        // corner_orientations = bcos;
     }
     else if (m & R) {
         static CubieEnum reps[4] = { UR, BR, DR, FR };
-        // static int reos[4]      = {};
         static CubieEnum rcps[4] = { UFR, UBR, DBR, DFR };
-        // static int rcos[4]      = {};
         edge_enums = reps;
-        // edge_orientations = reos;
         corner_enums = rcps;
-        // corner_orientations = rcos;
     }
     else if (m & L) {
         static CubieEnum leps[4] = { UL, FL, DL, BL };
-        // static int leos[4]      = {};
         static CubieEnum lcps[4] = { UBL, UFL, DFL, DBL };
-        // static int lcos[4]      = {};
         edge_enums = leps;
-        // edge_orientations = leos;
         corner_enums = lcps;
-        // corner_orientations = lcos;
     }
     else {
         return c;
@@ -124,13 +106,13 @@ Cube applyMove(Cube c, Move m) {
             old_enum = b ? edge_enums[i] : corner_enums[i];
             new_enum = b ? edge_enums[(i+1)%4] : corner_enums[(i+1)%4];
 
-            unsigned long add_mask, clear_mask;
-
             int bits = b ? EDGE_BITS : CORNER_BITS;
             int num = (b ? NUM_EDGES : NUM_CORNERS)/2;
 
-            add_mask = b ?  ((old_enum < num) ? c.edges1 : c.edges2) :
-                            ((old_enum < num) ? c.corners1 : c.corners2);
+            unsigned long add_mask, clear_mask;
+
+            add_mask = b ? ((old_enum < num) ? c.edges1 : c.edges2) :
+                        ((old_enum < num) ? c.corners1 : c.corners2);
             add_mask >>= bits*(old_enum % num);
             add_mask &= ((1 << bits) -1);
             add_mask <<= bits*(new_enum % num);
@@ -160,8 +142,19 @@ Cube applyMove(Cube c, Move m) {
     return c;
 }
 
+Cube applyMoves(Cube c, Move *ms, int n) {
+    while(n-- > 0) {
+        c = applyMove(c, *ms++);
+    }
+    return c;
+}
+
 void printCube(Cube c) {
 
+}
+
+char *moveToString(Move m) {
+    
 }
 
 int main() {
