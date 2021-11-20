@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <limits.h>
 #include "cube.h"
 
 /*
@@ -16,24 +17,18 @@ TODO:
 /* FUNCTION IMPLEMENTATION */
 
 Cube cubeFactory() {
-    unsigned long edges1 = 0, edges2 = 0, corners1 = 0, corners2 = 0;
+    Int64 edges = 0, corners = 0;
 
-    int i;
-    for(i=0 ; i<NUM_EDGES/2 ; i++) {
-        edges1 |= i << (EDGE_BITS * i);
+    Int64 i;
+    for(i=0 ; i<NUM_EDGES ; i++) {
+        edges |= i << (EDGE_BITS * i);
     }
-    for(i=NUM_EDGES/2 ; i<NUM_EDGES ; i++) {
-        edges2 |= i << (EDGE_BITS * (i-NUM_EDGES/2));
-    }
-    for(i=0 ; i<NUM_CORNERS/2 ; i++) {
-        corners1 |= i << (CORNER_BITS * i);
-    }
-    for(i=NUM_CORNERS/2 ; i<NUM_CORNERS ; i++) {
-        corners2 |= i << (CORNER_BITS * (i-NUM_CORNERS/2));
+    for(i=0 ; i<NUM_CORNERS ; i++) {
+        corners |= i << (CORNER_BITS * i);
     }
 
-    // 172066848 379887846 100384 235684
-    Cube c = { edges1, edges2, corners1, corners2 };
+    // 407901468851537952 247132686368
+    Cube c = { edges, corners };
     return c;
 }
 
@@ -107,34 +102,22 @@ Cube applyMove(Cube c, Move m) {
             new_enum = b ? edge_enums[(i+1)%4] : corner_enums[(i+1)%4];
 
             int bits = b ? EDGE_BITS : CORNER_BITS;
-            int num = (b ? NUM_EDGES : NUM_CORNERS)/2;
 
-            unsigned long add_mask, clear_mask;
+            Int64 add_mask, clear_mask;
 
-            add_mask = b ? ((old_enum < num) ? c.edges1 : c.edges2) :
-                        ((old_enum < num) ? c.corners1 : c.corners2);
-            add_mask >>= bits*(old_enum % num);
-            add_mask &= ((1 << bits) -1);
-            add_mask <<= bits*(new_enum % num);
+            add_mask = b ? old_c.edges : old_c.corners;
+            add_mask >>= bits * old_enum;
+            add_mask &= ((1 << bits) - 1);
+            add_mask <<= bits * new_enum;
 
-            clear_mask = ((1 << bits) -1);
-            clear_mask <<= bits*(new_enum % num);
+            clear_mask = ((1 << bits) - 1);
+            clear_mask <<= bits * new_enum;
 
             if (b) {
-                if (new_enum < num) {
-                    c.edges1 = (c.edges1 & ~clear_mask) | add_mask;
-                }
-                else {
-                    c.edges2 = (c.edges2 & ~clear_mask) | add_mask;
-                }
+                c.edges = (c.edges & ~clear_mask) | add_mask;
             }
             else {
-                if (new_enum < num) {
-                    c.corners1 = (c.corners1 & ~clear_mask) | add_mask;
-                }
-                else {
-                    c.corners2 = (c.corners2 & ~clear_mask) | add_mask;
-                }
+                c.corners = (c.corners & ~clear_mask) | add_mask;
             }
         }
     }
@@ -149,21 +132,29 @@ Cube applyMoves(Cube c, Move *ms, int n) {
     return c;
 }
 
-void printCube(Cube c) {
+int areEqual(Cube c1, Cube c2) {
+    return (c1.edges == c2.edges && c1.corners == c2.corners);
+}
 
+void printCube(Cube c) {
+    printf("%llu %llu\n", c.edges, c.corners);
 }
 
 char *moveToString(Move m) {
-    
+
 }
 
 int main() {
+    printf("Bytes in Cube: %u\n", sizeof(Cube));
+
     Cube c1 = cubeFactory();
     Cube c2 = applyMove(c1, R);
+    Cube c3 = applyMove(c2, R|I);
 
     printCube(c1);
     printCube(c2);
+    printCube(c3);
 
-    printf("c1: %d %d %d %d\n", c1.edges1, c1.edges2, c1.corners1, c1.corners2);
-    printf("c2: %d %d %d %d\n", c2.edges1, c2.edges2, c2.corners1, c2.corners2);
+    Int64 i = 0;
+    printf("ULL MAX: %llu\n", ULLONG_MAX);
 }

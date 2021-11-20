@@ -13,14 +13,16 @@
 
 /* TYPE DEFINITIONS */
 
-typedef unsigned char CubieEnum, MoveMask;
-
-typedef unsigned char Move;
+typedef unsigned char Int8;
+typedef unsigned long long Int64;
 
 typedef struct {
-    unsigned long edges1, edges2;
-    unsigned long corners1, corners2;
+    Int64 edges;
+    Int64 corners;
 } Cube;
+
+typedef Int8 Move;
+typedef Int8 CubieEnum, MoveMask;
 
 /* ENUMERATIONS */
 
@@ -34,6 +36,10 @@ static const MoveMask NOP=0, U=1, D=2, F=4, B=8, R=16, L=32, I=64, H=128;
 Cube cubeFactory();
 
 Cube applyMove(Cube c, Move m);
+
+Cube applyMoves(Cube c, Move *ms, int n);
+
+int areEqual(Cube c1, Cube c2);
 
 void printCube(Cube c);
 
