@@ -1,75 +1,26 @@
-#include <stddef.h>
 #include <stdio.h>
 #include "solver.h"
+#include "util.h"
 
-/* DATA STRUCTURE CONSTANTS */
+/* FUNCTION IMPLEMENTATION */
 
-#define QUEUE_SIZE 1000000
-#define MAP_SIZE 100
+static Cube compress(Cube c, int phase) {
+    switch (phase) {
+        case 1: // edge orientations
+            
+            break;
+        case 2: // corner orientations, E slice edges
 
-/* TYPE DEFINITIONS */
+            break;
+        case 3: // M/S slice edges, corner tetrads, parity
 
-typedef long Hash;
-
-typedef struct Node {
-    Hash prev_hash;         // pointer to previous node
-    Move prev_move;         // move applied to previous state
-    Cube cube;              // cube state
-    Hash hash;              // hash value of cube and phase
-    int dir;                // search direction for bi-directional BFS
-} Node;
-
-typedef struct {
-    Hash *ks;
-    Node **vs;
-    int size;
-} NodeMap;
-
-typedef struct {
-    Hash *hs;
-    int front;
-    int rear;
-} HashQueue;
-
-/* DATA STRUCTURE FUNCTION IMPLEMENTATION */
-
-static int mapIndex(NodeMap *m, Hash k) {
-    int idx = k % MAP_SIZE;
-    for ( ; m->vs[idx] != NULL && m->vs[idx]->hash != k ; idx = (idx+1) % MAP_SIZE);
-    return idx;
-}
-
-static int contains(NodeMap *m, Hash k) {
-    return (m->vs[mapIndex(m, k)] != NULL);
-}
-
-static Node *lookup(NodeMap *m, Hash k) {
-    return m->vs[mapIndex(m, k)];
-}
-
-static void insert(NodeMap *m, Node *n) {
-    m->vs[mapIndex(m, n->hash)] = n;
-    m->size++;
-}
-
-static int isEmpty(HashQueue *q) {
-    return (q->front == q->rear);
-}
-
-static Hash dequeue(HashQueue *q) {
-    if (q->front < q->rear) {
-        return q->hs[q->front++];
+            break;
+        case 4: // entire state
+            
+            break;
     }
-    return -1;
+    return c;
 }
-
-static void enqueue(HashQueue *q, Hash h) {
-    if (q->rear < QUEUE_SIZE) {
-        q->hs[q->rear++] = h;
-    }
-}
-
-/* ALGORITHM FUNCTION IMPLEMENTATION */
 
 static int getMoveset(Move *ms, int phase) {
     if (phase == 1) {       // g0 group
@@ -119,24 +70,6 @@ static int getMoveset(Move *ms, int phase) {
     return 0;
 }
 
-static Hash hash(Cube c, int phase) {
-    switch (phase) {
-        case 1: // edge orientations
-            
-            break;
-        case 2: // corner orientations, E slice edges
-
-            break;
-        case 3: // M/S slice edges, corner tetrads, parity
-
-            break;
-        case 4: // entire state
-            
-            break;
-    }
-    return phase;
-}
-
 int solve(Cube c, Move *ms, int n) {
     // define init and goal states
     Cube init_cube = c;
@@ -146,46 +79,43 @@ int solve(Cube c, Move *ms, int n) {
     int phase = 0;
     while (++phase <= 4) {
         // create init and goal hashes
-        Hash init_hash = hash(init_cube, phase);
-        Hash goal_hash = hash(goal_cube, phase);
+        Cube init_cube = compress(init_cube, phase);
+        Cube goal_cube = compress(goal_cube, phase);
 
         // DEBUGGING PURPOSES ONLY
         printf("-- PHASE %d --\n", phase);
-        printf("INIT -- hash: %d\n", init_hash);
+        printf("INIT -- hash: %d\n", init_cube);
         printCube(init_cube);
-        printf("GOAL -- hash: %d\n", goal_hash);
+        printf("GOAL -- hash: %d\n", goal_cube);
         printCube(goal_cube);
 
-        if (init_hash == goal_hash) {
+        if (areEqual(init_cube, goal_cube)) {
             continue;
         }
 
         // create init and goal nodes
-        Node init_node = { 0, NOP, init_cube, init_hash, 1 };
-        Node goal_node = { 0, NOP, goal_cube, goal_hash, 2 };
+        Node init_node = { NULL, NOP, init_cube /*, 1 */ };
+        Node goal_node = { NULL, NOP, goal_cube /*, 2 */ };
 
         // initialize BFS queue
-        // stores a list of hashes in the order to be explored
-        Hash hs[QUEUE_SIZE] = {};
-        HashQueue q = { hs, 0, 0 };
-        enqueue(&q, init_hash);
-        enqueue(&q, goal_hash);
+        Cube cs[QUEUE_SIZE] = {};
+        Queue q = { cs, 0, 0 };
+        enqueue(&q, init_cube);
+        enqueue(&q, goal_cube);
 
-        // initialize BFS map
-        // maps hashes to search nodes
-        Hash ks[MAP_SIZE] = {};
-        Node *vs[MAP_SIZE] = {};
-        NodeMap m = { ks, vs, 0 };
-        insert(&m, &init_node);
-        insert(&m, &goal_node);
+        // initialize BFS lookup table
+        Node *ns[TABLE_SIZE] = {};
+        Table t = { ns, 0 };
+        insert(&t, &init_node);
+        insert(&t, &goal_node);
 
         // iterate through BFS queue
         while(!isEmpty(&q)) {
-            // dequeue parent node from queue
-            Hash prev_hash = dequeue(&q);
-            Node *prev_node = lookup(&m, prev_hash);
+            // get new frontier node
+            Cube prev_cube = dequeue(&q);
+            Node *prev_node = lookup(&t, prev_cube);
 
-            // lookup phase moveset
+            // get phase moveset
             Move moveset[NUM_MOVES];
             int i = getMoveset(moveset, phase);
 
@@ -200,27 +130,27 @@ int solve(Cube c, Move *ms, int n) {
             // iterate through phase moveset
             while(i-- > 0) {
                 // lookup child state by applying move to parent state
-                Move mv = moveset[i];
-                Cube next_cube = applyMove(prev_node->cube, mv);
-                Hash next_hash = hash(next_cube, phase);
+                Move m = moveset[i];
+                Cube next_cube = applyMove(prev_cube, m);
+                next_cube = compress(next_cube, phase);
 
                 // explore new child state
-                if (!contains(&m, next_hash)) {
-                    Node next_node = { prev_hash, mv, next_cube, next_hash, prev_node->dir };
-                    enqueue(&q, next_hash);
-                    insert(&m, &next_node);
+                if (lookup(&t, next_cube) == NULL) {
+                    Node next_node = { prev_node, m, next_cube };
+                    enqueue(&q, next_cube);
+                    insert(&t, &next_node);
                 }
-                // child state explored from reverse search direction
-                else if ((lookup(&m, next_hash))->dir != prev_node->dir) {
-                    // TODO: solved this phase
-                    // walk along path and:
-                    // 1. add moves to ms
-                    // 2. apply moves to init_cube
-                    // printMove(mv);
-                    printf(", hash table size: %d \n", m.size);
-                    printCube(next_cube);
-                    return 1;
-                }
+                // // child state explored from reverse search direction
+                // else if ((lookup(&m, next_hash))->dir != prev_node->dir) {
+                //     // TODO: solved this phase
+                //     // walk along path and:
+                //     // 1. apply moves to c
+                //     // 2. add moves to ms
+                //     // printMove(m);
+                //     printf(", hash table size: %d \n", m.size);
+                //     printCube(next_cube);
+                //     return 1;
+                // }
 
             }            
 
