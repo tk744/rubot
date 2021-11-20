@@ -23,6 +23,7 @@ typedef struct Node {
 
 typedef struct {
     Node **ns;
+    int size;
 } NodeMap;
 
 typedef struct {
@@ -49,6 +50,7 @@ static Node *get(NodeMap *m, Hash k) {
 
 static void insert(NodeMap *m, Node *n) {
     m->ns[mapIndex(m, n->hash)] = n;
+    m->size++;
 }
 
 static int isEmpty(HashQueue *q) {
@@ -62,12 +64,10 @@ static Hash dequeue(HashQueue *q) {
     return -1;
 }
 
-static int enqueue(HashQueue *q, Hash h) {
+static void enqueue(HashQueue *q, Hash h) {
     if (q->rear < QUEUE_SIZE) {
         q->hs[q->rear++] = h;
-        return 1;
     }
-    return -1;
 }
 
 /* ALGORITHM FUNCTION IMPLEMENTATION */
@@ -123,7 +123,7 @@ static int getMoveset(Move *ms, int phase) {
 static Hash hash(Cube c, int phase) {
     switch (phase) {
         case 1: // edge orientations
-
+            return readColor(c, F, UR);
             break;
         case 2: // corner orientations, E slice edges
 
@@ -149,6 +149,14 @@ int solve(Cube c, Move *ms, int n) {
         // create init and goal hashes
         Hash init_hash = hash(init_cube, phase);
         Hash goal_hash = hash(goal_cube, phase);
+
+        // DEBUGGING PURPOSES ONLY
+        printf("-- PHASE %d --\n", phase);
+        printf("INIT -- hash: %d\n", init_hash);
+        printCube(init_cube);
+        printf("GOAL -- hash: %d\n", goal_hash);
+        printCube(goal_cube);
+
         if (init_hash == goal_hash) {
             continue;
         }
@@ -168,7 +176,7 @@ int solve(Cube c, Move *ms, int n) {
         // initialize BFS map
         // maps hashes to search nodes
         Node *ns[MAP_SIZE] = {};
-        NodeMap m = { ns };
+        NodeMap m = { ns, 0 };
         insert(&m, &init_node);
         insert(&m, &goal_node);
 
@@ -180,12 +188,20 @@ int solve(Cube c, Move *ms, int n) {
 
             // get phase moveset
             Move moveset[NUM_MOVES];
-            int n = getMoveset(moveset, phase);
+            int i = getMoveset(moveset, phase);
+
+            // DEBUGGING PURPOSES ONLY
+            printf("MOVESET[%d]: ", i);
+            int j = i;
+            while (j-- > 0) {
+                printMove(moveset[j]);
+                printf(j == 0 ? "\n" : ", ");
+            }
 
             // iterate through phase moveset
-            while(n-- > 0) {
+            while(i-- > 0) {
                 // get child state by applying move to parent state
-                Move mv = moveset[n];
+                Move mv = moveset[i];
                 Cube next_cube = applyMove(prev_node->cube, mv);
                 Hash next_hash = hash(next_cube, phase);
 
@@ -198,6 +214,12 @@ int solve(Cube c, Move *ms, int n) {
                 // child state explored from reverse search direction
                 else if ((get(&m, next_hash))->dir != prev_node->dir) {
                     // TODO: solved this phase
+                    // walk along path and:
+                    // 1. add moves to ms
+                    // 2. apply moves to init_cube
+                    printMove(mv);
+                    printf(", hash table size: %d \n", m.size);
+                    printCube(next_cube);
                     return 1;
                 }
 
@@ -210,6 +232,13 @@ int solve(Cube c, Move *ms, int n) {
     return 0;
 }
 
-int main() {
+// int main() {
+//     int n = 100;
+//     Move ms[n];
+//     Cube c = solvedCubeFactory();
+//     c = applyMove(c, M_R);
+//     printCube(c);
 
-}
+//     int l = solve(c, ms, n);
+//     printf("moves: %d\n", l);
+// }
