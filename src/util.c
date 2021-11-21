@@ -12,10 +12,6 @@ static int tableIndex(Table *t, Cube c) {
     return idx;
 }
 
-// static int contains(Table *m, Cube c) {
-//     return (m->xs[tableIndex(m, c)] != NULL);
-// }
-
 void insert(Table *t, Node *n) {
     t->ns[tableIndex(t, n->cube)] = n;
     t->size++;
@@ -39,4 +35,20 @@ Cube dequeue(Queue *q) {
     if (q->front < q->rear) {
         return q->cs[q->front++];
     }
+}
+
+void push(Stack *s, Node *n) {
+    if (s->size < STACK_SIZE) {
+        s->ns[s->size++] = n;
+    }
+}
+
+Node *pop(Stack *s) {
+    if (s->size > 0) {
+        return s->ns[s->size--];
+    }
+}
+
+void empty(Stack *s) {
+    s->size = 0;
 }
