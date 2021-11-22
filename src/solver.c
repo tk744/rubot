@@ -2,23 +2,18 @@
 #include "solver.h"
 #include "util.h"
 
-/* PHASE DEFINITIONS */
-
-static int phase_maxdepth[4] = { 7, 13, 15, 17 };
-
-static Move phase_moveset[4][NUM_MOVES] = { 
-    { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
-    { U, U|I, D, D|I, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
-    { U, U|I, D, D|I, R, R|I, L, L|I, F, F|I, F|H, B, B|I, B|H },
-    { U, U|I, D, D|I, R, R|I, L, L|I, F, F|I, B, B|I } };
-
-/* FUNCTION IMPLEMENTATION */
-
 static int phaseMaxDepth(int phase) {
+    static int phase_maxdepth[4] = { 7, 13, 15, 17 };
     return (1 <= phase && phase <= 4) ? phase_maxdepth[phase-1] : 0;
 }
 
 static int phaseMoveset(int phase, Move *ms) {
+    static Move phase_moveset[4][NUM_MOVES] = { 
+        { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
+        { U, U|I,      D, D|I,      R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
+        { U, U|I,      D, D|I,      R, R|I,      L, L|I,      F, F|I, F|H, B, B|I, B|H },
+        { U, U|I,      D, D|I,      R, R|I,      L, L|I,      F, F|I,      B, B|I      } };
+
     if (1 <= phase && phase <= 4) {
         ms = phase_moveset[phase-1];
 
