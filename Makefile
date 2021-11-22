@@ -10,9 +10,12 @@ SRCS := $(shell find $(SRC_DIR) -name '*.c')
 # Get list of .o files from .c files
 OBJS := $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
-# Add include directory to compiler flags
+# Add include directory to preprocessor flags
 INC_FLAGS := $(addprefix -I,$(INC_DIR))
 CPPFLAGS := $(INC_FLAGS)
+
+# Add C standard to compiler flags
+CFLAGS := -std=gnu89
 
 # Build target executable from .o files
 $(TARGET_EXEC): $(OBJS)
