@@ -2,9 +2,9 @@
 
 /* DATA STRUCTURE CONSTANTS */
 
-#define STACK_SIZE 500
-// #define TABLE_SIZE 1000
+#define STACK_SIZE 310 // 17 (max depth) * 18 (max branching factor) = 306
 
+// #define TABLE_SIZE 1000
 // #define NULL ((void *)0)
 
 /* TYPE DEFINITIONS */
