@@ -6,7 +6,6 @@
 TODO:
 1. orientation handling in applyMove()
 2. printCube()
-3. moveToString()
 */
 
 /* MODEL CONSTANTS */
@@ -78,7 +77,10 @@ Cube applyMove(Cube c, Move m) {
         return c;
     }
 
-    if (m & I) {
+    if (m & H) {
+        // TODO
+    }
+    else if (m & I) {
         CubieEnum tmp_enum;
 
         tmp_enum = edge_enums[1];
@@ -88,10 +90,6 @@ Cube applyMove(Cube c, Move m) {
         tmp_enum = corner_enums[1];
         corner_enums[1] = corner_enums[3];
         corner_enums[3] = tmp_enum;
-    }
-
-    if (m * H) {
-        // TODO
     }
 
     int i, b;
@@ -140,21 +138,49 @@ void printCube(Cube c) {
     printf("%llu %llu\n", c.edges, c.corners);
 }
 
-char *moveToString(Move m) {
+void printMove(Move m) {
+    if (m & U) {
+        printf("U");
+    }
+    else if (m & D) {
+        printf("D");
+    }
+    else if (m & F) {
+        printf("F");
+    }
+    else if (m & B) {
+        printf("B");
+    }
+    else if (m & R) {
+        printf("R");
+    }
+    else if (m & L) {
+        printf("L");
+    }
+    else {
+        printf("NOP");
+        return;
+    }
 
+    if (m & H) {
+        printf("2");
+    }
+    else if (m & I) {
+        printf("'");
+    }
 }
 
-int main() {
-    printf("Bytes in Cube: %u\n", sizeof(Cube));
+// int main() {
+//     printf("Bytes in Cube: %u\n", sizeof(Cube));
 
-    Cube c1 = cubeFactory();
-    Cube c2 = applyMove(c1, R);
-    Cube c3 = applyMove(c2, R|I);
+//     Cube c1 = cubeFactory();
+//     Cube c2 = applyMove(c1, R);
+//     Cube c3 = applyMove(c2, R|I);
 
-    printCube(c1);
-    printCube(c2);
-    printCube(c3);
+//     printCube(c1);
+//     printCube(c2);
+//     printCube(c3);
 
-    Int64 i = 0;
-    printf("ULL MAX: %llu\n", ULLONG_MAX);
-}
+//     Int64 i = 0;
+//     printf("ULL MAX: %llu\n", ULLONG_MAX);
+// }

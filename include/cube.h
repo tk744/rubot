@@ -43,6 +43,6 @@ int areEqual(Cube c1, Cube c2);
 
 void printCube(Cube c);
 
-char *moveToString(Move m);
+void printMove(Move m);
 
 #endif
