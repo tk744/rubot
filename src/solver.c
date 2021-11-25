@@ -48,8 +48,8 @@ static Cube phaseCube(int phase, Cube c) {
 
 int solve(Cube c, Move *ms) {
     // create IDDFS stack
-    Node ns[STACK_SIZE] = {};
-    Stack s = { ns, 0 };
+    static Node ns[STACK_SIZE] = {};
+    static Stack s = { ns, 0 };
 
     // iterate through phases
     int phase = 0, offset_depth = 0;
@@ -57,7 +57,7 @@ int solve(Cube c, Move *ms) {
         // create goal cube and root node
         Cube goal_cube = phaseCube(phase, cubeFactory());
         Cube root_cube = phaseCube(phase, c);
-        Node root_node = { NOP, root_cube, 0 };
+        Node root_node = { root_cube, NOP, 0 };
 
         // iterative deepening
         int max_depth = 0;
@@ -92,7 +92,7 @@ int solve(Cube c, Move *ms) {
                         Move m = moveset[i];
                         Cube next_cube = applyMove(node.cube, m);
                         next_cube = phaseCube(phase, next_cube);
-                        Node next_node = { m, next_cube, node.depth+1 };
+                        Node next_node = { next_cube, m, node.depth+1 };
                         push(&s, next_node);
                     }
                 }
@@ -104,6 +104,17 @@ int solve(Cube c, Move *ms) {
 }
 
 int main() {
-    printf("%d", phaseMoveset(3, NULL));
-    return 0;
+    printf("Cube size:    %u bytes\n", sizeof(Cube));
+    printf("Node size:    %u bytes\n", sizeof(Node));
+    printf("Stack size: %u bytes \n", STACK_SIZE * sizeof(Node));
+
+    Cube c1 = cubeFactory();
+    Cube c2 = applyMove(c1, R);
+    Cube c3 = applyMove(c2, R|I);
+
+    printCube(c1);
+    printCube(c2);
+    printCube(c3);
+
+    return(0);
 }

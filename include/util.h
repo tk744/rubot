@@ -9,9 +9,9 @@
 
 /* TYPE DEFINITIONS */
 
-typedef struct Node {
-    Move move;
+typedef struct {
     Cube cube;
+    Move move;
     Int8 depth;
 } Node;
 
