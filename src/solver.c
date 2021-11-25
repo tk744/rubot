@@ -108,10 +108,12 @@ int main() {
     printf("Node size:    %u bytes\n", sizeof(Node));
     printf("Stack size: %u bytes \n", STACK_SIZE * sizeof(Node));
 
-    Cube c1 = cubeFactory();
-    Cube c2 = applyMove(c1, R);
-    Cube c3 = applyMove(c2, R|I);
+    Cube c0 = cubeFactory();        // -
+    Cube c1 = applyMove(c0, R|I);   // R R R
+    Cube c2 = applyMove(c1, R|I);   // R R
+    Cube c3 = applyMove(c2, R|H);   // -
 
+    printCube(c0);
     printCube(c1);
     printCube(c2);
     printCube(c3);

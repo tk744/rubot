@@ -1,10 +1,9 @@
 #include <stdio.h>
-#include <limits.h>
 #include "cube.h"
 
 /*
 TODO:
-1. orientation handling in applyMove()
+1. applyMove() orientations
 2. printCube()
 */
 
@@ -32,11 +31,23 @@ Cube cubeFactory() {
 }
 
 Cube applyMove(Cube c, Move m) {
-    Cube old_c = c;
+    // recursive calls for double and inverse rotations
+    if (m & H) {
+        m &= ~(H|I);
+        c = applyMove(c, m);
+        c = applyMove(c, m);
+        return c;
+    }
+    else if (m & I) {
+        m &= ~(H|I);
+        c = applyMove(c, m|H);
+        c = applyMove(c, m);
+        return c;
+    }
 
+    // define cubies affected by base move
     CubieEnum *edge_enums;
     CubieEnum *corner_enums;
-
     if (m & U) {
         static CubieEnum ueps[4] = { UF, UL, UB, UR };
         static CubieEnum ucps[4] = { UFR, UFL, UBL, UBR };
@@ -77,21 +88,8 @@ Cube applyMove(Cube c, Move m) {
         return c;
     }
 
-    if (m & H) {
-        // TODO
-    }
-    else if (m & I) {
-        CubieEnum tmp_enum;
-
-        tmp_enum = edge_enums[1];
-        edge_enums[1] = edge_enums[3];
-        edge_enums[3] = tmp_enum;
-
-        tmp_enum = corner_enums[1];
-        corner_enums[1] = corner_enums[3];
-        corner_enums[3] = tmp_enum;
-    }
-
+    // rotate permutations and compute orientations of affected cubies
+    Cube old_c = c;
     int i, b;
     for (i=0 ; i<4 ; i++) {
         for (b=0 ; b<2 ; b++) {
@@ -119,7 +117,6 @@ Cube applyMove(Cube c, Move m) {
             }
         }
     }
-
     return c;
 }
 
@@ -169,18 +166,3 @@ void printMove(Move m) {
         printf("'");
     }
 }
-
-// int main() {
-//     printf("Bytes in Cube: %u\n", sizeof(Cube));
-
-//     Cube c1 = cubeFactory();
-//     Cube c2 = applyMove(c1, R);
-//     Cube c3 = applyMove(c2, R|I);
-
-//     printCube(c1);
-//     printCube(c2);
-//     printCube(c3);
-
-//     Int64 i = 0;
-//     printf("ULL MAX: %llu\n", ULLONG_MAX);
-// }
