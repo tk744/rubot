@@ -166,3 +166,10 @@ void printMove(Move m) {
         printf("'");
     }
 }
+
+void printMoves(Move *ms, int n) {
+    while(n-- > 0) {
+        printMove(*ms++);
+        printf(n == 0 ? "\n" : ", ");
+    }
+}
