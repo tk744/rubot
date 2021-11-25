@@ -7,6 +7,6 @@
 
 #include "cube.h"
 
-int solve(Cube c, Move *ms, int n);
+int solve(Cube c, Move *ms);
 
 #endif

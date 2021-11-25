@@ -2,51 +2,37 @@
 
 /* DATA STRUCTURE CONSTANTS */
 
-#define TABLE_SIZE 1000
-#define QUEUE_SIZE 1000000
-#define STACK_SIZE 1000
+#define STACK_SIZE 500
+// #define TABLE_SIZE 1000
 
-#define NULL ((void *)0)
+// #define NULL ((void *)0)
 
 /* TYPE DEFINITIONS */
 
 typedef struct Node {
-    struct Node *prev_node;
-    Move prev_move;
+    Move move;
     Cube cube;
     Int8 depth;
 } Node;
 
-typedef struct {
-    Node **ns;
-    int size;
-} Table;
+// typedef struct {
+//     Node **ns;
+//     int size;
+// } Table;
 
 typedef struct {
-    Cube *cs;
-    int front;
-    int rear;
-} Queue;
-
-typedef struct {
-    Node **ns;
+    Node *ns;
     int size;
 } Stack;
 
 /* FUNCTION PROTOTYPES */
 
-void insert(Table *t, Node *n);
+// void insert(Table *t, Node *n);
 
-Node *lookup(Table *t, Cube c);
+// Node *lookup(Table *t, Cube c);
 
-int isEmpty(Queue *q);
+void push(Stack *s, Node n);
 
-void enqueue(Queue *q, Cube c);
+Node pop(Stack *s);
 
-Cube dequeue(Queue *q);
-
-void push(Stack *s, Node *n);
-
-Node *pop(Stack *s);
-
-void empty(Stack *s);
+void clear(Stack *s);
