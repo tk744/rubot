@@ -99,7 +99,7 @@ Cube applyMove(Cube c, Move m) {
             add_mask &= (1 << CUBIE_BITS) - 1;
 
             // update add mask to update cubie orientation
-            if (isEdge && (m & (U|D))) {
+            if (isEdge && (m & (F|B))) {
                 add_mask ^= 1 << (CUBIE_BITS - 1);
             }
             else if (!isEdge && 0) {
