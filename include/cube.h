@@ -11,6 +11,10 @@
 #define NUM_CORNERS 8
 #define NUM_MOVES 18
 
+/* MODEL CONSTANTS */
+
+#define CUBIE_BITS 5
+
 /* TYPE DEFINITIONS */
 
 typedef unsigned char Int8;
