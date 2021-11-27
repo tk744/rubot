@@ -18,6 +18,7 @@ typedef unsigned long long Int64;
 
 typedef Int8 Move, MoveMask;
 typedef Int8 CubieEnum;
+typedef Int8 FaceEnum;
 
 typedef struct {
     Int64 edges;
@@ -29,10 +30,12 @@ typedef struct {
 // 1-hot encoding masks
 static const MoveMask NOP=0, U=1, D=2, F=4, B=8, R=16, L=32, I=64, H=128;
 
-// edge cubies
-static const CubieEnum UF=0, UB=1, UR=2, UL=3, FR=4, FL=5, DF=6, DB=7, DR=8, DL=9, BR=10, BL=11;
-// corner cubies
+// edge cubie encoding index
+static const CubieEnum UF=0, UB=1, UR=2, UL=3, DF=4, DB=5, DR=6, DL=7, FR=8, FL=9, BR=10, BL=11;
+// corner cubie encoding index
 static const CubieEnum UFR=0, UFL=1, UBR=2, UBL=3, DFR=4, DFL=5, DBR=6, DBL=7;
+
+static FaceEnum U_FACE=1, D_FACE=2, F_FACE=3, B_FACE=4, R_FACE=5, L_FACE=6;
 
 /* FUNCTION PROTOTYPES */
 
