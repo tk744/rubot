@@ -15,8 +15,8 @@ static int phaseMaxDepth(int phase) {
 static int phaseMoveset(int phase, Move *ms) {
     static Move phase_moveset[4][NUM_MOVES] = { 
         { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
-        { U, U|I,      D, D|I,      R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
-        { U, U|I,      D, D|I,      R, R|I,      L, L|I,      F, F|I, F|H, B, B|I, B|H },
+        { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I,      B, B|I,     },
+        { U, U|I, U|H, D, D|I, D|H, R, R|I,      L, L|I,      F, F|I,      B, B|I,     },
         { U, U|I,      D, D|I,      R, R|I,      L, L|I,      F, F|I,      B, B|I      } };
 
     if (1 <= phase && phase <= 4) {
@@ -73,8 +73,8 @@ int solve(Cube c, Move *ms) {
 
                 // update move sequence if node is not root
                 if (node.depth > 0) {
-                    int ms_idx = offset_depth + node.depth-1;
-                    *(ms+ms_idx) = node.move;
+                    int idx = offset_depth + node.depth-1;
+                    ms[idx] = node.move;
                 }
 
                 // finish phase if node is goal
@@ -103,20 +103,20 @@ int solve(Cube c, Move *ms) {
     return offset_depth;
 }
 
-int main() {
-    printf("Cube size:    %u bytes\n", sizeof(Cube));
-    printf("Node size:    %u bytes\n", sizeof(Node));
-    printf("Stack size: %u bytes \n", STACK_SIZE * sizeof(Node));
+// int main() {
+//     printf("Cube size:    %u bytes\n", sizeof(Cube));
+//     printf("Node size:    %u bytes\n", sizeof(Node));
+//     printf("Stack size: %u bytes \n", STACK_SIZE * sizeof(Node));
 
-    Cube c0 = cubeFactory();        // -
-    Cube c1 = applyMove(c0, R|I);   // R R R
-    Cube c2 = applyMove(c1, R|I);   // R R
-    Cube c3 = applyMove(c2, R|H);   // -
+//     Cube c0 = cubeFactory();        // -
+//     Cube c1 = applyMove(c0, U|I);   // R R R
+//     Cube c2 = applyMove(c1, U|I);   // R R
+//     Cube c3 = applyMove(c2, U|H);   // -
 
-    printCube(c0);
-    printCube(c1);
-    printCube(c2);
-    printCube(c3);
+//     printCube(c0);
+//     printCube(c1);
+//     printCube(c2);
+//     printCube(c3);
 
-    return(0);
-}
+//     return(0);
+// }

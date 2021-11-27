@@ -8,18 +8,16 @@ TODO:
 /* FUNCTION IMPLEMENTATION */
 
 Cube cubeFactory() {
-    Int64 edges = 0, corners = 0;
+    Cube c = { 0, 0 }; // initialize to { 407901468851537952, 247132686368 }
 
     Int64 i;
     for(i=0 ; i<NUM_EDGES ; i++) {
-        edges |= i << (CUBIE_BITS * i);
+        c.edges |= i << (CUBIE_BITS * i);
     }
     for(i=0 ; i<NUM_CORNERS ; i++) {
-        corners |= i << (CUBIE_BITS * i);
+        c.corners |= i << (CUBIE_BITS * i);
     }
 
-    // 407901468851537952 247132686368
-    Cube c = { edges, corners };
     return c;
 }
 
