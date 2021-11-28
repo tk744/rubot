@@ -4,7 +4,8 @@
 
 /*
 TODO:
-1. phaseCube()
+1. phaseCube() phases 2 & 3
+2. debug why demo breaks when n=9
 */
 
 static int phaseMaxDepth(int phase) {
@@ -15,9 +16,9 @@ static int phaseMaxDepth(int phase) {
 static int phaseMoveset(int phase, Move *ms) {
     static Move phase_moveset[4][NUM_MOVES] = { 
         { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
-        { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I,      B, B|I,     },
-        { U, U|I, U|H, D, D|I, D|H, R, R|I,      L, L|I,      F, F|I,      B, B|I,     },
-        { U, U|I,      D, D|I,      R, R|I,      L, L|I,      F, F|I,      B, B|I      } };
+        { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H,         F|H,         B|H },
+        { U, U|I, U|H, D, D|I, D|H,         R|H,         L|H,         F|H,         B|H },
+        {         U|H,         D|H,         R|H,         L|H,         F|H,         B|H } };
 
     if (1 <= phase && phase <= 4) {
         int n;
@@ -30,18 +31,18 @@ static int phaseMoveset(int phase, Move *ms) {
 }
 
 static Cube phaseCube(int phase, Cube c) {
-    switch (phase) {
-        case 1: // edge orientations
-            c.corners = 0;
-            break;
-        case 2: // corner orientations, E-slice edges
-            c.edges = 0;
-            break;
-        case 3: // M/S-slice edges, corner tetrad, even parity
+    if (phase == 1) {       // edge orientations
+        int i;
+        for(i=0 ; i<NUM_EDGES ; i++) {
+            c.edges &= ~((((Int64) 1 << (CUBIE_BITS - 1)) - 1) << (CUBIE_BITS * i));
+        }
+        c.corners = 0;
+    }
+    else if (phase == 2) {  // corner orientations, E-slice edges
 
-            break;
-        case 4: // entire state
-            break;
+    }
+    else if (phase == 3) {  // M/S-slice edges, corner tetrad, even parity
+
     }
     return c;
 }
@@ -98,7 +99,7 @@ int solve(Cube c, Move *ms) {
                 }
             }
         }
-        return 0;
+        return -1;
     }
     return offset_depth;
 }
@@ -111,14 +112,25 @@ int main() {
 
     // initialize
     Cube c = cubeFactory();
-    Move ms[MAX_MOVES] = { U, R|I, D|H, L, F, U|I };
+    Move ms[MAX_MOVES] = { U, R|I, D|H, L, F, U|I, B, F|H, U };
+    int n = 8; // breaks if set to 9
 
     // scramble
-    c = applyMoves(c, ms, 6);
+    c = applyMoves(c, ms, n);
     
-    // solve and display
-    int n = solve(c, ms);
+    // solve
+    Move solved_ms[MAX_MOVES];
+    int solved_n = solve(c, solved_ms);
+
+    // print details
+    printf("\n-- INITIAL STATE --\n");
+    printCube(c);
+    printf("\n-- SCRAMBLE MOVES --\n");
+    printf("[%u]: ", n);
     printMoves(ms, n);
+    printf("\n-- SOLVE MOVES --\n");
+    printf("[%u]: ", solved_n);
+    printMoves(solved_ms, solved_n);
 
     return 0;
 }
