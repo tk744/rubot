@@ -125,7 +125,6 @@ Cube convertColorCube(ColorCube cc) {
 
     Int64 i;
     for(i=0 ; i<NUM_EDGES ; i++) {
-        printf("%d\n", cubieEncoding(cc, i, 1));
         c.edges |= ((Int64) cubieEncoding(cc, i, 1)) << (CUBIE_BITS * i);
     }
     for(i=0 ; i<NUM_CORNERS ; i++) {
@@ -136,7 +135,19 @@ Cube convertColorCube(ColorCube cc) {
 }
 
 ColorCube convertCube(Cube c) {
-    
+    ColorCube cc;
+    cc.U.C = U; cc.D.C = D; cc.F.C = F; cc.B.C = B; cc.R.C = R; cc.L.C = L;
+
+    Int64 i;
+    for(i=0 ; i<NUM_EDGES ; i++) {
+
+    }
+    for(i=0 ; i<NUM_CORNERS ; i++) {
+
+    }
+
+    return cc;
+
 }
 
 static void printColor(FaceMask color) {
@@ -230,15 +241,15 @@ void printCube(Cube c) {
     printf("%llu %llu\n", c.edges, c.corners);
 }
 
-int main() {
-    ColorCube cc0 = colorCubeFactory();
-    printColorCube(cc0);
+// int main() {
+//     ColorCube cc0 = colorCubeFactory();
+//     printColorCube(cc0);
 
-    Cube c0 = convertColorCube(cc0);
-    printCube(c0);
+//     Cube c0 = convertColorCube(cc0);
+//     printCube(c0);
     
-    return 0;
-}
+//     return 0;
+// }
 
 
 // static FaceMask getColor(Cube c, FaceMask fm, CubieEnum ce, int isEdge) {

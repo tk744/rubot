@@ -20,10 +20,10 @@ static int phaseMoveset(int phase, Move *ms) {
         { U, U|I,      D, D|I,      R, R|I,      L, L|I,      F, F|I,      B, B|I      } };
 
     if (1 <= phase && phase <= 4) {
-        ms = phase_moveset[phase-1];
-
         int n;
-        for (n=0 ; ms[n] != NOP ; n++);
+        for (n=0 ; phase_moveset[phase-1][n] != NOP && n < NUM_MOVES ; n++) {
+            *(ms+n) = *(phase_moveset[phase-1]+n);
+        }
         return n;
     }
     return 0;
@@ -120,3 +120,13 @@ int solve(Cube c, Move *ms) {
 
 //     return(0);
 // }
+
+int main() {
+    Cube c = cubeFactory();
+    c = applyMove(c, R|I);
+
+    Move ms[MAX_MOVES] = {};
+    int n = solve(c, ms);
+
+    printMoves(ms, n);
+}

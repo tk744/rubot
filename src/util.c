@@ -29,7 +29,7 @@ void push(Stack *s, Node n) {
 
 Node pop(Stack *s) {
     if (s->size > 0) {
-        return s->ns[s->size--];
+        return s->ns[--s->size];
     }
 }
 
