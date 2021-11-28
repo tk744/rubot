@@ -88,8 +88,8 @@ int solve(Cube c, Move *ms) {
                 if (node.depth < max_depth) {
                     Move moveset[NUM_MOVES];
                     int i = 0, n = phaseMoveset(phase, moveset);
-                    while(i++ < n) {
-                        Move m = moveset[i];
+                    while(i < n) {
+                        Move m = moveset[i++];
                         Cube next_cube = applyMove(node.cube, m);
                         next_cube = phaseCube(phase, next_cube);
                         Node next_node = { next_cube, m, node.depth+1 };
@@ -103,30 +103,22 @@ int solve(Cube c, Move *ms) {
     return offset_depth;
 }
 
-// int main() {
-//     printf("Cube size:    %u bytes\n", sizeof(Cube));
-//     printf("Node size:    %u bytes\n", sizeof(Node));
-//     printf("Stack size: %u bytes \n", STACK_SIZE * sizeof(Node));
-
-//     Cube c0 = cubeFactory();        // -
-//     Cube c1 = applyMove(c0, U|I);   // R R R
-//     Cube c2 = applyMove(c1, U|I);   // R R
-//     Cube c3 = applyMove(c2, U|H);   // -
-
-//     printCube(c0);
-//     printCube(c1);
-//     printCube(c2);
-//     printCube(c3);
-
-//     return(0);
-// }
-
 int main() {
+    // print stats
+    printf("Cube size:    %u bytes\n", sizeof(Cube));
+    printf("Node size:    %u bytes\n", sizeof(Node));
+    printf("Stack size: %u bytes \n", STACK_SIZE * sizeof(Node));
+
+    // initialize
     Cube c = cubeFactory();
-    c = applyMove(c, R|I);
+    Move ms[MAX_MOVES] = { U, R|I, D|H, L, F, U|I };
 
-    Move ms[MAX_MOVES] = {};
+    // scramble
+    c = applyMoves(c, ms, 6);
+    
+    // solve and display
     int n = solve(c, ms);
-
     printMoves(ms, n);
+
+    return 0;
 }
