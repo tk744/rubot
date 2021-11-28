@@ -234,11 +234,27 @@ ColorCube colorCubeFactory() {
 }
 
 void printCube(Cube c) {
-    ColorCube cc = convertCube(c);
-    printColorCube(cc);
+    // ColorCube cc = convertCube(c);
+    // printColorCube(cc);
 
-    // FOR DEBUGGING PURPOSES ONLY:
-    printf("%llu %llu\n", c.edges, c.corners);
+    int i, p, o, cubie;
+    printf("  EDGES: ");
+    for(i=0 ; i<NUM_EDGES ; i++) {
+        cubie = c.edges >> (CUBIE_BITS * i);
+        p = cubie & 0b01111;
+        o = cubie & 0b10000;
+        o >>= 4;
+        printf("%u:%u ", p, o);
+    }
+    printf("\nCORNERS: ");
+    for(i=0 ; i<NUM_CORNERS ; i++) {
+        cubie = c.corners >> (CUBIE_BITS * i);
+        p = cubie & 0b00111;
+        o = cubie & 0b11000;
+        o >>= 3;
+        printf("%u:%u ", p, o);
+    }
+    printf("\n");
 }
 
 // int main() {
