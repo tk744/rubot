@@ -15,8 +15,8 @@ static int phaseMaxDepth(int phase) {
 static int phaseMoveset(int phase, Move *ms) {
     static Move phase_moveset[4][NUM_MOVES] = { 
         { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
-        { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H,         F|H,         B|H },
-        { U, U|I, U|H, D, D|I, D|H,         R|H,         L|H,         F|H,         B|H },
+        {         U|H,         D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
+        {         U|H,         D|H, R, R|I, R|H, L, L|I, L|H,         F|H,         B|H },
         {         U|H,         D|H,         R|H,         L|H,         F|H,         B|H } };
 
     if (1 <= phase && phase <= 4) {

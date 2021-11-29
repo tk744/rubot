@@ -125,7 +125,7 @@ Cube applyMove(Cube c, Move m) {
             Int64 add_mask = getCubie(isEdge ? old_c.edges : old_c.corners, old_enum);
 
             // update add mask to update cubie orientation
-            if (isEdge && (m & (F|B))) {
+            if (isEdge && (m & (U|D))) {
                 add_mask ^= 1 << (CUBIE_BITS - 1);
             }
             else if (!isEdge && 0) {
