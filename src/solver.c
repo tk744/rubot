@@ -43,10 +43,10 @@ static Cube phaseCube(int phase, Cube c) {
             Int8 cubie = getCubie(c.edges, i);
             Int8 p = getPermutation(cubie, 1);
             if (p == UR || p == UL || p == DR || p == DL) {
-                setPermutation(&cubie, 1, 1);
+                setPermutation(&cubie, 1, UR);
             }
             else {
-                setPermutation(&cubie, 1, 2);
+                setPermutation(&cubie, 1, UF);
             }
             setCubie(&c.edges, i, cubie);
         }
