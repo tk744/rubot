@@ -2,8 +2,6 @@
 #include "solver.h"
 #include "util.h"
 
-// TODO: debug phase 3
-
 static int phaseMaxDepth(int phase) {
     static int phase_maxdepth[4] = { 7, 10, 14, 15 };
     return (1 <= phase && phase <= 4) ? phase_maxdepth[phase-1] : 0;
@@ -32,7 +30,7 @@ static Cube phaseCube(int phase, Cube c) {
         int i;
         for(i=0 ; i<NUM_EDGES ; i++) {
             Int8 cubie = getCubie(c.edges, i);
-            setPermutation(&cubie, 1, 1);
+            setPermutation(&cubie, 1, 0);
             setCubie(&c.edges, i, cubie);
         }
         // create 1 corner permutation and orientation group
@@ -56,7 +54,7 @@ static Cube phaseCube(int phase, Cube c) {
         // create 1 corner permutation group
         for(i=0 ; i<NUM_CORNERS ; i++) {
             Int8 cubie = getCubie(c.corners, i);
-            setPermutation(&cubie, 0, 1);
+            setPermutation(&cubie, 0, 0);
             setCubie(&c.corners, i, cubie);
         }
     }
@@ -155,6 +153,12 @@ int solve(Cube c, Move *ms) {
                     int i = 0, n = phaseMoveset(phase, moveset);
                     while(i < n) {
                         Move m = moveset[i++];
+                        
+                        // skip redundant moves
+                        if ((m & ~(H|I)) & (node.move & ~(H|I))) {
+                            continue;
+                        }
+
                         Cube next_cube = applyMove(node.cube, m);
                         next_cube = phaseCube(phase, next_cube);
                         Node next_node = { next_cube, m, node.depth+1 };
@@ -177,24 +181,22 @@ int main() {
     // initialize
     Cube c = cubeFactory();
     Move ms[MAX_MOVES] = { U, R|I, F|H, U|I };
-    int n = 8;
 
     // scramble
-    c = applyMoves(c, ms, n);
+    c = applyMoves(c, ms, MAX_MOVES);
     
     // solve
     Move solved_ms[MAX_MOVES];
-    int solved_n = solve(c, solved_ms);
+    int n = solve(c, solved_ms);
 
     // display details
     printf("\n-- INITIAL STATE --\n");
     printCube(c);
     printf("\n-- SCRAMBLE MOVES --\n");
-    printf("[%u]: ", n);
     printMoves(ms, n);
     printf("\n-- SOLVE MOVES --\n");
-    printf("[%u]: ", solved_n);
-    printMoves(solved_ms, solved_n);
+    printf("[%u]: ", n);
+    printMoves(solved_ms, n);
 
     return 0;
 }
