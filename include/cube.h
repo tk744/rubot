@@ -48,6 +48,18 @@ Cube applyMoves(Cube c, Move *ms, int n);
 
 int areEqual(Cube c1, Cube c2);
 
+Int8 getCubie(Int64 encoding, CubieEnum ce);
+
+Int8 getPermutation(Int8 cubie, int isEdge);
+
+Int8 getOrientation(Int8 cubie, int isEdge);
+
+void setCubie(Int64 *encoding, CubieEnum ce, Int8 cubie);
+
+void setPermutation(Int8 *cubie, int isEdge, Int8 permutation);
+
+void setOrientation(Int8 *cubie, int isEdge, Int8 orientation);
+
 void printCube(Cube c);
 
 void printMove(Move m);

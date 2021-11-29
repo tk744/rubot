@@ -4,8 +4,7 @@
 
 /*
 TODO:
-1. phaseCube() phases 2 & 3
-2. debug why demo breaks when n=9
+1. phaseCube() phases 3
 */
 
 static int phaseMaxDepth(int phase) {
@@ -32,17 +31,40 @@ static int phaseMoveset(int phase, Move *ms) {
 
 static Cube phaseCube(int phase, Cube c) {
     if (phase == 1) {       // edge orientations
+        // zero edge permutations
         int i;
         for(i=0 ; i<NUM_EDGES ; i++) {
-            c.edges &= ~((((Int64) 1 << (CUBIE_BITS - 1)) - 1) << (CUBIE_BITS * i));
+            Int8 cubie = getCubie(c.edges, i);
+            setPermutation(&cubie, 1, 0);
+            setCubie(&c.edges, i, cubie);
         }
+        // zero corner permutations and orientations
         c.corners = 0;
     }
     else if (phase == 2) {  // corner orientations, E-slice edges
+        // zero edge permutations except for FR, FL, BR, BL
+        int i;
+        for(i=0 ; i<NUM_EDGES ; i++) {
+            Int8 cubie = getCubie(c.edges, i);
+            Int8 p = getPermutation(cubie, 1);
+            if (p == FR || p == FL || p == BR || p == BL) {
+                continue;
+            }
+            else {
+                setPermutation(&cubie, 1, 0);
+                setCubie(&c.edges, i, cubie);
+            }
+        }
 
+        // zero corner permutations
+        for(i=0 ; i<NUM_CORNERS ; i++) {
+            Int8 cubie = getCubie(c.corners, i);
+            setPermutation(&cubie, 0, 0);
+            setCubie(&c.corners, i, cubie);
+        }
     }
     else if (phase == 3) {  // M/S-slice edges, corner tetrad, even parity
-
+        // TODO
     }
     return c;
 }
@@ -80,7 +102,18 @@ int solve(Cube c, Move *ms) {
 
                 // finish phase if node is goal
                 if (areEqual(node.cube, goal_cube)) {
+                    // FOR DEBUGGING PURPOSES ONLY
+                    printf("\nPhase %d: depth %d\n", phase, node.depth);
+                    printMoves(ms+offset_depth, node.depth);
+                    printf(" - Cube (phase):\n");
+                    printCube(node.cube);
+
                     c = applyMoves(c, ms+offset_depth, node.depth);
+
+                    // FOR DEBUGGING PURPOSES ONLY
+                    printf(" - Cube (original):\n");
+                    printCube(c);
+
                     offset_depth += node.depth;
                     goto next_phase;
                 }
@@ -122,7 +155,7 @@ int main() {
     Move solved_ms[MAX_MOVES];
     int solved_n = solve(c, solved_ms);
 
-    // print details
+    // display details
     printf("\n-- INITIAL STATE --\n");
     printCube(c);
     printf("\n-- SCRAMBLE MOVES --\n");

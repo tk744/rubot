@@ -237,22 +237,16 @@ void printCube(Cube c) {
     // ColorCube cc = convertCube(c);
     // printColorCube(cc);
 
-    int i, p, o, cubie;
+    int i;
     printf("  EDGES: ");
     for(i=0 ; i<NUM_EDGES ; i++) {
-        cubie = c.edges >> (CUBIE_BITS * i);
-        p = cubie & 0b01111;
-        o = cubie & 0b10000;
-        o >>= 4;
-        printf("%u:%u ", p, o);
+        Int8 cubie = getCubie(c.edges, i);
+        printf("%2u:%u ", getPermutation(cubie, 1), getOrientation(cubie, 1));
     }
     printf("\nCORNERS: ");
     for(i=0 ; i<NUM_CORNERS ; i++) {
-        cubie = c.corners >> (CUBIE_BITS * i);
-        p = cubie & 0b00111;
-        o = cubie & 0b11000;
-        o >>= 3;
-        printf("%u:%u ", p, o);
+        Int8 cubie = getCubie(c.corners, i);
+        printf("%2u:%u ", getPermutation(cubie, 0), getOrientation(cubie, 0));
     }
     printf("\n");
 }

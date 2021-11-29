@@ -21,6 +21,34 @@ Cube cubeFactory() {
     return c;
 }
 
+Int8 getCubie(Int64 encoding, CubieEnum ce) {
+    return (encoding >> (CUBIE_BITS * ce)) & ((1 << CUBIE_BITS) - 1);
+}
+
+Int8 getPermutation(Int8 cubie, int isEdge) {
+    return cubie & ((1 << (CUBIE_BITS - (isEdge ? 1 : 2))) - 1);
+}
+
+Int8 getOrientation(Int8 cubie, int isEdge) {
+    return cubie >> (CUBIE_BITS - (isEdge ? 1 : 2));
+}
+
+void setCubie(Int64 *encoding, CubieEnum ce, Int8 cubie) {
+    *encoding &= ~((((Int64) 1 << CUBIE_BITS) - 1) << (CUBIE_BITS * ce));
+    *encoding |= (Int64) cubie << (CUBIE_BITS * ce);
+}
+
+void setPermutation(Int8 *cubie, int isEdge, Int8 permutation) {
+    *cubie &= ~((1 << (CUBIE_BITS - (isEdge ? 1 : 2))) - 1);
+    *cubie |= permutation;
+}
+
+void setOrientation(Int8 *cubie, int isEdge, Int8 orientation) {
+    Int8 permutation = getPermutation(*cubie, isEdge);
+    *cubie = orientation << (CUBIE_BITS - (isEdge ? 1 : 2));
+    setPermutation(cubie, isEdge, permutation);
+}
+
 Cube applyMove(Cube c, Move m) {
     // recursive calls for double and inverse rotations
     if (m & H) {
@@ -94,9 +122,7 @@ Cube applyMove(Cube c, Move m) {
             Int64 clear_mask = ((1 << CUBIE_BITS) - 1);
  
             // set add mask to old cubie encoding
-            Int64 add_mask = isEdge ? old_c.edges : old_c.corners;
-            add_mask >>= CUBIE_BITS * old_enum;
-            add_mask &= (1 << CUBIE_BITS) - 1;
+            Int64 add_mask = getCubie(isEdge ? old_c.edges : old_c.corners, old_enum);
 
             // update add mask to update cubie orientation
             if (isEdge && (m & (F|B))) {
