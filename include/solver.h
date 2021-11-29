@@ -5,7 +5,7 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-#define MAX_MOVES 52
+#define MAX_MOVES 46
 
 #include "cube.h"
 

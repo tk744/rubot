@@ -2,13 +2,10 @@
 #include "solver.h"
 #include "util.h"
 
-/*
-TODO:
-1. phaseCube() phases 3
-*/
+// TODO: debug phase 3
 
 static int phaseMaxDepth(int phase) {
-    static int phase_maxdepth[4] = { 7, 13, 15, 17 };
+    static int phase_maxdepth[4] = { 7, 10, 14, 15 };
     return (1 <= phase && phase <= 4) ? phase_maxdepth[phase-1] : 0;
 }
 
@@ -16,7 +13,7 @@ static int phaseMoveset(int phase, Move *ms) {
     static Move phase_moveset[4][NUM_MOVES] = { 
         { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
         {         U|H,         D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
-        {         U|H,         D|H, R, R|I, R|H, L, L|I, L|H,         F|H,         B|H },
+        {         U|H,         D|H,         R|H,         L|H, F, F|I, F|H, B, B|I, B|H },
         {         U|H,         D|H,         R|H,         L|H,         F|H,         B|H } };
 
     if (1 <= phase && phase <= 4) {
@@ -30,41 +27,75 @@ static int phaseMoveset(int phase, Move *ms) {
 }
 
 static Cube phaseCube(int phase, Cube c) {
-    if (phase == 1) {       // edge orientations
-        // zero edge permutations
+    if (phase == 1) {       // fix edge orientations
+        // create 1 edge permutation group
         int i;
         for(i=0 ; i<NUM_EDGES ; i++) {
             Int8 cubie = getCubie(c.edges, i);
-            setPermutation(&cubie, 1, 0);
+            setPermutation(&cubie, 1, 1);
             setCubie(&c.edges, i, cubie);
         }
-        // zero corner permutations and orientations
+        // create 1 corner permutation and orientation group
         c.corners = 0;
     }
-    else if (phase == 2) {  // corner orientations, E-slice edges
-        // zero edge permutations except for FR, FL, BR, BL
+    else if (phase == 2) {  // fix corner orientations, 1 slice edges
+        // create 2 edge permutation groups: { UR, UL, DR, DL} and rest
         int i;
         for(i=0 ; i<NUM_EDGES ; i++) {
             Int8 cubie = getCubie(c.edges, i);
             Int8 p = getPermutation(cubie, 1);
-            if (p == FR || p == FL || p == BR || p == BL) {
-                continue;
+            if (p == UR || p == UL || p == DR || p == DL) {
+                setPermutation(&cubie, 1, 1);
             }
             else {
-                setPermutation(&cubie, 1, 0);
-                setCubie(&c.edges, i, cubie);
+                setPermutation(&cubie, 1, 2);
             }
+            setCubie(&c.edges, i, cubie);
         }
 
-        // zero corner permutations
+        // create 1 corner permutation group
         for(i=0 ; i<NUM_CORNERS ; i++) {
             Int8 cubie = getCubie(c.corners, i);
-            setPermutation(&cubie, 0, 0);
+            setPermutation(&cubie, 0, 1);
             setCubie(&c.corners, i, cubie);
         }
     }
-    else if (phase == 3) {  // M/S-slice edges, corner tetrad, even parity
-        // TODO
+    else if (phase == 3) {  // fix edge slices, corner tetrad pairs
+        // create 3 edge permutation groups: { UF, UB, DF, DB }, { UR, UL, DR, DL}, { FR, FL, BR, BL }
+        int i;
+        for(i=0 ; i<NUM_EDGES ; i++) {
+            Int8 cubie = getCubie(c.edges, i);
+            Int8 p = getPermutation(cubie, 1);
+            if (p == UF || p == UB || p == DF || p == DB) {
+                setPermutation(&cubie, 1, UF);
+            }
+            else if (p == UR || p == UL || p == DR || p == DL) {
+                setPermutation(&cubie, 1, UR);
+            }
+            else if (p == FR || p == FL || p == BR || p == BL) {
+                setPermutation(&cubie, 1, FR);
+            }
+            setCubie(&c.edges, i, cubie);
+        }
+
+        // create 4 corner permutation groups: { UFR, UBL }, { UFL, UBR }, { DFR, DBL }, { DFL, DBR }
+        for(i=0 ; i<NUM_CORNERS ; i++) {
+            Int8 cubie = getCubie(c.corners, i);
+            Int8 p = getPermutation(cubie, 0);
+            if (p == UFR || p == UBL) {
+                setPermutation(&cubie, 0, UFR);
+            }
+            else if (p == UFL || p == UBR) {
+                setPermutation(&cubie, 0, UFL);
+            }
+            else if (p == DFR || p == DBL) {
+                setPermutation(&cubie, 0, DFR);
+            }
+            else if (p == DFL || p == DBR) {
+                setPermutation(&cubie, 0, DFL);
+            }
+            setCubie(&c.corners, i, cubie);
+        }
     }
     return c;
 }
@@ -83,8 +114,11 @@ int solve(Cube c, Move *ms) {
         Node root_node = { root_cube, NOP, 0 };
 
         // iterative deepening
-        int max_depth = 0;
+        int max_depth = -1;
         while (++max_depth <= phaseMaxDepth(phase)) {
+            // FOR DEBUGGING PURPOSES ONLY
+            printf("Phase %d: depth %d\n", phase, max_depth);
+
             // initialize IDDFS stack with root node
             clear(&s);
             push(&s, root_node);
@@ -102,15 +136,12 @@ int solve(Cube c, Move *ms) {
 
                 // finish phase if node is goal
                 if (areEqual(node.cube, goal_cube)) {
-                    // FOR DEBUGGING PURPOSES ONLY
-                    printf("\nPhase %d: depth %d\n", phase, node.depth);
-                    printMoves(ms+offset_depth, node.depth);
-                    printf(" - Cube (phase):\n");
-                    printCube(node.cube);
-
                     c = applyMoves(c, ms+offset_depth, node.depth);
 
                     // FOR DEBUGGING PURPOSES ONLY
+                    printMoves(ms+offset_depth, node.depth);
+                    printf(" - Cube (phase):\n");
+                    printCube(node.cube);
                     printf(" - Cube (original):\n");
                     printCube(c);
 
@@ -145,8 +176,8 @@ int main() {
 
     // initialize
     Cube c = cubeFactory();
-    Move ms[MAX_MOVES] = { U, R|I, D|H, L, F, U|I, B, F|H, U };
-    int n = 8; // breaks if set to 9
+    Move ms[MAX_MOVES] = { U, R|I, F|H, U|I };
+    int n = 8;
 
     // scramble
     c = applyMoves(c, ms, n);
