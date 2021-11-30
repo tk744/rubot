@@ -106,6 +106,11 @@ int solve(Cube c, Move *ms) {
     // iterate through phases
     int phase = 0, offset_depth = 0;
     next_phase: while (++phase <= 4) {
+        // FOR DEBUGGING PURPOSES ONLY
+        printf(phase == 1 ? "" : "\n");
+        Move null[MAX_MOVES];
+        int num_moves = phaseMoveset(phase, null);
+
         // create goal cube and root node
         Cube goal_cube = phaseCube(phase, cubeFactory());
         Cube root_cube = phaseCube(phase, c);
@@ -115,7 +120,8 @@ int solve(Cube c, Move *ms) {
         int max_depth = -1;
         while (++max_depth <= phaseMaxDepth(phase)) {
             // FOR DEBUGGING PURPOSES ONLY
-            printf("Phase %d: depth %d\n", phase, max_depth);
+            printf("\rPhase: %d | Branching factor: %2d | Max depth: %2d | Depth: %2d", phase, num_moves, phaseMaxDepth(phase), max_depth);
+            fflush(stdout);
 
             // initialize IDDFS stack with root node
             clear(&s);
@@ -135,14 +141,6 @@ int solve(Cube c, Move *ms) {
                 // finish phase if node is goal
                 if (areEqual(node.cube, goal_cube)) {
                     c = applyMoves(c, ms+offset_depth, node.depth);
-
-                    // FOR DEBUGGING PURPOSES ONLY
-                    printMoves(ms+offset_depth, node.depth);
-                    printf(" - Cube (phase):\n");
-                    printCube(node.cube);
-                    printf(" - Cube (original):\n");
-                    printCube(c);
-
                     offset_depth += node.depth;
                     goto next_phase;
                 }
@@ -178,22 +176,25 @@ int main() {
     printf("Node size:    %u bytes\n", sizeof(Node));
     printf("Stack size: %u bytes \n", STACK_SIZE * sizeof(Node));
 
-    // initialize
+    // initialize scrambled cube
     Cube c = cubeFactory();
-    Move ms[MAX_MOVES] = { U, R|I, D, R, F|I, L|H, R|I, D|I, B, L|I, U, R|H };
+    Move ms[] = { F, D|I, B|H, R, U|I, L, F|H, D, R|I };
+    int num_moves = sizeof(ms) / sizeof(ms[0]);
+    c = applyMoves(c, ms, num_moves);
 
-    // scramble
-    c = applyMoves(c, ms, MAX_MOVES);
-    
-    // solve
-    Move solved_ms[MAX_MOVES];
-    int n = solve(c, solved_ms);
-
-    // display details
     printf("\n-- INITIAL STATE --\n");
     printCube(c);
     printf("\n-- SCRAMBLE MOVES --\n");
-    printMoves(ms, n);
+    printf("[%u]: ", num_moves);
+    printMoves(ms, num_moves);
+    
+    // solve
+    printf("\n-- SOLVER DEBUG --\n");
+    Move solved_ms[MAX_MOVES];
+    int n = solve(c, solved_ms);
+    printf("\n");
+
+    // display details
     printf("\n-- SOLVE MOVES --\n");
     printf("[%u]: ", n);
     printMoves(solved_ms, n);
