@@ -1,10 +1,5 @@
 #include "cube.h"
 
-/*
-TODO:
-1. applyMove() update corner orientation
-*/
-
 /* FUNCTION IMPLEMENTATION */
 
 Cube cubeFactory() {
@@ -143,6 +138,29 @@ Cube applyMoves(Cube c, Move *ms, int n) {
         c = applyMove(c, *ms++);
     }
     return c;
+}
+
+static Move randomMove(MoveMask exclude) {
+    Move m;
+
+    // generate base move
+    do {
+        m = 1 << (rand() % 6);
+    } while (m & exclude);
+
+    // generate I or H modifier
+    int mod = rand() % 3;
+    m |= mod == 0 ? 0 : mod == 1 ? I : H;
+
+    return m;
+}
+
+Cube scramble(Cube c, Move *ms, int n) {
+    int i;
+    for(i=0 ; i<n ; i++) {
+        *(ms+i) = randomMove(i == 0 ? 0 : *(ms+i-1));
+    }
+    return applyMoves(c, ms, n);
 }
 
 int areEqual(Cube c1, Cube c2) {

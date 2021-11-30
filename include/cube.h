@@ -40,14 +40,6 @@ static const CubieEnum UFR=0, UFL=1, UBR=2, UBL=3, DFR=4, DFL=5, DBR=6, DBL=7;
 
 /* FUNCTION PROTOTYPES */
 
-Cube cubeFactory();
-
-Cube applyMove(Cube c, Move m);
-
-Cube applyMoves(Cube c, Move *ms, int n);
-
-int areEqual(Cube c1, Cube c2);
-
 Int8 getCubie(Int64 encoding, CubieEnum ce);
 
 Int8 getPermutation(Int8 cubie, int isEdge);
@@ -59,6 +51,16 @@ void setCubie(Int64 *encoding, CubieEnum ce, Int8 cubie);
 void setPermutation(Int8 *cubie, int isEdge, Int8 permutation);
 
 void setOrientation(Int8 *cubie, int isEdge, Int8 orientation);
+
+Cube cubeFactory();
+
+Cube applyMove(Cube c, Move m);
+
+Cube applyMoves(Cube c, Move *ms, int n);
+
+Cube scramble(Cube c, Move *ms, int n);
+
+int areEqual(Cube c1, Cube c2);
 
 void printCube(Cube c);
 
