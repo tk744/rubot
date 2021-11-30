@@ -169,35 +169,3 @@ int solve(Cube c, Move *ms) {
     }
     return offset_depth;
 }
-
-int main() {
-    // print stats
-    printf("Cube size:    %u bytes\n", sizeof(Cube));
-    printf("Node size:    %u bytes\n", sizeof(Node));
-    printf("Stack size: %u bytes \n", STACK_SIZE * sizeof(Node));
-
-    // initialize scrambled cube
-    Cube c = cubeFactory();
-    Move ms[] = { F, D|I, B|H, R, U|I, L, F|H, D, R|I };
-    int num_moves = sizeof(ms) / sizeof(ms[0]);
-    c = applyMoves(c, ms, num_moves);
-
-    printf("\n-- INITIAL STATE --\n");
-    printCube(c);
-    printf("\n-- SCRAMBLE MOVES --\n");
-    printf("[%u]: ", num_moves);
-    printMoves(ms, num_moves);
-    
-    // solve
-    printf("\n-- SOLVER DEBUG --\n");
-    Move solved_ms[MAX_MOVES];
-    int n = solve(c, solved_ms);
-    printf("\n");
-
-    // display details
-    printf("\n-- SOLVE MOVES --\n");
-    printf("[%u]: ", n);
-    printMoves(solved_ms, n);
-
-    return 0;
-}
