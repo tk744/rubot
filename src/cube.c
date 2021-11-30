@@ -127,7 +127,7 @@ Cube applyMove(Cube c, Move m) {
             }
             else if (!isEdge && (m & (U|D|R|L))) {
                 orientation += (i % 2) ? 2 : 1;
-                orientation %= 2;
+                orientation %= 3;
             }
             setOrientation(&cubie, isEdge, orientation);
 
