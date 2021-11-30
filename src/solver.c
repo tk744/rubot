@@ -180,7 +180,7 @@ int main() {
 
     // initialize
     Cube c = cubeFactory();
-    Move ms[MAX_MOVES] = { U, R|I, F|H, U|I };
+    Move ms[MAX_MOVES] = { U, R|I, D, R, F|I, L|H, R|I, D|I, B, L|I, U, R|H };
 
     // scramble
     c = applyMoves(c, ms, MAX_MOVES);

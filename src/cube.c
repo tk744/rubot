@@ -69,13 +69,13 @@ Cube applyMove(Cube c, Move m) {
     CubieEnum *corner_enums;
     if (m & U) {
         static CubieEnum ueps[4] = { UF, UL, UB, UR };
-        static CubieEnum ucps[4] = { UFR, UFL, UBL, UBR };
+        static CubieEnum ucps[4] = { UFL, UBL, UBR, UFR };
         edge_enums = ueps;
         corner_enums = ucps;
     }
     else if (m & D) {
         static CubieEnum deps[4] = { DF, DR, DB, DL };
-        static CubieEnum dcps[4] = { DFL, DFR, DBR, DBL };
+        static CubieEnum dcps[4] = { DBL, DFL, DFR, DBR };
         edge_enums = deps;
         corner_enums = dcps;
     }
@@ -114,35 +114,25 @@ Cube applyMove(Cube c, Move m) {
         // alternate between edge and corner cubies
         for (isEdge=0 ; isEdge<2 ; isEdge++) {
             // get encoding index of old and new cubie
-            CubieEnum old_enum, new_enum;
-            old_enum = isEdge ? edge_enums[i] : corner_enums[i];
-            new_enum = isEdge ? edge_enums[(i+1)%4] : corner_enums[(i+1)%4];
+            CubieEnum old_enum = isEdge ? edge_enums[i] : corner_enums[i];
+            CubieEnum new_enum = isEdge ? edge_enums[(i+1)%4] : corner_enums[(i+1)%4];
 
-            // set all bits in clear mask
-            Int64 clear_mask = ((1 << CUBIE_BITS) - 1);
- 
-            // set add mask to old cubie encoding
-            Int64 add_mask = getCubie(isEdge ? old_c.edges : old_c.corners, old_enum);
+            // get old cubie
+            Int8 cubie = getCubie(isEdge ? old_c.edges : old_c.corners, old_enum);
 
-            // update add mask to update cubie orientation
+            // update orientation of cubie
+            Int8 orientation = getOrientation(cubie, isEdge);
             if (isEdge && (m & (U|D))) {
-                add_mask ^= 1 << (CUBIE_BITS - 1);
+                orientation = !orientation;
             }
-            else if (!isEdge && 0) {
-                // TODO: figure out how and when to change corner orientation
+            else if (!isEdge && (m & (U|D|R|L))) {
+                orientation += (i % 2) ? 2 : 1;
+                orientation %= 2;
             }
+            setOrientation(&cubie, isEdge, orientation);
 
-            // shift masks into encoding index of new cubie
-            clear_mask <<= CUBIE_BITS * new_enum;
-            add_mask <<= CUBIE_BITS * new_enum;
-
-            // update new cubie encoding by applying masks
-            if (isEdge) {
-                c.edges = (c.edges & ~clear_mask) | add_mask;
-            }
-            else {
-                c.corners = (c.corners & ~clear_mask) | add_mask;
-            }
+            // set new cubie
+            setCubie(isEdge ? &c.edges : &c.corners, new_enum, cubie);
         }
     }
     return c;
