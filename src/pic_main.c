@@ -1,4 +1,7 @@
 #include "solver.h"
+#include "port_expander_brl4.h"
+#include "config_1_3_2.h"
+#include "pt_cornell_1_3_2.h"
 #include "tft_master.h"
 #include "tft_gfx.h"
 #include <stdio.h>  // required for serial communication
@@ -82,7 +85,7 @@ struct Face down = {.begin_x0 = 230,.begin_y0 = 62, .begin_x1 = 290, .begin_y1 =
 int TFT_STATE = INIT_STATE;
 
 /* GLOBAL STATE */
-Cube c = cubeFactory();
+// Cube c = cubeFactory();
 
 Move scramble_moves[32] = {};
 Move solution_moves[MAX_MOVES] = {};
@@ -336,29 +339,55 @@ void drawTFT() {
     }
 }
 
-int initHardware() {
-    ANSELA = 0; ANSELB = 0;
-
-    // initialize TFT
-    tft_init_hw();
-    tft_begin();
-    tft_setRotation(1); // 320x240 horizontal display
-
-    // setup system-wide interrupts
-    //INTEnableSystemMultiVectoredInt();
-}
-
-void main() {
-    // initialization
-    initHardware();
-    drawTFT();
-
-    // read and respond to GUI signals
-    while (1) {
-        if (/* SOLVE signal */) {
-            // TODO:
-            // set num_scrable_moves
-            // set scramble_moves[]
+// === Python serial thread ====================================================
+// you should not need to change this thread UNLESS you add new control types
+static PT_THREAD (protothread_serial(struct pt *pt)) {
+    PT_BEGIN(pt);
+    static char junk;   
+    
+    while(1) {
+        // There is no YIELD in this loop because there are
+        // YIELDS in the spawned threads that determine the 
+        // execution rate while WAITING for machine input
+        // =============================================
+        // NOTE!! -- to use serial spawned functions
+        // you MUST edit config_1_3_2 to
+        // (1) uncomment the line -- #define use_uart_serial
+        // (2) SET the baud rate to match the PC terminal
+        // =============================================
+        
+        // now wait for machine input from python
+        // Terminate on the usual <enter key>
+        PT_terminate_char = '\r' ; 
+        PT_terminate_count = 0 ; 
+        PT_terminate_time = 0 ;
+        // note that there will NO visual feedback using the following function
+        PT_SPAWN(pt, &pt_input, PT_GetMachineBuffer(&pt_input) );
+        
+        // PREV signal
+        if (PT_term_buffer[0] == 'p') {
+            if (tft_move > 0) {
+                tft_move--;
+            }
+            // update TFT display
+            drawTFT();
+        }
+        // NEXT signal
+        else if (PT_term_buffer[0] == 'n') {
+            if (tft_move < num_solution_moves-1) {
+                tft_move++;
+            }
+            // update TFT display
+            drawTFT();
+        }
+        // SOLVE signal
+        else if (PT_term_buffer[0] == 's') {
+            // set scramble moves
+            num_scramble_moves = PT_term_buffer[1];
+            int i;
+            for (i=0 ; i<num_scramble_moves ; i++) {
+                scramble_moves[i] = PT_term_buffer[2+i];
+            }
 
             // scramble cube
             Cube c = scramble(cubeFactory(), scramble_moves, num_scramble_moves);
@@ -374,20 +403,29 @@ void main() {
             TFT_STATE = SOLVED_STATE;
             tft_move = 0;
             drawTFT();
-        }
-        else if (/* NEXT signal */) {
-            if (tft_move < num_solution_moves-1) {
-                tft_move++;
-            }
-            // update TFT display
-            drawTFT();
-        }
-        else if (/* PREV signal */) {
-            if (tft_move > 0) {
-                tft_move--;
-            }
-            // update TFT display
-            drawTFT();
-        }
+        }                         
     }
+
+    PT_END(pt);  
+}
+
+void main() {
+    // initialize hardware
+    ANSELA = 0; ANSELB = 0;
+
+    // initialize TFT
+    tft_init_hw();
+    tft_begin();
+    tft_setRotation(1); // 320x240 horizontal display
+    drawTFT();
+
+    // initialize threads and scheduler
+    PT_setup();
+    INTEnableSystemMultiVectoredInt();
+
+    pt_add(protothread_serial, 0);
+    PT_INIT(&pt_sched);
+
+    pt_sched_method = SCHED_ROUND_ROBIN;
+    PT_SCHEDULE(protothread_sched(&pt_sched));
 }
