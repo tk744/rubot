@@ -30,34 +30,14 @@ import PySimpleGUI as sg
 #                                         (PIC gnd)
 #
 import time
-#import serial                                                                # COMMENT THIS OUT FOR TESTING
+import serial                                                                # COMMENT THIS OUT FOR TESTING
 # open microcontroller serial port
 # For windows the device will be 'COMx'
-#ser = serial.Serial('COM5', 38400, timeout=0.001)                            # COMMENT THIS OUT TO TEST
+
+ser = serial.Serial('COM5', 38400, timeout=0.001)                            # COMMENT THIS OUT TO TEST
+
 sg.theme('DarkAmber')   # Add a touch of color
 # All the stuff inside your window.
-# This a heirachical list of items to be displayd in the window
-# First list is first row controls, etc
-# Buttons:
-#   Realtime buttons respond to push-events
-#   After the window is defined below, release events may be bound to each realtime button
-#   The 'key' for each button must be of the form 'pushbutNN',
-#   where 'NN' are digits 0-9 defining the button number
-# Toggles:
-#   Toggle switches are actually checkboxes
-#   The 'key' for each checkbox must be of the form 'toggleNN',
-#   where 'NN' are digits 0-9 defining the checkbox number
-# Sliders
-#   The 'key' for each slider must be of the form 'sliderN',
-#   where 'N' is a digit 0-9 defining the slider number
-#   Sliders can have any integer range which is handy for the application
-# Text
-#   The text input field acts like the one-line Arduino serial send box.
-#   The multiline output box receives serial from the PIC. text typed here is ignored.
-# Listbox
-#   The 'key' for each listbox must be of the form 'listN',
-#   where 'N' is a digit 0-9 defining the listbox number
-#   Listbox as implemented can have only one selected value
 
 # Encode Char
 def encode_char(c):
@@ -83,11 +63,11 @@ def encode_char(c):
   elif '2' in c:
     m |= 128
 
-  return m 
+  return m
 
 font_spec = 'Courier 24 bold'
-heading_color = '#2FB8AD'
-canvas_color = '#9FB8AD'
+heading_color = '#3684ad'
+canvas_color = '#3684ad'
 groove_width = 2;
 layout = [  # Header
             [sg.Text('Rubot', font = 'Helvetica 32 bold underline', background_color = canvas_color)],
@@ -97,7 +77,7 @@ layout = [  # Header
                layout = [
                          [sg.Text('Seperate each move with a space. Half moves are allowed.', font = 'Helvetica 12', background_color = canvas_color)],
                          #[sg.Multiline(default_text = 'Seperate each move with a space. Half moves are allowed.', key = 'moves', size = (50, 3), autoscroll = True)],
-                         [sg.Input(default_text = '', key = 'moves', size = (50, 3), expand_x = True)],
+                         [sg.Input(default_text = '', key = 'user_moves', size = (50, 3), expand_x = True)],
                          [sg.Button('Solve', key = 'solve_start', font = 'Helvetica 12')],
                         ]
             )],
@@ -106,9 +86,9 @@ layout = [  # Header
             [sg.Frame('TFT Controls', font = 'Helvetica 12 bold', background_color = canvas_color, title_location = 'n', element_justification = 'center', expand_x = True, border_width = groove_width,
                layout = [
                          [
-                          sg.Button('<', key = 'prev_step', font = 'Helvetica 12', s = (2)), 
+                          sg.Button('<', key = 'prev', font = 'Helvetica 12', s = (2)), 
                           sg.Text('Move', font = 'Helvetica 12 bold', background_color = canvas_color),
-                          sg.Button('>', key='next_step', font='Helvetica 12', s = (2))
+                          sg.Button('>', key='next', font='Helvetica 12', s = (2))
                          ]
                         ]
                )],
@@ -130,7 +110,7 @@ layout = [  # Header
                layout = [
                          [
                           # sg.Button('RESET PIC', key = 'rtg', font = 'Helvetica 12'),
-                          sg.Button('EXIT', key = 'Exit', font='Helvetica 12', bind_return_key = True)
+                          sg.Button('EXIT', key = 'Exit', font='Helvetica 12', bind_return_key = False)
                          ],
                          # [
                          #  sg.Checkbox('reset_enable', key='r_en',font='Helvetica 8', enable_events=True),
@@ -141,8 +121,9 @@ layout = [  # Header
          ]
 
 # change the colors in any way you like.
-sg.SetOptions(background_color='#9FB8AD',
+sg.SetOptions(background_color='#3684AD',
        text_element_background_color='#9FB8AD',
+       text_color = '#fc0328',
        element_background_color='#475841',#'#9FB8AD',
        scrollbar_color=None,
        input_elements_background_color='#9FB8AD',#'#F7F3EC',
@@ -171,88 +152,99 @@ button_which = '0'
 #
 while True:
 
-    # time out paramenter makes the system non-blocking
-    # If there is no event the call returns event  '__TIMEOUT__'
-    event, values = window.read(timeout=20) # timeout=10
-    #
-    #print(event)  # for debugging
-    # if user closes window using windows 'x' or clicks 'Exit' button
-    if event == sg.WIN_CLOSED or event == 'Exit': #
-        break
-    #
-#     # pushbutton events state machine
-#     if event[0:3]  == 'pus' and button_on == 0 :
-#        # 'b' for button, two numeral characters, a '1' for pushed, and a terminator
-#        ser.write(('b' + event[7:9] + '1' + '\r').encode())
-#        button_on = 1
-#        button_which = event[7:9]
-#     # release event signalled by the 'r'
-#     elif (button_on == 1 and event[7:10] == button_which +'r') :
-#        ser.write(('b'  + button_which + '0' + '\r').encode())
-#        button_on = 0
-#        button_which = ' '
-#     #
-#     # listbox
-#     if event[0:3]  == 'lis'  :
-#        # get the list box index#
-#        listbox_value = window.Element(event).GetIndexes()
-#        ser.write(('l0' + event[4] + str(listbox_value[0]) + '\r').encode())
-#     #
-#     # radio button
-#     if event[0:3]  == 'rad'  :
-#        #print(event)
-#        # get the radio group ID and group-member ID radio1_2
-#        ser.write(('r0' + event[5] + event[7] + '\r').encode())
+   # time out paramenter makes the system non-blocking
+   # If there is no event the call returns event  '__TIMEOUT__'
+   event, values = window.read(timeout=20) # timeout=10
+   #
+   #print(event)  # for debugging
+   # if user closes window using windows 'x' or clicks 'Exit' button
+   if event == sg.WIN_CLOSED or event == 'Exit':
+      ser.close()
+      break
 
-#     # toggle switches
-#     if event[0:3]  == 'tog'  :
-#        # read out the toggle switches
-#        switch_state = window.Element(event).get()
-#        ser.write(('t' + event[6:8] + str(switch_state) + '\r').encode())
-#     #
-#     # silder events
-#     if event[0:3]  == 'sli'  :
-#        ser.write(('s ' + event[6] + " {:f}".format((values[event])) + '\r').encode())
-#     #
-#     # reset events
-#     switch_state = window.Element('r_en').get()
-#     if event[0:3] == 'rtg' and switch_state == 1 :
-#        # drops the data line for 100 mSec
-#        ser.send_break() #optional duration; duration=0.01
-#     #
-#     # The button to start the solving guide
-#     if event == 'start':
-#        # add <cr> for PIC
-#        input_state = '$' + 'start' + '\r'
-#        # send to PIC protothreads
-#        ser.write((input_state).encode())
+   if event == 'solve_start':
+      # Grab the given user moves
+      move_string = window.Element('user_moves').get()
 
-# 	# Button to move onto the next step of solution
-#     elif event == 'next':
-#        # add <cr> for PIC
-#        input_state = '$' + 'next' + '\r'
-#        # send to PIC protothreads
-#        ser.write((input_state).encode())
+      # Convert move string to a String array
+      char_array = move_string.split()
 
-# 	# Button to scramble cube
-#     elif event == 'scramble':
-#        # The text from the one-line input field
-#        # add <cr> for PIC
-#        input_state = '$' + 'scram'+ '\r'
-#        # send to PIC protothreads
-#        ser.write((input_state).encode())
+      # Convert char_array to an encoded array
+      encoded_array = []
+      error_pos = -1
+      for i, c in enumerate(char_array):
+         m = encode_char(c)
+         if (m):
+            encoded_array.append(m)
+         else:
+            error_pos = i
+         break
 
-#        #
-#     # character loopback from PIC
-#     while ser.in_waiting > 0:
-#        #serial_chars = (ser.read().decode('utf-8'));
-#        #window['console'].update(serial_chars+'\n', append=True)
-#        pic_char = chr(ser.read(size=1)[0])
-#        if (pic_char) == '\r' :
-#           window['console'].update('\n', append=True)
-#        else :
-#           window['console'].update((pic_char), append=True)
+      # Encode all move data to a char buffer
+      num_moves = len(encoded_array) #num moves
+      s = 's'.encode() + (num_moves).to_bytes(1, 'big') + bytes(encoded_array)
+      assert len(s) == 2 + num_moves
 
-# # close port and Bail out
-# ser.close()
-# window.close()
+      # zero the input field
+      window['user_moves'].update('')
+
+      #Send solve data to PIC
+      ser.write((s))
+
+   # User requests next move
+   if event == 'next':
+      #send the next move buffer to PIC
+      ser.write('n'.encode())
+
+   # User requests previous move
+   if event == 'prev':
+      #send the previous move buffer to PIC
+      ser.write('p'.encode())
+
+# ----------------------------------------------------- OTHER STUFFS-------------------------------
+#                                              Close port and Bail out still at bottom
+
+    # # pushbutton events state machine
+    # if event[0:3]  == 'pus' and button_on == 0 :
+    #    # 'b' for button, two numeral characters, a '1' for pushed, and a terminator
+    #    ser.write(('b' + event[7:9] + '1' + '\r').encode())
+    #    button_on = 1
+    #    button_which = event[7:9]
+    # # release event signalled by the 'r'
+    # elif (button_on == 1 and event[7:10] == button_which +'r') :
+    #    ser.write(('b'  + button_which + '0' + '\r').encode())
+    #    button_on = 0
+    #    button_which = ' '
+    # #
+    # # listbox
+    # if event[0:3]  == 'lis'  :
+    #    # get the list box index#
+    #    listbox_value = window.Element(event).GetIndexes()
+    #    ser.write(('l0' + event[4] + str(listbox_value[0]) + '\r').encode())
+    # #
+    # # radio button
+    # if event[0:3]  == 'rad'  :
+    #    #print(event)
+    #    # get the radio group ID and group-member ID radio1_2
+    #    ser.write(('r0' + event[5] + event[7] + '\r').encode())
+
+    # # toggle switches
+    # if event[0:3]  == 'tog'  :
+    #    # read out the toggle switches
+    #    switch_state = window.Element(event).get()
+    #    ser.write(('t' + event[6:8] + str(switch_state) + '\r').encode())
+    # #
+    # # silder events
+    # if event[0:3]  == 'sli'  :
+    #    ser.write(('s ' + event[6] + " {:f}".format((values[event])) + '\r').encode())
+    # #
+    # # reset events
+    # switch_state = window.Element('r_en').get()
+    # if event[0:3] == 'rtg' and switch_state == 1 :
+    #    # drops the data line for 100 mSec
+    #    ser.send_break() #optional duration; duration=0.01
+    # #
+
+# close port and Bail out
+ser.close()
+window.close()
