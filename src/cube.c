@@ -47,15 +47,15 @@ void setOrientation(Int8 *cubie, int isEdge, Int8 orientation) {
 
 Cube applyMove(Cube c, Move m) {
     // recursive calls for double and inverse rotations
-    if (m & H) {
-        m &= ~(H|I);
+    if (m & MV_MASK_H) {
+        m &= ~(MV_MASK_H|MV_MASK_I);
         c = applyMove(c, m);
         c = applyMove(c, m);
         return c;
     }
-    else if (m & I) {
-        m &= ~(H|I);
-        c = applyMove(c, m|H);
+    else if (m & MV_MASK_I) {
+        m &= ~(MV_MASK_H|MV_MASK_I);
+        c = applyMove(c, m|MV_MASK_H);
         c = applyMove(c, m);
         return c;
     }
@@ -63,39 +63,39 @@ Cube applyMove(Cube c, Move m) {
     // define cubies affected by base move
     CubieEnum *edge_enums;
     CubieEnum *corner_enums;
-    if (m & U) {
-        static CubieEnum ueps[4] = { UF, UL, UB, UR };
-        static CubieEnum ucps[4] = { UFL, UBL, UBR, UFR };
+    if (m & MV_MASK_U) {
+        static CubieEnum ueps[4] = { ECUBIE_UF, ECUBIE_UL, ECUBIE_UB, ECUBIE_UR };
+        static CubieEnum ucps[4] = { CCUBIE_UFL, CCUBIE_UBL, CCUBIE_UBR, CCUBIE_UFR };
         edge_enums = ueps;
         corner_enums = ucps;
     }
-    else if (m & D) {
-        static CubieEnum deps[4] = { DF, DR, DB, DL };
-        static CubieEnum dcps[4] = { DBL, DFL, DFR, DBR };
+    else if (m & MV_MASK_D) {
+        static CubieEnum deps[4] = { ECUBIE_DF, ECUBIE_DR, ECUBIE_DB, ECUBIE_DL };
+        static CubieEnum dcps[4] = { CCUBIE_DBL, CCUBIE_DFL, CCUBIE_DFR, CCUBIE_DBR };
         edge_enums = deps;
         corner_enums = dcps;
     }
-    else if (m & F) {
-        static CubieEnum feps[4] = { UF, FR, DF, FL };
-        static CubieEnum fcps[4] = { UFL, UFR, DFR, DFL };
+    else if (m & MV_MASK_F) {
+        static CubieEnum feps[4] = { ECUBIE_UF, ECUBIE_FR, ECUBIE_DF, ECUBIE_FL };
+        static CubieEnum fcps[4] = { CCUBIE_UFL, CCUBIE_UFR, CCUBIE_DFR, CCUBIE_DFL };
         edge_enums = feps;
         corner_enums = fcps;
     }
-    else if (m & B) {
-        static CubieEnum beps[4] = { UB, BL, DB, BR };
-        static CubieEnum bcps[4] = { UBR, UBL, DBL, DBR };
+    else if (m & MV_MASK_B) {
+        static CubieEnum beps[4] = { ECUBIE_UB, ECUBIE_BL, ECUBIE_DB, ECUBIE_BR };
+        static CubieEnum bcps[4] = { CCUBIE_UBR, CCUBIE_UBL, CCUBIE_DBL, CCUBIE_DBR };
         edge_enums = beps;
         corner_enums = bcps;
     }
-    else if (m & R) {
-        static CubieEnum reps[4] = { UR, BR, DR, FR };
-        static CubieEnum rcps[4] = { UFR, UBR, DBR, DFR };
+    else if (m & MV_MASK_R) {
+        static CubieEnum reps[4] = { ECUBIE_UR, ECUBIE_BR, ECUBIE_DR, ECUBIE_FR };
+        static CubieEnum rcps[4] = { CCUBIE_UFR, CCUBIE_UBR, CCUBIE_DBR, CCUBIE_DFR };
         edge_enums = reps;
         corner_enums = rcps;
     }
-    else if (m & L) {
-        static CubieEnum leps[4] = { UL, FL, DL, BL };
-        static CubieEnum lcps[4] = { UBL, UFL, DFL, DBL };
+    else if (m & MV_MASK_L) {
+        static CubieEnum leps[4] = { ECUBIE_UL, ECUBIE_FL, ECUBIE_DL, ECUBIE_BL };
+        static CubieEnum lcps[4] = { CCUBIE_UBL, CCUBIE_UFL, CCUBIE_DFL, CCUBIE_DBL };
         edge_enums = leps;
         corner_enums = lcps;
     }
@@ -118,10 +118,10 @@ Cube applyMove(Cube c, Move m) {
 
             // update orientation of cubie
             Int8 orientation = getOrientation(cubie, isEdge);
-            if (isEdge && (m & (U|D))) {
+            if (isEdge && (m & (MV_MASK_U|MV_MASK_D))) {
                 orientation = !orientation;
             }
-            else if (!isEdge && (m & (U|D|R|L))) {
+            else if (!isEdge && (m & (MV_MASK_U|MV_MASK_D|MV_MASK_R|MV_MASK_L))) {
                 orientation += (i % 2) ? 2 : 1;
                 orientation %= 3;
             }
@@ -151,7 +151,7 @@ static Move randomMove(MoveMask exclude) {
 
     // generate I or H modifier
     int mod = rand() % 3;
-    m |= mod == 0 ? 0 : mod == 1 ? I : H;
+    m |= mod == 0 ? 0 : mod == 1 ? MV_MASK_I : MV_MASK_H;
 
     return m;
 }

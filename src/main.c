@@ -85,7 +85,7 @@ struct Face down = {.begin_x0 = 230,.begin_y0 = 62, .begin_x1 = 290, .begin_y1 =
 int TFT_STATE = INIT_STATE;
 
 /* GLOBAL STATE */
-// Cube c = cubeFactory();
+Cube c;
 
 Move scramble_moves[32] = {};
 Move solution_moves[MAX_MOVES] = {};
@@ -119,76 +119,171 @@ unsigned int color_select(struct Face this_face, int i){
     }
 }
 
+unsigned short fm2color(FaceMask fm) {
+    if (fm & MV_MASK_U) {
+        return ILI9340_RED;
+    }
+    else if (fm & MV_MASK_D) {
+        return ILI9340_ORANGE;
+    }
+    else if (fm & MV_MASK_F) {
+        return ILI9340_GREEN;
+    }
+    else if (fm & MV_MASK_B) {
+        return ILI9340_BLUE;
+    }
+    else if (fm & MV_MASK_R) {
+        return ILI9340_YELLOW;
+    }
+    else if (fm & MV_MASK_L) {
+        return ILI9340_WHITE;
+    }
+}
+
 void color_change(Cube c) {
     ColorCube cc = convertCube(c);
 
     //front
-    front.color0 = cc.F.UL;
-    front.color1 = cc.F.U;
-    front.color2 = cc.F.UR;
-    front.color3 = cc.F.L;
-    front.color4 = cc.F.C;
-    front.color5 = cc.F.R;
-    front.color6 = cc.F.DL;
-    front.color7 = cc.F.D;
-    front.color8 = cc.F.DR;
+    front.color0 = fm2color(cc.F.UL);
+    front.color1 = fm2color(cc.F.U);
+    front.color2 = fm2color(cc.F.UR);
+    front.color3 = fm2color(cc.F.L);
+    front.color4 = fm2color(cc.F.C);
+    front.color5 = fm2color(cc.F.R);
+    front.color6 = fm2color(cc.F.DL);
+    front.color7 = fm2color(cc.F.D);
+    front.color8 = fm2color(cc.F.DR);
 
     //right
-    right.color0 = cc.R.UL;
-    right.color1 = cc.R.U;
-    right.color2 = cc.R.UR;
-    right.color3 = cc.R.L;
-    right.color4 = cc.R.C;
-    right.color5 = cc.R.R;
-    right.color6 = cc.R.DL;
-    right.color7 = cc.R.D;
-    right.color8 = cc.R.DR;
+    right.color0 = fm2color(cc.R.UL);
+    right.color1 = fm2color(cc.R.U);
+    right.color2 = fm2color(cc.R.UR);
+    right.color3 = fm2color(cc.R.L);
+    right.color4 = fm2color(cc.R.C);
+    right.color5 = fm2color(cc.R.R);
+    right.color6 = fm2color(cc.R.DL);
+    right.color7 = fm2color(cc.R.D);
+    right.color8 = fm2color(cc.R.DR);
 
     //up
-    up.color0 = cc.U.UL;
-    up.color1 = cc.U.U;
-    up.color2 = cc.U.UR;
-    up.color3 = cc.U.L;
-    up.color4 = cc.U.C;
-    up.color5 = cc.U.R;
-    up.color6 = cc.U.DL;
-    up.color7 = cc.U.D;
-    up.color8 = cc.U.DR;
+    up.color0 = fm2color(cc.U.UL);
+    up.color1 = fm2color(cc.U.U);
+    up.color2 = fm2color(cc.U.UR);
+    up.color3 = fm2color(cc.U.L);
+    up.color4 = fm2color(cc.U.C);
+    up.color5 = fm2color(cc.U.R);
+    up.color6 = fm2color(cc.U.DL);
+    up.color7 = fm2color(cc.U.D);
+    up.color8 = fm2color(cc.U.DR);
 
     //back
-    back.color0 = cc.B.DR;
-    back.color1 = cc.B.D;
-    back.color2 = cc.B.DL;
-    back.color3 = cc.B.R;
-    back.color4 = cc.B.C;
-    back.color5 = cc.B.L;
-    back.color6 = cc.B.UR;
-    back.color7 = cc.B.U;
-    back.color8 = cc.B.UL;
+    back.color0 = fm2color(cc.B.DR);
+    back.color1 = fm2color(cc.B.D);
+    back.color2 = fm2color(cc.B.DL);
+    back.color3 = fm2color(cc.B.R);
+    back.color4 = fm2color(cc.B.C);
+    back.color5 = fm2color(cc.B.L);
+    back.color6 = fm2color(cc.B.UR);
+    back.color7 = fm2color(cc.B.U);
+    back.color8 = fm2color(cc.B.UL);
 
     //left
-    left.color0 = cc.L.DR;
-    left.color1 = cc.L.D;
-    left.color2 = cc.L.DL;
-    left.color3 = cc.L.R;
-    left.color4 = cc.L.C;
-    left.color5 = cc.L.L;
-    left.color6 = cc.L.UR;
-    left.color7 = cc.L.U;
-    left.color8 = cc.L.UL;
+    left.color0 = fm2color(cc.L.DR);
+    left.color1 = fm2color(cc.L.D);
+    left.color2 = fm2color(cc.L.DL);
+    left.color3 = fm2color(cc.L.R);
+    left.color4 = fm2color(cc.L.C);
+    left.color5 = fm2color(cc.L.L);
+    left.color6 = fm2color(cc.L.UR);
+    left.color7 = fm2color(cc.L.U);
+    left.color8 = fm2color(cc.L.UL);
 
     //down
-    down.color0 = cc.D.UR;
-    down.color1 = cc.D.R;
-    down.color2 = cc.D.DR;
-    down.color3 = cc.D.U;
-    down.color4 = cc.D.C;
-    down.color5 = cc.D.D;
-    down.color6 = cc.D.UL;
-    down.color7 = cc.D.L;
-    down.color8 = cc.D.DL;
+    down.color0 = fm2color(cc.D.UR);
+    down.color1 = fm2color(cc.D.R);
+    down.color2 = fm2color(cc.D.DR);
+    down.color3 = fm2color(cc.D.U);
+    down.color4 = fm2color(cc.D.C);
+    down.color5 = fm2color(cc.D.D);
+    down.color6 = fm2color(cc.D.UL);
+    down.color7 = fm2color(cc.D.L);
+    down.color8 = fm2color(cc.D.DL);
 }
+// sets up display
+void setup_display() {
+    
+    // front face
+    tft_drawLine(50,100,110,105,ILI9340_WHITE);
+    tft_drawLine(110,105,110,165,ILI9340_WHITE);
+    tft_drawLine(50,100,50,160,ILI9340_WHITE);
+    tft_drawLine(110,165,50,160,ILI9340_WHITE);
 
+    tft_drawLine(70,101,70,164,ILI9340_WHITE);//vertical
+    tft_drawLine(90,101,90,164,ILI9340_WHITE);//vertical
+    tft_drawLine(50,120,110,125,ILI9340_WHITE);//horizontal
+    tft_drawLine(50,140,110,145,ILI9340_WHITE);//horizontal
+
+    //additional lines for top face
+    tft_drawLine(50,100,80,62,ILI9340_WHITE);
+    tft_drawLine(110,105,140,67,ILI9340_WHITE);
+    tft_drawLine(140,67,80,62,ILI9340_WHITE);
+
+    tft_drawLine(70,74,130,79,ILI9340_WHITE);// horizontal
+    tft_drawLine(60,88,120,93,ILI9340_WHITE);// horizontal
+    tft_drawLine(100,63,70,101,ILI9340_WHITE); // vertical
+    tft_drawLine(120,66,90,101,ILI9340_WHITE); // vertical
+
+    //additional lines for right face
+    tft_drawLine(140,67,140,127,ILI9340_WHITE);
+    tft_drawLine(140,127,110,165,ILI9340_WHITE);
+
+    tft_drawLine(110,125,140,87,ILI9340_WHITE);// horizontal
+    tft_drawLine(110,145,140,107,ILI9340_WHITE);// horizontal
+    tft_drawLine(120,93,120,153,ILI9340_WHITE); // vertical
+    tft_drawLine(130,79,130,139,ILI9340_WHITE); // vertical
+
+    // left, back, down
+
+    // left face
+    tft_drawLine(200,100,260,105,ILI9340_WHITE);
+    tft_drawLine(260,105,260,165,ILI9340_WHITE);
+    tft_drawLine(200,100,200,160,ILI9340_WHITE);
+    tft_drawLine(260,165,200,160,ILI9340_WHITE);
+
+    tft_drawLine(220,101,220,164,ILI9340_WHITE);//vertical
+    tft_drawLine(240,101,240,164,ILI9340_WHITE);//vertical
+    tft_drawLine(200,120,260,125,ILI9340_WHITE);//horizontal
+    tft_drawLine(200,140,260,145,ILI9340_WHITE);//horizontal
+
+    //additional lines for down face
+    tft_drawLine(200,100,230,62,ILI9340_WHITE);
+    tft_drawLine(260,105,290,67,ILI9340_WHITE);
+    tft_drawLine(290,67,230,62,ILI9340_WHITE);
+
+    tft_drawLine(220,74,280,79,ILI9340_WHITE);// horizontal
+    tft_drawLine(210,88,270,93,ILI9340_WHITE);// horizontal
+    tft_drawLine(250,63,220,101,ILI9340_WHITE); // vertical
+    tft_drawLine(270,66,240,101,ILI9340_WHITE); // vertical
+
+    //additional lines for back face
+    tft_drawLine(290,67,290,127,ILI9340_WHITE);
+    tft_drawLine(290,127,260,165,ILI9340_WHITE);
+
+    tft_drawLine(260,125,290,87,ILI9340_WHITE);// horizontal
+    tft_drawLine(260,145,290,107,ILI9340_WHITE);// horizontal
+    tft_drawLine(270,93,270,153,ILI9340_WHITE); // vertical
+    tft_drawLine(280,79,280,139,ILI9340_WHITE); // vertical
+
+
+    // side labels
+    tft_drawChar(75, 175,'F', ILI9340_CYAN, ILI9340_BLACK, 2);
+    tft_drawChar(100, 45,'U', ILI9340_CYAN, ILI9340_BLACK, 2);
+    tft_drawChar(150, 100,'R', ILI9340_CYAN, ILI9340_BLACK, 2);
+    tft_drawChar(225, 175,'L', ILI9340_CYAN, ILI9340_BLACK, 2);
+    tft_drawChar(250, 45,'D', ILI9340_CYAN, ILI9340_BLACK, 2);
+    tft_drawChar(300, 100,'B', ILI9340_CYAN, ILI9340_BLACK, 2);
+
+}
 void draw(){
     int j;
     int k;
@@ -317,57 +412,72 @@ void drawTFT() {
     if (TFT_STATE == INIT_STATE) {
       tft_setCursor(100,100);
       tft_setTextSize(3);
-      char title = "RUBOT";
+      char title[] = "RUBOT";
       tft_writeString(title);
     }
     else if (TFT_STATE == SOLVING_STATE) {
         tft_setCursor(100,100);
-        char solving = "Solving..."
+        char solving[] = "Solving...";
         tft_writeString(solving);
     }
     else if (TFT_STATE == SOLVED_STATE) {
-        // Move <tft_move+1> of <num_solution_moves>
-        // <solution_moves[tft_move]>
         tft_setCursor(0,0);
         sprintf(buffer,"Step: %d of %d", tft_move+1,num_solution_moves);
         tft_writeString(buffer);
         
+        //draw();
+        //setup_display();
+        
         tft_setTextSize(4);
         tft_setCursor(100,100);
-        sprintf(buffer,"%c",solution_moves[tft_move]);
+        
+        if (solution_moves[tft_move] & MV_MASK_U) {
+            sprintf(buffer, "U");
+        }
+        else if (solution_moves[tft_move] & MV_MASK_D) {
+            sprintf(buffer, "D");
+        }
+        else if (solution_moves[tft_move] & MV_MASK_F) {
+            sprintf(buffer, "F");
+        }
+        else if (solution_moves[tft_move] & MV_MASK_B) {
+            sprintf(buffer, "B");
+        }
+        else if (solution_moves[tft_move] & MV_MASK_R) {
+            sprintf(buffer, "R");
+        }
+        else if (solution_moves[tft_move] & MV_MASK_L) {
+            sprintf(buffer, "L");
+        }
+        
+        if (solution_moves[tft_move] & MV_MASK_I) {
+            sprintf(buffer+1, "'");
+        }
+        else if (solution_moves[tft_move] & MV_MASK_H) {
+            sprintf(buffer+1, "2");
+        }
+        
         tft_writeString(buffer);
     }
 }
 
-// === Python serial thread ====================================================
-// you should not need to change this thread UNLESS you add new control types
+// Python serial thread
 static PT_THREAD (protothread_serial(struct pt *pt)) {
     PT_BEGIN(pt);
     static char junk;   
     
     while(1) {
-        // There is no YIELD in this loop because there are
-        // YIELDS in the spawned threads that determine the 
-        // execution rate while WAITING for machine input
-        // =============================================
-        // NOTE!! -- to use serial spawned functions
-        // you MUST edit config_1_3_2 to
-        // (1) uncomment the line -- #define use_uart_serial
-        // (2) SET the baud rate to match the PC terminal
-        // =============================================
-        
-        // now wait for machine input from python
-        // Terminate on the usual <enter key>
         PT_terminate_char = '\r' ; 
         PT_terminate_count = 0 ; 
         PT_terminate_time = 0 ;
-        // note that there will NO visual feedback using the following function
         PT_SPAWN(pt, &pt_input, PT_GetMachineBuffer(&pt_input) );
         
         // PREV signal
         if (PT_term_buffer[0] == 'p') {
             if (tft_move > 0) {
                 tft_move--;
+                c = applyMove(c, solution_moves[tft_move]);
+                color_change(c);
             }
             // update TFT display
             drawTFT();
@@ -376,6 +486,8 @@ static PT_THREAD (protothread_serial(struct pt *pt)) {
         else if (PT_term_buffer[0] == 'n') {
             if (tft_move < num_solution_moves-1) {
                 tft_move++;
+                c = applyMove(c, solution_moves[tft_move]);
+                color_change(c);
             }
             // update TFT display
             drawTFT();
@@ -390,7 +502,7 @@ static PT_THREAD (protothread_serial(struct pt *pt)) {
             }
 
             // scramble cube
-            Cube c = scramble(cubeFactory(), scramble_moves, num_scramble_moves);
+            c = applyMoves(cubeFactory(), scramble_moves, num_scramble_moves);
 
             // update TFT display
             TFT_STATE = SOLVING_STATE;
@@ -398,6 +510,7 @@ static PT_THREAD (protothread_serial(struct pt *pt)) {
 
             // solve cube
             num_solution_moves = solve(c, solution_moves);
+            color_change(c);
 
             // update TFT display
             TFT_STATE = SOLVED_STATE;

@@ -9,14 +9,14 @@ static int phaseMaxDepth(int phase) {
 
 static int phaseMoveset(int phase, Move *ms) {
     static Move phase_moveset[4][NUM_MOVES] = { 
-        { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
-        {         U|H,         D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
-        {         U|H,         D|H,         R|H,         L|H, F, F|I, F|H, B, B|I, B|H },
-        {         U|H,         D|H,         R|H,         L|H,         F|H,         B|H } };
+    { MV_MASK_U, MV_MASK_U|MV_MASK_I, MV_MASK_U|MV_MASK_H, MV_MASK_D, MV_MASK_D|MV_MASK_I, MV_MASK_D|MV_MASK_H, MV_MASK_R, MV_MASK_R|MV_MASK_I, MV_MASK_R|MV_MASK_H, MV_MASK_L, MV_MASK_L|MV_MASK_I, MV_MASK_L|MV_MASK_H, MV_MASK_F, MV_MASK_F|MV_MASK_I, MV_MASK_F|MV_MASK_H, MV_MASK_B, MV_MASK_B|MV_MASK_I, MV_MASK_B|MV_MASK_H },
+    {         MV_MASK_U|MV_MASK_H,         MV_MASK_D|MV_MASK_H, MV_MASK_R, MV_MASK_R|MV_MASK_I, MV_MASK_R|MV_MASK_H, MV_MASK_L, MV_MASK_L|MV_MASK_I, MV_MASK_L|MV_MASK_H, MV_MASK_F, MV_MASK_F|MV_MASK_I, MV_MASK_F|MV_MASK_H, MV_MASK_B, MV_MASK_B|MV_MASK_I, MV_MASK_B|MV_MASK_H },
+    {         MV_MASK_U|MV_MASK_H,         MV_MASK_D|MV_MASK_H,         MV_MASK_R|MV_MASK_H,         MV_MASK_L|MV_MASK_H, MV_MASK_F, MV_MASK_F|MV_MASK_I, MV_MASK_F|MV_MASK_H, MV_MASK_B, MV_MASK_B|MV_MASK_I, MV_MASK_B|MV_MASK_H },
+    {         MV_MASK_U|MV_MASK_H,         MV_MASK_D|MV_MASK_H,         MV_MASK_R|MV_MASK_H,         MV_MASK_L|MV_MASK_H,         MV_MASK_F|MV_MASK_H,         MV_MASK_B|MV_MASK_H } };
 
     if (1 <= phase && phase <= 4) {
         int n;
-        for (n=0 ; phase_moveset[phase-1][n] != NOP && n < NUM_MOVES ; n++) {
+        for (n=0 ; phase_moveset[phase-1][n] != MV_MASK_NOP && n < NUM_MOVES ; n++) {
             *(ms+n) = *(phase_moveset[phase-1]+n);
         }
         return n;
@@ -42,11 +42,11 @@ static Cube phaseCube(int phase, Cube c) {
         for(i=0 ; i<NUM_EDGES ; i++) {
             Int8 cubie = getCubie(c.edges, i);
             Int8 p = getPermutation(cubie, 1);
-            if (p == UR || p == UL || p == DR || p == DL) {
-                setPermutation(&cubie, 1, UR);
+            if (p == ECUBIE_UR || p == ECUBIE_UL || p == ECUBIE_DR || p == ECUBIE_DL) {
+                setPermutation(&cubie, 1, ECUBIE_UR);
             }
             else {
-                setPermutation(&cubie, 1, UF);
+                setPermutation(&cubie, 1, ECUBIE_UF);
             }
             setCubie(&c.edges, i, cubie);
         }
@@ -64,14 +64,14 @@ static Cube phaseCube(int phase, Cube c) {
         for(i=0 ; i<NUM_EDGES ; i++) {
             Int8 cubie = getCubie(c.edges, i);
             Int8 p = getPermutation(cubie, 1);
-            if (p == UF || p == UB || p == DF || p == DB) {
-                setPermutation(&cubie, 1, UF);
+            if (p == ECUBIE_UF || p == ECUBIE_UB || p == ECUBIE_DF || p == ECUBIE_DB) {
+                setPermutation(&cubie, 1, ECUBIE_UF);
             }
-            else if (p == UR || p == UL || p == DR || p == DL) {
-                setPermutation(&cubie, 1, UR);
+            else if (p == ECUBIE_UR || p == ECUBIE_UL || p == ECUBIE_DR || p == ECUBIE_DL) {
+                setPermutation(&cubie, 1, ECUBIE_UR);
             }
-            else if (p == FR || p == FL || p == BR || p == BL) {
-                setPermutation(&cubie, 1, FR);
+            else if (p == ECUBIE_FR || p == ECUBIE_FL || p == ECUBIE_BR || p == ECUBIE_BL) {
+                setPermutation(&cubie, 1, ECUBIE_FR);
             }
             setCubie(&c.edges, i, cubie);
         }
@@ -80,17 +80,17 @@ static Cube phaseCube(int phase, Cube c) {
         for(i=0 ; i<NUM_CORNERS ; i++) {
             Int8 cubie = getCubie(c.corners, i);
             Int8 p = getPermutation(cubie, 0);
-            if (p == UFR || p == UBL) {
-                setPermutation(&cubie, 0, UFR);
+            if (p == CCUBIE_UFR || p == CCUBIE_UBL) {
+                setPermutation(&cubie, 0, CCUBIE_UFR);
             }
-            else if (p == UFL || p == UBR) {
-                setPermutation(&cubie, 0, UFL);
+            else if (p == CCUBIE_UFL || p == CCUBIE_UBR) {
+                setPermutation(&cubie, 0, CCUBIE_UFL);
             }
-            else if (p == DFR || p == DBL) {
-                setPermutation(&cubie, 0, DFR);
+            else if (p == CCUBIE_DFR || p == CCUBIE_DBL) {
+                setPermutation(&cubie, 0, CCUBIE_DFR);
             }
-            else if (p == DFL || p == DBR) {
-                setPermutation(&cubie, 0, DFL);
+            else if (p == CCUBIE_DFL || p == CCUBIE_DBR) {
+                setPermutation(&cubie, 0, CCUBIE_DFL);
             }
             setCubie(&c.corners, i, cubie);
         }
@@ -114,7 +114,7 @@ int solve(Cube c, Move *ms) {
         // create goal cube and root node
         Cube goal_cube = phaseCube(phase, cubeFactory());
         Cube root_cube = phaseCube(phase, c);
-        Node root_node = { root_cube, NOP, 0 };
+        Node root_node = { root_cube, MV_MASK_NOP, 0 };
 
         // iterative deepening
         int max_depth = -1;
@@ -153,7 +153,7 @@ int solve(Cube c, Move *ms) {
                         Move m = moveset[i++];
                         
                         // skip redundant moves
-                        if ((m & ~(H|I)) & (node.move & ~(H|I))) {
+                        if ((m & ~(MV_MASK_H|MV_MASK_I)) & (node.move & ~(MV_MASK_H|MV_MASK_I))) {
                             continue;
                         }
 
