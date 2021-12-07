@@ -34,36 +34,36 @@ import serial                                                                # C
 # open microcontroller serial port
 # For windows the device will be 'COMx'
 
-ser = serial.Serial('COM5', 38400, timeout=0.001)                            # COMMENT THIS OUT TO TEST
+ser = serial.Serial('COM3', 38400, timeout=0.001)                            # COMMENT THIS OUT TO TEST
 
 sg.theme('DarkAmber')   # Add a touch of color
 # All the stuff inside your window.
 
 # Encode Char
 def encode_char(c):
-  m = 0;
-  if 'U' in c.upper():
-    m |= 1
-  elif 'D' in c.upper():
-    m |= 2
-  elif 'F' in c.upper():
-    m |= 4
-  elif 'B' in c.upper():
-    m |= 8
-  elif 'R' in c.upper():
-    m |= 16
-  elif 'L' in c.upper():
-    m |= 32
+    m = 0;
+    if 'U' in c.upper():
+        m |= 1
+    elif 'D' in c.upper():
+        m |= 2
+    elif 'F' in c.upper():
+        m |= 4
+    elif 'B' in c.upper():
+        m |= 8
+    elif 'R' in c.upper():
+        m |= 16
+    elif 'L' in c.upper():
+        m |= 32
   
-  if m == 0:
-    return 0
+    if m == 0:
+        return 0
 
-  if '\'' in c:
-    m |= 64
-  elif '2' in c:
-    m |= 128
+    if '\'' in c:
+        m |= 64
+    elif '2' in c:
+        m |= 128
 
-  return m
+    return m
 
 font_spec = 'Courier 24 bold'
 heading_color = '#3684ad'
@@ -152,98 +152,51 @@ button_which = '0'
 #
 while True:
 
-   # time out paramenter makes the system non-blocking
-   # If there is no event the call returns event  '__TIMEOUT__'
-   event, values = window.read(timeout=20) # timeout=10
-   #
-   #print(event)  # for debugging
-   # if user closes window using windows 'x' or clicks 'Exit' button
-   if event == sg.WIN_CLOSED or event == 'Exit':
-      ser.close()
-      break
+    # time out paramenter makes the system non-blocking
+    # If there is no event the call returns event  '__TIMEOUT__'
+    event, values = window.read(timeout=20) # timeout=10
+    #
+    #print(event)  # for debugging
+    # if user closes window using windows 'x' or clicks 'Exit' button
+    if event == sg.WIN_CLOSED or event == 'Exit':
+        ser.close()
+        break
 
-   if event == 'solve_start':
-      # Grab the given user moves
-      move_string = window.Element('user_moves').get()
+    if event == 'solve_start':
+        # Grab the given user moves
+        move_string = window.Element('user_moves').get()
 
-      # Convert move string to a String array
-      char_array = move_string.split()
+        # Convert move string to a String array
+        char_array = move_string.split()
+        print(char_array)
 
-      # Convert char_array to an encoded array
-      encoded_array = []
-      error_pos = -1
-      for i, c in enumerate(char_array):
-         m = encode_char(c)
-         if (m):
-            encoded_array.append(m)
-         else:
-            error_pos = i
-         break
+        # Convert char_array to an encoded array
+        encoded_array = []
+        for c in char_array:
+            m = encode_char(c)
+            if m:
+                encoded_array.append(m)
 
-      # Encode all move data to a char buffer
-      num_moves = len(encoded_array) #num moves
-      s = 's'.encode() + (num_moves).to_bytes(1, 'big') + bytes(encoded_array) + '\r'.encode()
-      assert len(s) == 2 + num_moves
+        # Encode all move data to a char buffer
+        num_moves = len(encoded_array) #num moves
+        s = 's'.encode() + (num_moves).to_bytes(1, 'big') + bytes(encoded_array) + '\r'.encode()
+        assert len(s) == 3 + num_moves
 
-      # zero the input field
-      window['user_moves'].update('')
+        # zero the input field
+        window['user_moves'].update('')
 
-      #Send solve data to PIC
-      ser.write((s))
+        #Send solve data to PIC
+        ser.write((s))
 
-   # User requests next move
-   if event == 'next':
-      #send the next move buffer to PIC
-      ser.write('n\r'.encode())
+    # User requests next move
+    if event == 'next':
+        #send the next move buffer to PIC
+        ser.write('n\r'.encode())
 
-   # User requests previous move
-   if event == 'prev':
-      #send the previous move buffer to PIC
-      ser.write('p\r'.encode())
-
-# ----------------------------------------------------- OTHER STUFFS-------------------------------
-#                                              Close port and Bail out still at bottom
-
-    # # pushbutton events state machine
-    # if event[0:3]  == 'pus' and button_on == 0 :
-    #    # 'b' for button, two numeral characters, a '1' for pushed, and a terminator
-    #    ser.write(('b' + event[7:9] + '1' + '\r').encode())
-    #    button_on = 1
-    #    button_which = event[7:9]
-    # # release event signalled by the 'r'
-    # elif (button_on == 1 and event[7:10] == button_which +'r') :
-    #    ser.write(('b'  + button_which + '0' + '\r').encode())
-    #    button_on = 0
-    #    button_which = ' '
-    # #
-    # # listbox
-    # if event[0:3]  == 'lis'  :
-    #    # get the list box index#
-    #    listbox_value = window.Element(event).GetIndexes()
-    #    ser.write(('l0' + event[4] + str(listbox_value[0]) + '\r').encode())
-    # #
-    # # radio button
-    # if event[0:3]  == 'rad'  :
-    #    #print(event)
-    #    # get the radio group ID and group-member ID radio1_2
-    #    ser.write(('r0' + event[5] + event[7] + '\r').encode())
-
-    # # toggle switches
-    # if event[0:3]  == 'tog'  :
-    #    # read out the toggle switches
-    #    switch_state = window.Element(event).get()
-    #    ser.write(('t' + event[6:8] + str(switch_state) + '\r').encode())
-    # #
-    # # silder events
-    # if event[0:3]  == 'sli'  :
-    #    ser.write(('s ' + event[6] + " {:f}".format((values[event])) + '\r').encode())
-    # #
-    # # reset events
-    # switch_state = window.Element('r_en').get()
-    # if event[0:3] == 'rtg' and switch_state == 1 :
-    #    # drops the data line for 100 mSec
-    #    ser.send_break() #optional duration; duration=0.01
-    # #
+    # User requests previous move
+    if event == 'prev':
+        #send the previous move buffer to PIC
+        ser.write('p\r'.encode())
 
 # close port and Bail out
 ser.close()
