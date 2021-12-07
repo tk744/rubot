@@ -28,6 +28,19 @@ typedef struct {
     Int64 corners;
 } Cube;
 
+/* Equivalent representation of faces and colors using existing move representation. */
+typedef MoveMask FaceMask;
+
+/* Representation of a face consisting of 9 colors. */
+typedef struct {
+    FaceMask C, U, D, R, L, UR, UL, DR, DL;
+} Face;
+
+/* Representation of a cube consisting of 6 faces. */
+typedef struct {
+    Face U, D, F, B, R, L;
+} ColorCube;
+
 /* ENUMERATIONS */
 
 // 1-hot encoding masks
@@ -67,5 +80,7 @@ void printCube(Cube c);
 void printMove(Move m);
 
 void printMoves(Move *ms, int n);
+
+ColorCube convertCube(Cube c);
 
 #endif

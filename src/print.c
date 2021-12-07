@@ -1,19 +1,6 @@
 #include <stdio.h>
 #include "cube.h"
 
-/* Equivalent representation of faces and colors using existing move representation. */
-typedef MoveMask FaceMask;
-
-/* Representation of a face consisting of 9 colors. */
-typedef struct {
-    FaceMask C, U, D, R, L, UR, UL, DR, DL;
-} Face;
-
-/* Representation of a cube consisting of 6 faces. */
-typedef struct {
-    Face U, D, F, B, R, L;
-} ColorCube;
-
 /* Returns a new solved ColorCube. */
 ColorCube colorCubeFactory() {
     ColorCube cc;
