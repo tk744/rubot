@@ -3,6 +3,9 @@
 #include "tft_gfx.h"
 #include <stdio.h>  // required for serial communication
 
+// string buffer
+char buffer[60];
+
 /* DEFINE GUI SIGNALS */
 #define SOLVE_SIG 1
 #define NEXT_SIG 2
