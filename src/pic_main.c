@@ -29,6 +29,7 @@ int tft_move = 0;
 void drawTFT() {
     // clear display
     tft_fillScreen(ILI9340_BLACK);
+    tft_setTextColor(ILI9340_CYAN);
 
     if (TFT_STATE == INIT_STATE) {
       tft_setCursor(100,100);
