@@ -6,7 +6,7 @@ void demo0() {
     srand(&demo0);
 
     // scramble
-    int n_scramble = 8;
+    int n_scramble = 0;
     Move ms_scramble[n_scramble];
     Cube c_scramble = scramble(cubeFactory(), ms_scramble, n_scramble);
 
@@ -32,7 +32,29 @@ void demo0() {
     printCube(c_solution);
 }
 
+void c2ccMapping() {
+    Cube c0 = cubeFactory();
+    Cube c1 = applyMove(c0, F);
+    Cube c2 = applyMove(c0, R|I);
+    Cube c3 = applyMove(c0, U|I);
+    Cube c4 = applyMove(applyMove(c0, F), R);
+    Cube c5 = applyMove(applyMove(applyMove(applyMove(applyMove(c0, U), F), D), R|H), F);
+
+    printf("-- ORIGINAL CUBE --\n");
+    printCube(c0);
+    printf("-- F MOVE --\n");
+    printCube(c1);
+    printf("-- R' MOVE --\n");
+    printCube(c2);
+    printf("-- U' MOVE --\n");
+    printCube(c3);
+    printf("-- F R MOVE --\n");
+    printCube(c4);
+    printf("-- U F D R2 F MOVE --\n");
+    printCube(c5);
+}
+
 int main() {
-    demo0();
+    c2ccMapping();
     return 0;
 }
