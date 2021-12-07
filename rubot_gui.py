@@ -182,7 +182,7 @@ while True:
 
       # Encode all move data to a char buffer
       num_moves = len(encoded_array) #num moves
-      s = 's'.encode() + (num_moves).to_bytes(1, 'big') + bytes(encoded_array)
+      s = 's'.encode() + (num_moves).to_bytes(1, 'big') + bytes(encoded_array) + '\r'.encode()
       assert len(s) == 2 + num_moves
 
       # zero the input field
@@ -194,12 +194,12 @@ while True:
    # User requests next move
    if event == 'next':
       #send the next move buffer to PIC
-      ser.write('n'.encode())
+      ser.write('n\r'.encode())
 
    # User requests previous move
    if event == 'prev':
       #send the previous move buffer to PIC
-      ser.write('p'.encode())
+      ser.write('p\r'.encode())
 
 # ----------------------------------------------------- OTHER STUFFS-------------------------------
 #                                              Close port and Bail out still at bottom
