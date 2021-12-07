@@ -79,7 +79,7 @@ static Int8 getColorCubie(ColorCube cc, CubieEnum ce, int isEdge) {
         // TODO
     }
 
-    // get permutation
+    // set permutation
     if (isEdge) {
         if ((colors[0]|colors[1]) == (U|F)) {
             permutation = UF;
@@ -122,7 +122,7 @@ static Int8 getColorCubie(ColorCube cc, CubieEnum ce, int isEdge) {
         // TODO
     }
 
-    // get orientation
+    // set orientation
     if (isEdge) {
         orientation = (colors[0] & (L|R) || ((colors[0] & (F|B)) && (colors[1] & (U|D))));
     }
@@ -192,34 +192,125 @@ static FaceMask getColor(Cube c, CubieEnum ce, int isEdge, FaceMask fm) {
         }
     }
     else {
-        // // set color array
-        // if (permutation == UFR) {
-        //     colors[0] = U; colors[1] = F; colors[2] = R;
-        // }
-        // else if (permutation == UFL) {
-        //     colors[0] = U; colors[1] = F; colors[2] = L;
-        // }
-        // else if (permutation == UBR) {
-        //     colors[0] = U; colors[1] = B; colors[2] = R;
-        // }
-        // else if (permutation == UBL) {
-        //     colors[0] = U; colors[1] = B; colors[2] = L;
-        // }
-        // else if (permutation == DFR) {
-        //     colors[0] = D; colors[1] = F; colors[2] = R;
-        // }
-        // else if (permutation == DFL) {
-        //     colors[0] = D; colors[1] = F; colors[2] = L;
-        // }
-        // else if (permutation == DBR) {
-        //     colors[0] = D; colors[1] = B; colors[2] = R;
-        // }
-        // else if (permutation == DBL) {
-        //     colors[0] = D; colors[1] = B; colors[2] = L;
-        // }
+        // set color array
+        if (permutation == UFR) {
+            colors[0] = F; colors[1] = R; colors[2] = U;
+        }
+        else if (permutation == UFL) {
+            colors[0] = F; colors[1] = L; colors[2] = U;
+        }
+        else if (permutation == UBR) {
+            colors[0] = B; colors[1] = R; colors[2] = U;
+        }
+        else if (permutation == UBL) {
+            colors[0] = B; colors[1] = L; colors[2] = U;
+        }
+        else if (permutation == DFR) {
+            colors[0] = F; colors[1] = R; colors[2] = D;
+        }
+        else if (permutation == DFL) {
+            colors[0] = F; colors[1] = L; colors[2] = D;
+        }
+        else if (permutation == DBR) {
+            colors[0] = B; colors[1] = R; colors[2] = D;
+        }
+        else if (permutation == DBL) {
+            colors[0] = B; colors[1] = L; colors[2] = D;
+        }
 
         // set color index
-        // TODO
+        int permutation_tetrad, ce_tetrad;
+
+        if (permutation == UFR || permutation == DFL || permutation == UBL || permutation == DBR) {
+            permutation_tetrad = 1;
+        }
+        else {
+            permutation_tetrad = 0;
+        }
+
+        if (ce == UFR || ce == DFL || ce == UBL || ce == DBR) {
+            ce_tetrad = 1;
+        }
+        else {
+            ce_tetrad = 0;
+        }
+
+        if (fm & (F|B)) {
+            if (ce_tetrad == 1) {
+                if (orientation == 0) {
+                    idx = 0;
+                }
+                else if (orientation == 1) {
+                    idx = (permutation_tetrad == ce_tetrad) ? 2 : 1;
+                }
+                else if (orientation == 2) {
+                    idx = (permutation_tetrad == ce_tetrad) ? 1 : 2;
+                }
+            }
+            else {
+                if (orientation == 0) {
+                    idx = 0;
+                }
+                else if (orientation == 1) {
+                    idx = (permutation_tetrad == ce_tetrad) ? 1 : 2;
+                }
+                else if (orientation == 2) {
+                    idx = (permutation_tetrad == ce_tetrad) ? 2 : 1;
+                }
+            }
+        }
+        else if (fm & (R|L)) {
+            if (orientation == 0) {
+                if (permutation_tetrad == ce_tetrad) {
+                    idx = 1;
+                }
+                else {
+                    idx = 2;
+                }
+            }
+            else if (orientation == 1) {
+                if (ce_tetrad == 0) {
+                    idx = (permutation_tetrad == ce_tetrad) ? 2 : 1;
+                }
+                else {
+                    idx = 0;
+                }
+            }
+            else if (orientation == 2) {
+                if (ce_tetrad == 1) {
+                    idx = (permutation_tetrad == ce_tetrad) ? 2 : 1;
+                }
+                else {
+                    idx = 0;
+                }
+            }
+        }
+        else if (fm & (U|D)) {
+            if (orientation == 0) {
+                if (permutation_tetrad == ce_tetrad) {
+                    idx = 2;
+                }
+                else {
+                    idx = 1;
+                }
+            }
+            else if (orientation == 1) {
+                if (ce_tetrad == 0) {
+                    idx = 0;
+                }
+                else {
+                    idx = (permutation_tetrad == ce_tetrad) ? 1 : 2;
+                }
+            }
+            else if (orientation == 2) {
+                if (ce_tetrad == 1) {
+                    idx = 0;
+                }
+                else {
+                    idx = (permutation_tetrad == ce_tetrad) ? 1 : 2;
+                }
+            }
+        }
     }
 
     return colors[idx];
