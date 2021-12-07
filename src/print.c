@@ -1,26 +1,40 @@
 #include <stdio.h>
 #include "cube.h"
 
-/*
-TODO:
-1. cubieEncoding() corners
-2. convertCube()
-*/
-
-// represent colors and faces by FaceMask using corresponding MoveMask
+/* Equivalent representation of faces and colors using existing move representation. */
 typedef MoveMask FaceMask;
 
+/* Representation of a face consisting of 9 colors. */
 typedef struct {
     FaceMask C, U, D, R, L, UR, UL, DR, DL;
 } Face;
 
+/* Representation of a cube consisting of 6 faces. */
 typedef struct {
     Face U, D, F, B, R, L;
 } ColorCube;
 
-static Int8 cubieEncoding(ColorCube cc, CubieEnum ce, int isEdge) {
-    FaceMask colors[3] = {};
+/* Returns a new solved ColorCube. */
+ColorCube colorCubeFactory() {
+    ColorCube cc;
+    Face *faces[6] = { &cc.U, &cc.D, &cc.F, &cc.B, &cc.L, &cc.R };
+    FaceMask colors[6] = { U, D, F, B, L, R };
+    
+    int i;
+    for (i=0 ; i<6 ; i++) {
+        Face *f = faces[i];
+        FaceMask color = colors[i];
+        f->C = f->U = f->D = f->R = f->L = f->UL = f->UR = f->DL = f->DR = color;
+    }
+
+    return cc;
+}
+
+/* Returns representation of a cubie from ColorCube `cc` specified by cubie enum. */
+static Int8 getColorCubie(ColorCube cc, CubieEnum ce, int isEdge) {
     Int8 permutation, orientation;
+    
+    FaceMask colors[3] = {};
 
     // read colors
     if (isEdge) {
@@ -65,7 +79,7 @@ static Int8 cubieEncoding(ColorCube cc, CubieEnum ce, int isEdge) {
         // TODO
     }
 
-    // set permutation
+    // get permutation
     if (isEdge) {
         if ((colors[0]|colors[1]) == (U|F)) {
             permutation = UF;
@@ -108,7 +122,7 @@ static Int8 cubieEncoding(ColorCube cc, CubieEnum ce, int isEdge) {
         // TODO
     }
 
-    // set orientation
+    // get orientation
     if (isEdge) {
         orientation = (colors[0] & (L|R) || ((colors[0] & (F|B)) && (colors[1] & (U|D))));
     }
@@ -117,39 +131,183 @@ static Int8 cubieEncoding(ColorCube cc, CubieEnum ce, int isEdge) {
     }
 
     // return cubie encoding
-    return permutation | (orientation << (CUBIE_BITS - (isEdge ? 1 : 2)));
+    Int8 cubie;
+    setPermutation(&cubie, isEdge, permutation);
+    setOrientation(&cubie, isEdge, orientation);
+    return cubie;
 }
 
+/* Returns color of a square from Cube `c` specified by cubie enum and face enum. */
+static FaceMask getColor(Cube c, CubieEnum ce, int isEdge, FaceMask fm) {
+    Int8 cubie = getCubie(isEdge ? c.edges : c.corners, ce);
+    Int8 permutation = getPermutation(cubie, isEdge);
+    Int8 orientation = getOrientation(cubie, isEdge);
+
+    FaceMask colors[3] = {};
+    int idx = 0;
+
+    if (isEdge) {
+        // set color array
+        if (permutation == UF) {
+            colors[0] = U; colors[1] = F;
+        }
+        else if (permutation == UB) {
+            colors[0] = U; colors[1] = B;
+        }
+        else if (permutation == UR) {
+            colors[0] = U; colors[1] = R;
+        }
+        else if (permutation == UL) {
+            colors[0] = U; colors[1] = L;
+        }
+        else if (permutation == DF) {
+            colors[0] = D; colors[1] = F;
+        }
+        else if (permutation == DB) {
+            colors[0] = D; colors[1] = B;
+        }
+        else if (permutation == DR) {
+            colors[0] = D; colors[1] = R;
+        }
+        else if (permutation == DL) {
+            colors[0] = D; colors[1] = L;
+        }
+        else if (permutation == FR) {
+            colors[0] = F; colors[1] = R;
+        }
+        else if (permutation == FL) {
+            colors[0] = F; colors[1] = L;
+        }
+        else if (permutation == BR) {
+            colors[0] = B; colors[1] = R;
+        }
+        else if (permutation == BL) {
+            colors[0] = B; colors[1] = L;
+        }
+
+        // set color index
+        idx = (colors[1] & (L|R)) ? !orientation : orientation;
+        if ((fm & (F|B)) || ((fm & (U|D)) && (ce == UR || ce == UL || ce == DR || ce == DL))) {
+            idx = !idx;
+        }
+    }
+    else {
+        // // set color array
+        // if (permutation == UFR) {
+        //     colors[0] = U; colors[1] = F; colors[2] = R;
+        // }
+        // else if (permutation == UFL) {
+        //     colors[0] = U; colors[1] = F; colors[2] = L;
+        // }
+        // else if (permutation == UBR) {
+        //     colors[0] = U; colors[1] = B; colors[2] = R;
+        // }
+        // else if (permutation == UBL) {
+        //     colors[0] = U; colors[1] = B; colors[2] = L;
+        // }
+        // else if (permutation == DFR) {
+        //     colors[0] = D; colors[1] = F; colors[2] = R;
+        // }
+        // else if (permutation == DFL) {
+        //     colors[0] = D; colors[1] = F; colors[2] = L;
+        // }
+        // else if (permutation == DBR) {
+        //     colors[0] = D; colors[1] = B; colors[2] = R;
+        // }
+        // else if (permutation == DBL) {
+        //     colors[0] = D; colors[1] = B; colors[2] = L;
+        // }
+
+        // set color index
+        // TODO
+    }
+
+    return colors[idx];
+}
+
+/* Returns ColorCube representation of Cube `c`. */
+ColorCube convertCube(Cube c) {
+    ColorCube cc;
+    
+    // set center cubies
+    cc.U.C = U; 
+    cc.D.C = D; 
+    cc.F.C = F; 
+    cc.B.C = B; 
+    cc.R.C = R; 
+    cc.L.C = L;
+    
+    // set edge cubies
+    cc.U.D = getColor(c, UF, 1, U);
+    cc.F.U = getColor(c, UF, 1, F);
+    cc.U.U = getColor(c, UB, 1, U);
+    cc.B.U = getColor(c, UB, 1, B);
+    cc.U.R = getColor(c, UR, 1, U);
+    cc.R.U = getColor(c, UR, 1, R);
+    cc.U.L = getColor(c, UL, 1, U);
+    cc.L.U = getColor(c, UL, 1, L);
+    cc.D.U = getColor(c, DF, 1, D);
+    cc.F.D = getColor(c, DF, 1, F);
+    cc.D.D = getColor(c, DB, 1, D);
+    cc.B.D = getColor(c, DB, 1, B);
+    cc.D.R = getColor(c, DR, 1, D);
+    cc.R.D = getColor(c, DR, 1, R);
+    cc.D.L = getColor(c, DL, 1, D);
+    cc.L.D = getColor(c, DL, 1, L);
+    cc.F.R = getColor(c, FR, 1, F);
+    cc.R.L = getColor(c, FR, 1, R);
+    cc.F.L = getColor(c, FL, 1, F);
+    cc.L.R = getColor(c, FL, 1, L);
+    cc.B.L = getColor(c, BR, 1, B);
+    cc.R.R = getColor(c, BR, 1, R);
+    cc.B.R = getColor(c, BL, 1, B);
+    cc.L.L = getColor(c, BL, 1, L);
+            
+    // set corner cubies
+    cc.U.DR = getColor(c, UFR, 0, U);
+    cc.F.UR = getColor(c, UFR, 0, F);
+    cc.R.UL = getColor(c, UFR, 0, R);
+    cc.U.DL = getColor(c, UFL, 0, U);
+    cc.F.UL = getColor(c, UFL, 0, F);
+    cc.L.UR = getColor(c, UFL, 0, L);
+    cc.U.UR = getColor(c, UBR, 0, U);
+    cc.B.UL = getColor(c, UBR, 0, B);
+    cc.R.UR = getColor(c, UBR, 0, R);
+    cc.U.UL = getColor(c, UBL, 0, U);
+    cc.B.UR = getColor(c, UBL, 0, B);
+    cc.L.UL = getColor(c, UBL, 0, L);
+    cc.D.UR = getColor(c, DFR, 0, D);
+    cc.F.DR = getColor(c, DFR, 0, F);
+    cc.R.DL = getColor(c, DFR, 0, R);
+    cc.D.UL = getColor(c, DFL, 0, D);
+    cc.F.DL = getColor(c, DFL, 0, F);
+    cc.L.DR = getColor(c, DFL, 0, L);
+    cc.D.DR = getColor(c, DBR, 0, D);
+    cc.B.DL = getColor(c, DBR, 0, B);
+    cc.R.DR = getColor(c, DBR, 0, R);
+    cc.D.DL = getColor(c, DBL, 0, D);
+    cc.B.DR = getColor(c, DBL, 0, B);
+    cc.L.DL = getColor(c, DBL, 0, L);
+    
+    return cc;
+}
+
+/* Returns Cube representation of ColorCube `cc`. */
 Cube convertColorCube(ColorCube cc) {
     Cube c = { 0, 0 };
 
     Int64 i;
     for(i=0 ; i<NUM_EDGES ; i++) {
-        c.edges |= ((Int64) cubieEncoding(cc, i, 1)) << (CUBIE_BITS * i);
+        setCubie(&c.edges, i, getColorCubie(cc, i, 1));
     }
     for(i=0 ; i<NUM_CORNERS ; i++) {
-        c.corners |= ((Int64) cubieEncoding(cc, i, 0)) << (CUBIE_BITS * i);
+        setCubie(&c.corners, i, getColorCubie(cc, i, 0));
     }
 
     return c;
 }
 
-ColorCube convertCube(Cube c) {
-    ColorCube cc;
-    cc.U.C = U; cc.D.C = D; cc.F.C = F; cc.B.C = B; cc.R.C = R; cc.L.C = L;
-
-    Int64 i;
-    for(i=0 ; i<NUM_EDGES ; i++) {
-
-    }
-    for(i=0 ; i<NUM_CORNERS ; i++) {
-
-    }
-
-    return cc;
-
-}
-
+/* Print colored square to console. */
 static void printColor(FaceMask color) {
     if (color & U) {
         printf("\033[0;37m"); // white
@@ -172,6 +330,7 @@ static void printColor(FaceMask color) {
     printf("▣\033[0m");
 }
 
+/* Print ColorCube graphic to console. */
 void printColorCube(ColorCube cc) {
     Face faces[6] = { cc.U, cc.L, cc.F, cc.R, cc.B, cc.D };
 
@@ -218,27 +377,10 @@ void printColorCube(ColorCube cc) {
     printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
 }
 
-ColorCube colorCubeFactory() {
-    ColorCube cc;
-    Face *fs[6] = { &cc.U, &cc.D, &cc.F, &cc.B, &cc.L, &cc.R };
-    FaceMask cs[6] = { U, D, F, B, L, R };
-    
+/* Print Cube representation to console. */
+static void printCubeEncoding(Cube c) {
     int i;
-    for (i=0 ; i<6 ; i++) {
-        Face *f = fs[i];
-        FaceMask color = cs[i];
-        f->C = f->U = f->D = f->R = f->L = f->UL = f->UR = f->DL = f->DR = color;
-    }
-
-    return cc;
-}
-
-void printCube(Cube c) {
-    // ColorCube cc = convertCube(c);
-    // printColorCube(cc);
-
-    int i;
-    printf("  EDGES: ");
+    printf("EDGES:   ");
     for(i=0 ; i<NUM_EDGES ; i++) {
         Int8 cubie = getCubie(c.edges, i);
         printf("%2u:%u ", getPermutation(cubie, 1), getOrientation(cubie, 1));
@@ -248,150 +390,17 @@ void printCube(Cube c) {
         Int8 cubie = getCubie(c.corners, i);
         printf("%2u:%u ", getPermutation(cubie, 0), getOrientation(cubie, 0));
     }
-    printf("\n");
+    printf("\n");   
 }
 
-// int main() {
-//     ColorCube cc0 = colorCubeFactory();
-//     printColorCube(cc0);
+/* Print Cube graphic to console. */
+void printCube(Cube c) {
+    ColorCube cc = convertCube(c);
+    printColorCube(cc);
+    //printCubeEncoding(c);
+}
 
-//     Cube c0 = convertColorCube(cc0);
-//     printCube(c0);
-    
-//     return 0;
-// }
-
-
-// static FaceMask getColor(Cube c, FaceMask fm, CubieEnum ce, int isEdge) {
-//     Int8 cubie = ((isEdge ? c.edges : c.corners) >> (CUBIE_BITS * ce)) & ((1 << CUBIE_BITS) - 1);
-
-//     Int8 permutation = cubie & ((1 << (CUBIE_BITS - (isEdge ? 1 : 2))) - 1);
-//     Int8 orientation = cubie >> CUBIE_BITS - (isEdge ? 1 : 2);
-
-//     FaceMask colors[3] = {};
-
-//     if (isEdge) {
-//         if (permutation == UF) {
-//             colors[0] = U_FACE; colors[1] = F_FACE;
-//         }
-//         else if (permutation == UB) {
-//             colors[0] = U_FACE; colors[1] = B_FACE;
-//         }
-//         else if (permutation == UR) {
-//             colors[0] = U_FACE; colors[1] = R_FACE;
-//         }
-//         else if (permutation == UL) {
-//             colors[0] = U_FACE; colors[1] = L_FACE;
-//         }
-//         else if (permutation == DF) {
-//             colors[0] = D_FACE; colors[1] = F_FACE;
-//         }
-//         else if (permutation == DB) {
-//             colors[0] = D_FACE; colors[1] = B_FACE;
-//         }
-//         else if (permutation == DR) {
-//             colors[0] = D_FACE; colors[1] = R_FACE;
-//         }
-//         else if (permutation == DL) {
-//             colors[0] = D_FACE; colors[1] = L_FACE;
-//         }
-//         else if (permutation == FR) {
-//             colors[0] = F_FACE; colors[1] = R_FACE;
-//         }
-//         else if (permutation == FL) {
-//             colors[0] = F_FACE; colors[1] = L_FACE;
-//         }
-//         else if (permutation == BR) {
-//             colors[0] = B_FACE; colors[1] = R_FACE;
-//         }
-//         else if (permutation == BL) {
-//             colors[0] = B_FACE; colors[1] = L_FACE;
-//         }
-//     }
-//     else {
-//         if (permutation == UFR) {
-//             colors[0] = U_FACE; colors[1] = F_FACE; colors[2] = R_FACE;
-//         }
-//         else if (permutation == UFL) {
-//             colors[0] = U_FACE; colors[1] = F_FACE; colors[2] = L_FACE;
-//         }
-//         else if (permutation == UBR) {
-//             colors[0] = U_FACE; colors[1] = B_FACE; colors[2] = R_FACE;
-//         }
-//         else if (permutation == UBL) {
-//             colors[0] = U_FACE; colors[1] = B_FACE; colors[2] = L_FACE;
-//         }
-//         else if (permutation == DFR) {
-//             colors[0] = D_FACE; colors[1] = F_FACE; colors[2] = R_FACE;
-//         }
-//         else if (permutation == DFL) {
-//             colors[0] = D_FACE; colors[1] = F_FACE; colors[2] = L_FACE;
-//         }
-//         else if (permutation == DBR) {
-//             colors[0] = D_FACE; colors[1] = B_FACE; colors[2] = R_FACE;
-//         }
-//         else if (permutation == DBL) {
-//             colors[0] = D_FACE; colors[1] = B_FACE; colors[2] = L_FACE;
-//         }
-//         // TODO: fix
-//         colors[0] = colors[1] = colors[2] = 0;
-//     }
-
-//     return colors[orientation];
-// }
-
-// static void printColor(FaceEnum color) {
-//     if (color == U_FACE) {
-//         printf("\033[0;37m"); // white
-//     }
-//     else if (color == D_FACE) {
-//         printf("\033[0;33m"); // yellow
-//     }
-//     else if (color == F_FACE) {
-//         printf("\033[0;32m"); // green
-//     }
-//     else if (color == B_FACE) {
-//         printf("\033[0;34m"); // blue
-//     }
-//     else if (color == R_FACE) {
-//         printf("\033[0;31m"); // red
-//     }
-//     else if (color == L_FACE) {
-//         printf("\033[0;35m"); // purple
-//     }
-//     printf("▣\033[0m");
-// }
-
-// void printCube(Cube c) {
-//     FaceEnum faces[6] = { U_FACE, L_FACE, F_FACE, R_FACE, B_FACE, D_FACE };
-//     CubieEnum cubies[3][6][3] = {
-//         { { UBL, UB, UBR }, { UBL, UL, UFL }, { UFL, UF, UFR }, { UFR, UR, UBR }, { UBR, UB, UBL }, { DFL, DF, DFR } },
-//         { { UL, -1, UR }, { BL, -1, FL }, { FL, -1, FR }, { FR, -1, BR }, { BR, -1, BL }, { DL, -1, DR } },
-//         { { UFL, UF, UFR }, { DBL, DL, DFL }, { DFL, DF, DFR }, { DFR, DR, DBR }, { DBR, DB, DBL }, { DBL, DB, DBR } } 
-//     };
-
-//     printf("┌──┤U├──┬──┤L├──┬──┤F├──┬──┤R├──┬──┤B├──┬──┤D├──┐\n");
-
-//     int i, j, k;
-//     for (i=0 ; i<3 ; i++) {
-//         for (j=0 ; j<6 ; j++) {
-//             printf("│ ");
-//             for (k=0 ; k<3 ; k++) {
-//                 int isEdge = ((i+k) % 2 == 1);
-//                 FaceEnum color = (i == 1 && k == 1) ? faces[j] : getColor(c, faces[j], cubies[i][j][k], isEdge);
-//                 printColor(color);
-//                 printf(" ", color);
-//             }
-//         }
-//         printf("│\n");
-//     }
-
-//     printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
-
-//     // FOR DEBUGGING PURPOSES ONLY:
-//     printf("%llu %llu\n", c.edges, c.corners);
-// }
-
+/* Print single Move to console without terminating characters. */ 
 void printMove(Move m) {
     if (m & U) {
         printf("U");
@@ -424,6 +433,7 @@ void printMove(Move m) {
     }
 }
 
+/* Print list of Moves to console. */
 void printMoves(Move *ms, int n) {
     while(n-- > 0) {
         printMove(*ms++);

@@ -3,8 +3,9 @@
 /* FUNCTION IMPLEMENTATION */
 
 Cube cubeFactory() {
-    Cube c = { 0, 0 }; // initialize to { 407901468851537952, 247132686368 }
+    Cube c = { 0, 0 };
 
+    // set `c` to { 407901468851537952, 247132686368 }
     Int64 i;
     for(i=0 ; i<NUM_EDGES ; i++) {
         c.edges |= i << (CUBIE_BITS * i);
