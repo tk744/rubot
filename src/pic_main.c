@@ -28,15 +28,28 @@ void drawTFT() {
     tft_fillScreen(ILI9340_BLACK);
 
     if (TFT_STATE == INIT_STATE) {
-        // RUBOT
+      tft_setCursor(100,100);
+      tft_setTextSize(3);
+      char title = "RUBOT";
+      tft_writeString(title);
+
     }
     else if (TFT_STATE == SOLVING_STATE) {
-        // Solving...
+        tft_setCursor(100,100);
+        char solving = "Solving..."
+        tft_writeString(solving);
     }
     else if (TFT_STATE == SOLVED_STATE) {
         // Move <tft_move+1> of <num_solution_moves>
         // <solution_moves[tft_move]>
-    }
+        tft_setCursor(0,0);
+        sprintf(buffer,"Step: %d of %d", tft_move+1,num_solution_moves);
+        tft_writeString(buffer);
+        
+        tft_setTextSize(4);
+        tft_setCursor(100,100);
+        sprintf(buffer,"%c",solution_moves[tft_move]);
+        tft_writeString(buffer);
 }
 
 int initHardware() {
