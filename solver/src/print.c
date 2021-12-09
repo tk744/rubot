@@ -5,7 +5,7 @@
 ColorCube colorCubeFactory() {
     ColorCube cc;
     Face *faces[6] = { &cc.U, &cc.D, &cc.F, &cc.B, &cc.L, &cc.R };
-    FaceMask colors[6] = { U, D, F, B, L, R };
+    FaceMask colors[6] = { MV_MASK_U, MV_MASK_D, MV_MASK_F, MV_MASK_B, MV_MASK_L, MV_MASK_R };
     
     int i;
     for (i=0 ; i<6 ; i++) {
@@ -25,40 +25,40 @@ static Int8 getColorCubie(ColorCube cc, CubieEnum ce, int isEdge) {
 
     // read colors
     if (isEdge) {
-        if (ce == UF) {
+        if (ce == ECUBIE_UF) {
             colors[0] = cc.U.D; colors[1] = cc.F.U;
         }
-        else if (ce == UB) {
+        else if (ce == ECUBIE_UB) {
             colors[0] = cc.U.U; colors[1] = cc.B.U;
         }
-        else if (ce == UR) {
+        else if (ce == ECUBIE_UR) {
             colors[0] = cc.U.R; colors[1] = cc.R.U;
         }
-        else if (ce == UL) {
+        else if (ce == ECUBIE_UL) {
             colors[0] = cc.U.L; colors[1] = cc.L.U;
         }
-        else if (ce == DF) {
+        else if (ce == ECUBIE_DF) {
             colors[0] = cc.D.U; colors[1] = cc.F.D;
         }
-        else if (ce == DB) {
+        else if (ce == ECUBIE_DB) {
             colors[0] = cc.D.D; colors[1] = cc.B.D;
         }
-        else if (ce == DR) {
+        else if (ce == ECUBIE_DR) {
             colors[0] = cc.D.R; colors[1] = cc.R.D;
         }
-        else if (ce == DL) {
+        else if (ce == ECUBIE_DL) {
             colors[0] = cc.D.L; colors[1] = cc.L.D;
         }
-        else if (ce == FR) {
+        else if (ce == ECUBIE_FR) {
             colors[0] = cc.F.R; colors[1] = cc.R.L;
         }
-        else if (ce == FL) {
+        else if (ce == ECUBIE_FL) {
             colors[0] = cc.F.L; colors[1] = cc.L.R;
         }
-        else if (ce == BR) {
+        else if (ce == ECUBIE_BR) {
             colors[0] = cc.B.L; colors[1] = cc.R.R;
         }
-        else if (ce == BL) {
+        else if (ce == ECUBIE_BL) {
             colors[0] = cc.B.R; colors[1] = cc.L.L;
         }
     }
@@ -68,41 +68,41 @@ static Int8 getColorCubie(ColorCube cc, CubieEnum ce, int isEdge) {
 
     // set permutation
     if (isEdge) {
-        if ((colors[0]|colors[1]) == (U|F)) {
-            permutation = UF;
+        if ((colors[0]|colors[1]) == (MV_MASK_U|MV_MASK_F)) {
+            permutation = ECUBIE_UF;
         }
-        else if ((colors[0]|colors[1]) == (U|B)) {
-            permutation = UB;
+        else if ((colors[0]|colors[1]) == (MV_MASK_U|MV_MASK_B)) {
+            permutation = ECUBIE_UB;
         }
-        else if ((colors[0]|colors[1]) == (U|R)) {
-            permutation = UR;
+        else if ((colors[0]|colors[1]) == (MV_MASK_U|MV_MASK_R)) {
+            permutation = ECUBIE_UR;
         }
-        else if ((colors[0]|colors[1]) == (U|L)) {
-            permutation = UL;
+        else if ((colors[0]|colors[1]) == (MV_MASK_U|MV_MASK_L)) {
+            permutation = ECUBIE_UL;
         }
-        else if ((colors[0]|colors[1]) == (D|F)) {
-            permutation = DF;
+        else if ((colors[0]|colors[1]) == (MV_MASK_D|MV_MASK_F)) {
+            permutation = ECUBIE_DF;
         }
-        else if ((colors[0]|colors[1]) == (D|B)) {
-            permutation = DB;
+        else if ((colors[0]|colors[1]) == (MV_MASK_D|MV_MASK_B)) {
+            permutation = ECUBIE_DB;
         }
-        else if ((colors[0]|colors[1]) == (D|R)) {
-            permutation = DR;
+        else if ((colors[0]|colors[1]) == (MV_MASK_D|MV_MASK_R)) {
+            permutation = ECUBIE_DR;
         }
-        else if ((colors[0]|colors[1]) == (D|L)) {
-            permutation = DL;
+        else if ((colors[0]|colors[1]) == (MV_MASK_D|MV_MASK_L)) {
+            permutation = ECUBIE_DL;
         }
-        else if ((colors[0]|colors[1]) == (F|R)) {
-            permutation = FR;
+        else if ((colors[0]|colors[1]) == (MV_MASK_F|MV_MASK_R)) {
+            permutation = ECUBIE_FR;
         }
-        else if ((colors[0]|colors[1]) == (F|L)) {
-            permutation = FL;
+        else if ((colors[0]|colors[1]) == (MV_MASK_F|MV_MASK_L)) {
+            permutation = ECUBIE_FL;
         }
-        else if ((colors[0]|colors[1]) == (B|R)) {
-            permutation = BR;
+        else if ((colors[0]|colors[1]) == (MV_MASK_B|MV_MASK_R)) {
+            permutation = ECUBIE_BR;
         }
-        else if ((colors[0]|colors[1]) == (B|L)) {
-            permutation = BL;
+        else if ((colors[0]|colors[1]) == (MV_MASK_B|MV_MASK_L)) {
+            permutation = ECUBIE_BL;
         }
     }
     else {
@@ -111,7 +111,7 @@ static Int8 getColorCubie(ColorCube cc, CubieEnum ce, int isEdge) {
 
     // set orientation
     if (isEdge) {
-        orientation = (colors[0] & (L|R) || ((colors[0] & (F|B)) && (colors[1] & (U|D))));
+        orientation = (colors[0] & (MV_MASK_L|MV_MASK_R) || ((colors[0] & (MV_MASK_F|MV_MASK_B)) && (colors[1] & (MV_MASK_U|MV_MASK_D))));
     }
     else {
         // TODO
@@ -135,94 +135,94 @@ static FaceMask getColor(Cube c, CubieEnum ce, int isEdge, FaceMask fm) {
 
     if (isEdge) {
         // set color array
-        if (permutation == UF) {
-            colors[0] = U; colors[1] = F;
+        if (permutation == ECUBIE_UF) {
+            colors[0] = MV_MASK_U; colors[1] = MV_MASK_F;
         }
-        else if (permutation == UB) {
-            colors[0] = U; colors[1] = B;
+        else if (permutation == ECUBIE_UB) {
+            colors[0] = MV_MASK_U; colors[1] = MV_MASK_B;
         }
-        else if (permutation == UR) {
-            colors[0] = U; colors[1] = R;
+        else if (permutation == ECUBIE_UR) {
+            colors[0] = MV_MASK_U; colors[1] = MV_MASK_R;
         }
-        else if (permutation == UL) {
-            colors[0] = U; colors[1] = L;
+        else if (permutation == ECUBIE_UL) {
+            colors[0] = MV_MASK_U; colors[1] = MV_MASK_L;
         }
-        else if (permutation == DF) {
-            colors[0] = D; colors[1] = F;
+        else if (permutation == ECUBIE_DF) {
+            colors[0] = MV_MASK_D; colors[1] = MV_MASK_F;
         }
-        else if (permutation == DB) {
-            colors[0] = D; colors[1] = B;
+        else if (permutation == ECUBIE_DB) {
+            colors[0] = MV_MASK_D; colors[1] = MV_MASK_B;
         }
-        else if (permutation == DR) {
-            colors[0] = D; colors[1] = R;
+        else if (permutation == ECUBIE_DR) {
+            colors[0] = MV_MASK_D; colors[1] = MV_MASK_R;
         }
-        else if (permutation == DL) {
-            colors[0] = D; colors[1] = L;
+        else if (permutation == ECUBIE_DL) {
+            colors[0] = MV_MASK_D; colors[1] = MV_MASK_L;
         }
-        else if (permutation == FR) {
-            colors[0] = F; colors[1] = R;
+        else if (permutation == ECUBIE_FR) {
+            colors[0] = MV_MASK_F; colors[1] = MV_MASK_R;
         }
-        else if (permutation == FL) {
-            colors[0] = F; colors[1] = L;
+        else if (permutation == ECUBIE_FL) {
+            colors[0] = MV_MASK_F; colors[1] = MV_MASK_L;
         }
-        else if (permutation == BR) {
-            colors[0] = B; colors[1] = R;
+        else if (permutation == ECUBIE_BR) {
+            colors[0] = MV_MASK_B; colors[1] = MV_MASK_R;
         }
-        else if (permutation == BL) {
-            colors[0] = B; colors[1] = L;
+        else if (permutation == ECUBIE_BL) {
+            colors[0] = MV_MASK_B; colors[1] = MV_MASK_L;
         }
 
         // set color index
-        idx = (colors[1] & (L|R)) ? !orientation : orientation;
-        if ((fm & (F|B)) || ((fm & (U|D)) && (ce == UR || ce == UL || ce == DR || ce == DL))) {
+        idx = (colors[1] & (MV_MASK_L|MV_MASK_R)) ? !orientation : orientation;
+        if ((fm & (MV_MASK_F|MV_MASK_B)) || ((fm & (MV_MASK_U|MV_MASK_D)) && (ce == ECUBIE_UR || ce == ECUBIE_UL || ce == ECUBIE_DR || ce == ECUBIE_DL))) {
             idx = !idx;
         }
     }
     else {
         // set color array
-        if (permutation == UFR) {
-            colors[0] = F; colors[1] = R; colors[2] = U;
+        if (permutation == CCUBIE_UFR) {
+            colors[0] = MV_MASK_F; colors[1] = MV_MASK_R; colors[2] = MV_MASK_U;
         }
-        else if (permutation == UFL) {
-            colors[0] = F; colors[1] = L; colors[2] = U;
+        else if (permutation == CCUBIE_UFL) {
+            colors[0] = MV_MASK_F; colors[1] = MV_MASK_L; colors[2] = MV_MASK_U;
         }
-        else if (permutation == UBR) {
-            colors[0] = B; colors[1] = R; colors[2] = U;
+        else if (permutation == CCUBIE_UBR) {
+            colors[0] = MV_MASK_B; colors[1] = MV_MASK_R; colors[2] = MV_MASK_U;
         }
-        else if (permutation == UBL) {
-            colors[0] = B; colors[1] = L; colors[2] = U;
+        else if (permutation == CCUBIE_UBL) {
+            colors[0] = MV_MASK_B; colors[1] = MV_MASK_L; colors[2] = MV_MASK_U;
         }
-        else if (permutation == DFR) {
-            colors[0] = F; colors[1] = R; colors[2] = D;
+        else if (permutation == CCUBIE_DFR) {
+            colors[0] = MV_MASK_F; colors[1] = MV_MASK_R; colors[2] = MV_MASK_D;
         }
-        else if (permutation == DFL) {
-            colors[0] = F; colors[1] = L; colors[2] = D;
+        else if (permutation == CCUBIE_DFL) {
+            colors[0] = MV_MASK_F; colors[1] = MV_MASK_L; colors[2] = MV_MASK_D;
         }
-        else if (permutation == DBR) {
-            colors[0] = B; colors[1] = R; colors[2] = D;
+        else if (permutation == CCUBIE_DBR) {
+            colors[0] = MV_MASK_B; colors[1] = MV_MASK_R; colors[2] = MV_MASK_D;
         }
-        else if (permutation == DBL) {
-            colors[0] = B; colors[1] = L; colors[2] = D;
+        else if (permutation == CCUBIE_DBL) {
+            colors[0] = MV_MASK_B; colors[1] = MV_MASK_L; colors[2] = MV_MASK_D;
         }
 
         // set color index
         int permutation_tetrad, ce_tetrad;
 
-        if (permutation == UFR || permutation == DFL || permutation == UBL || permutation == DBR) {
+        if (permutation == CCUBIE_UFR || permutation == CCUBIE_DFL || permutation == CCUBIE_UBL || permutation == CCUBIE_DBR) {
             permutation_tetrad = 1;
         }
         else {
             permutation_tetrad = 0;
         }
 
-        if (ce == UFR || ce == DFL || ce == UBL || ce == DBR) {
+        if (ce == CCUBIE_UFR || ce == CCUBIE_DFL || ce == CCUBIE_UBL || ce == CCUBIE_DBR) {
             ce_tetrad = 1;
         }
         else {
             ce_tetrad = 0;
         }
 
-        if (fm & (F|B)) {
+        if (fm & (MV_MASK_F|MV_MASK_B)) {
             if (ce_tetrad == 1) {
                 if (orientation == 0) {
                     idx = 0;
@@ -246,7 +246,7 @@ static FaceMask getColor(Cube c, CubieEnum ce, int isEdge, FaceMask fm) {
                 }
             }
         }
-        else if (fm & (R|L)) {
+        else if (fm & (MV_MASK_R|MV_MASK_L)) {
             if (orientation == 0) {
                 if (permutation_tetrad == ce_tetrad) {
                     idx = 1;
@@ -272,7 +272,7 @@ static FaceMask getColor(Cube c, CubieEnum ce, int isEdge, FaceMask fm) {
                 }
             }
         }
-        else if (fm & (U|D)) {
+        else if (fm & (MV_MASK_U|MV_MASK_D)) {
             if (orientation == 0) {
                 if (permutation_tetrad == ce_tetrad) {
                     idx = 2;
@@ -308,64 +308,64 @@ ColorCube convertCube(Cube c) {
     ColorCube cc;
     
     // set center cubies
-    cc.U.C = U; 
-    cc.D.C = D; 
-    cc.F.C = F; 
-    cc.B.C = B; 
-    cc.R.C = R; 
-    cc.L.C = L;
+    cc.U.C = MV_MASK_U; 
+    cc.D.C = MV_MASK_D; 
+    cc.F.C = MV_MASK_F; 
+    cc.B.C = MV_MASK_B; 
+    cc.R.C = MV_MASK_R; 
+    cc.L.C = MV_MASK_L;
     
     // set edge cubies
-    cc.U.D = getColor(c, UF, 1, U);
-    cc.F.U = getColor(c, UF, 1, F);
-    cc.U.U = getColor(c, UB, 1, U);
-    cc.B.U = getColor(c, UB, 1, B);
-    cc.U.R = getColor(c, UR, 1, U);
-    cc.R.U = getColor(c, UR, 1, R);
-    cc.U.L = getColor(c, UL, 1, U);
-    cc.L.U = getColor(c, UL, 1, L);
-    cc.D.U = getColor(c, DF, 1, D);
-    cc.F.D = getColor(c, DF, 1, F);
-    cc.D.D = getColor(c, DB, 1, D);
-    cc.B.D = getColor(c, DB, 1, B);
-    cc.D.R = getColor(c, DR, 1, D);
-    cc.R.D = getColor(c, DR, 1, R);
-    cc.D.L = getColor(c, DL, 1, D);
-    cc.L.D = getColor(c, DL, 1, L);
-    cc.F.R = getColor(c, FR, 1, F);
-    cc.R.L = getColor(c, FR, 1, R);
-    cc.F.L = getColor(c, FL, 1, F);
-    cc.L.R = getColor(c, FL, 1, L);
-    cc.B.L = getColor(c, BR, 1, B);
-    cc.R.R = getColor(c, BR, 1, R);
-    cc.B.R = getColor(c, BL, 1, B);
-    cc.L.L = getColor(c, BL, 1, L);
+    cc.U.D = getColor(c, ECUBIE_UF, 1, MV_MASK_U);
+    cc.F.U = getColor(c, ECUBIE_UF, 1, MV_MASK_F);
+    cc.U.U = getColor(c, ECUBIE_UB, 1, MV_MASK_U);
+    cc.B.U = getColor(c, ECUBIE_UB, 1, MV_MASK_B);
+    cc.U.R = getColor(c, ECUBIE_UR, 1, MV_MASK_U);
+    cc.R.U = getColor(c, ECUBIE_UR, 1, MV_MASK_R);
+    cc.U.L = getColor(c, ECUBIE_UL, 1, MV_MASK_U);
+    cc.L.U = getColor(c, ECUBIE_UL, 1, MV_MASK_L);
+    cc.D.U = getColor(c, ECUBIE_DF, 1, MV_MASK_D);
+    cc.F.D = getColor(c, ECUBIE_DF, 1, MV_MASK_F);
+    cc.D.D = getColor(c, ECUBIE_DB, 1, MV_MASK_D);
+    cc.B.D = getColor(c, ECUBIE_DB, 1, MV_MASK_B);
+    cc.D.R = getColor(c, ECUBIE_DR, 1, MV_MASK_D);
+    cc.R.D = getColor(c, ECUBIE_DR, 1, MV_MASK_R);
+    cc.D.L = getColor(c, ECUBIE_DL, 1, MV_MASK_D);
+    cc.L.D = getColor(c, ECUBIE_DL, 1, MV_MASK_L);
+    cc.F.R = getColor(c, ECUBIE_FR, 1, MV_MASK_F);
+    cc.R.L = getColor(c, ECUBIE_FR, 1, MV_MASK_R);
+    cc.F.L = getColor(c, ECUBIE_FL, 1, MV_MASK_F);
+    cc.L.R = getColor(c, ECUBIE_FL, 1, MV_MASK_L);
+    cc.B.L = getColor(c, ECUBIE_BR, 1, MV_MASK_B);
+    cc.R.R = getColor(c, ECUBIE_BR, 1, MV_MASK_R);
+    cc.B.R = getColor(c, ECUBIE_BL, 1, MV_MASK_B);
+    cc.L.L = getColor(c, ECUBIE_BL, 1, MV_MASK_L);
             
     // set corner cubies
-    cc.U.DR = getColor(c, UFR, 0, U);
-    cc.F.UR = getColor(c, UFR, 0, F);
-    cc.R.UL = getColor(c, UFR, 0, R);
-    cc.U.DL = getColor(c, UFL, 0, U);
-    cc.F.UL = getColor(c, UFL, 0, F);
-    cc.L.UR = getColor(c, UFL, 0, L);
-    cc.U.UR = getColor(c, UBR, 0, U);
-    cc.B.UL = getColor(c, UBR, 0, B);
-    cc.R.UR = getColor(c, UBR, 0, R);
-    cc.U.UL = getColor(c, UBL, 0, U);
-    cc.B.UR = getColor(c, UBL, 0, B);
-    cc.L.UL = getColor(c, UBL, 0, L);
-    cc.D.UR = getColor(c, DFR, 0, D);
-    cc.F.DR = getColor(c, DFR, 0, F);
-    cc.R.DL = getColor(c, DFR, 0, R);
-    cc.D.UL = getColor(c, DFL, 0, D);
-    cc.F.DL = getColor(c, DFL, 0, F);
-    cc.L.DR = getColor(c, DFL, 0, L);
-    cc.D.DR = getColor(c, DBR, 0, D);
-    cc.B.DL = getColor(c, DBR, 0, B);
-    cc.R.DR = getColor(c, DBR, 0, R);
-    cc.D.DL = getColor(c, DBL, 0, D);
-    cc.B.DR = getColor(c, DBL, 0, B);
-    cc.L.DL = getColor(c, DBL, 0, L);
+    cc.U.DR = getColor(c, CCUBIE_UFR, 0, MV_MASK_U);
+    cc.F.UR = getColor(c, CCUBIE_UFR, 0, MV_MASK_F);
+    cc.R.UL = getColor(c, CCUBIE_UFR, 0, MV_MASK_R);
+    cc.U.DL = getColor(c, CCUBIE_UFL, 0, MV_MASK_U);
+    cc.F.UL = getColor(c, CCUBIE_UFL, 0, MV_MASK_F);
+    cc.L.UR = getColor(c, CCUBIE_UFL, 0, MV_MASK_L);
+    cc.U.UR = getColor(c, CCUBIE_UBR, 0, MV_MASK_U);
+    cc.B.UL = getColor(c, CCUBIE_UBR, 0, MV_MASK_B);
+    cc.R.UR = getColor(c, CCUBIE_UBR, 0, MV_MASK_R);
+    cc.U.UL = getColor(c, CCUBIE_UBL, 0, MV_MASK_U);
+    cc.B.UR = getColor(c, CCUBIE_UBL, 0, MV_MASK_B);
+    cc.L.UL = getColor(c, CCUBIE_UBL, 0, MV_MASK_L);
+    cc.D.UR = getColor(c, CCUBIE_DFR, 0, MV_MASK_D);
+    cc.F.DR = getColor(c, CCUBIE_DFR, 0, MV_MASK_F);
+    cc.R.DL = getColor(c, CCUBIE_DFR, 0, MV_MASK_R);
+    cc.D.UL = getColor(c, CCUBIE_DFL, 0, MV_MASK_D);
+    cc.F.DL = getColor(c, CCUBIE_DFL, 0, MV_MASK_F);
+    cc.L.DR = getColor(c, CCUBIE_DFL, 0, MV_MASK_L);
+    cc.D.DR = getColor(c, CCUBIE_DBR, 0, MV_MASK_D);
+    cc.B.DL = getColor(c, CCUBIE_DBR, 0, MV_MASK_B);
+    cc.R.DR = getColor(c, CCUBIE_DBR, 0, MV_MASK_R);
+    cc.D.DL = getColor(c, CCUBIE_DBL, 0, MV_MASK_D);
+    cc.B.DR = getColor(c, CCUBIE_DBL, 0, MV_MASK_B);
+    cc.L.DL = getColor(c, CCUBIE_DBL, 0, MV_MASK_L);
     
     return cc;
 }
@@ -387,22 +387,22 @@ Cube convertColorCube(ColorCube cc) {
 
 /* Print colored square to console. */
 static void printColor(FaceMask color) {
-    if (color & U) {
+    if (color & MV_MASK_U) {
         printf("\033[0;37m"); // white
     }
-    else if (color & D) {
+    else if (color & MV_MASK_D) {
         printf("\033[0;33m"); // yellow
     }
-    else if (color & F) {
+    else if (color & MV_MASK_F) {
         printf("\033[0;32m"); // green
     }
-    else if (color & B) {
+    else if (color & MV_MASK_B) {
         printf("\033[0;34m"); // blue
     }
-    else if (color & R) {
+    else if (color & MV_MASK_R) {
         printf("\033[0;31m"); // red
     }
-    else if (color & L) {
+    else if (color & MV_MASK_L) {
         printf("\033[0;35m"); // purple
     }
     printf("▣\033[0m");
@@ -480,22 +480,22 @@ void printCube(Cube c) {
 
 /* Print single Move to console without terminating characters. */ 
 void printMove(Move m) {
-    if (m & U) {
+    if (m & MV_MASK_U) {
         printf("U");
     }
-    else if (m & D) {
+    else if (m & MV_MASK_D) {
         printf("D");
     }
-    else if (m & F) {
+    else if (m & MV_MASK_F) {
         printf("F");
     }
-    else if (m & B) {
+    else if (m & MV_MASK_B) {
         printf("B");
     }
-    else if (m & R) {
+    else if (m & MV_MASK_R) {
         printf("R");
     }
-    else if (m & L) {
+    else if (m & MV_MASK_L) {
         printf("L");
     }
     else {
@@ -503,10 +503,10 @@ void printMove(Move m) {
         return;
     }
 
-    if (m & H) {
+    if (m & MV_MASK_H) {
         printf("2");
     }
-    else if (m & I) {
+    else if (m & MV_MASK_I) {
         printf("'");
     }
 }
