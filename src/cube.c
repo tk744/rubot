@@ -167,3 +167,7 @@ Cube scramble(Cube c, Move *ms, int n) {
 int areEqual(Cube c1, Cube c2) {
     return (c1.edges == c2.edges && c1.corners == c2.corners);
 }
+
+Move inverseMove(Move m) {
+    return (m & H) ? m : m^I;
+}
