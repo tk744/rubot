@@ -1,22 +1,3 @@
-import PySimpleGUI as sg
-# on linux:
-# sudo pip3 install pyserial
-# /home/bruce/.local/lib/python3.5
-# sudo python3.5 pic_target_3.py
-#
-# you can find out more about PySimleGUI at
-# https://pysimplegui.readthedocs.io/en/latest/
-#
-# --event format to PIC--
-# Four sharacters for each non-string event:
-# pushbutton event 'b' + 2 digit button number + value (1,0)
-# toggle sw event 't' + 2 digit button number + value (1,0)
-# slider event 's' + 1-digit slider number + n digit value
-# listbox event 'l' + + 1-digit listbox number + 1 digit selection number
-# radio button 'r' + 1 digit group number + 1 digit selection numbr
-# -- string --
-# strings typed in the input line are sent in their entirety.
-# -- reset --
 # RESET has NO code on PIC!
 # serial reset event sends a rs-232 BREAK which is connected
 # through a filter to MCLR pin
@@ -29,11 +10,11 @@ import PySimpleGUI as sg
 #                                             |
 #                                         (PIC gnd)
 #
-import time
+
+import PySimpleGUI as sg
 import serial
 
-# open serial port
-# For windows the device will be 'COMx'
+# on Windows the device will be 'COMx'
 device = None
 ser = serial.Serial(device, 38400, timeout=0.001)
 
@@ -41,7 +22,7 @@ sg.theme('DarkAmber')
 
 # Encode Char
 def encode_char(c):
-    m = 0;
+    m = 0
     if 'U' in c.upper():
         m |= 1
     elif 'D' in c.upper():

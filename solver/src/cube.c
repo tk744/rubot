@@ -170,5 +170,5 @@ int areEqual(Cube c1, Cube c2) {
 }
 
 Move inverseMove(Move m) {
-    return !(m & MV_MASK_H) ? m : m ^ MV_MASK_I;
+    return (m & MV_MASK_H) ? m : m^MV_MASK_I;
 }

@@ -116,6 +116,8 @@ void printMove(Move m);
 
 void printMoves(Move *ms, int n);
 
+Move inverseMove(Move m);
+
 ColorCube convertCube(Cube c);
 
 #endif
