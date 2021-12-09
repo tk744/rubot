@@ -1,8 +1,8 @@
 TARGET_EXEC = $(BUILD_DIR)/rubot
 
 # .c, .h, and .o files
-SRC_DIR := ./src
-INC_DIR := ./include
+SRC_DIR := #./src
+INC_DIR := #./include
 BUILD_DIR := ./build
 
 # Get list of all .c files
@@ -33,3 +33,7 @@ clean:
 .PHONY: run
 run: $(TARGET_EXEC)
 	$(TARGET_EXEC)
+
+.PHONY: gui
+gui:
+	python3 ./gui
