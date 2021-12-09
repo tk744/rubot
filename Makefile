@@ -1,4 +1,5 @@
 TARGET_EXEC = $(BUILD_DIR)/rubot
+ARGS := D R B2 U2 F\'
 
 # .c, .h, and .o files
 SRC_DIR := ./src
@@ -32,4 +33,4 @@ clean:
 
 .PHONY: run
 run: $(TARGET_EXEC)
-	$(TARGET_EXEC)
+	$(TARGET_EXEC) $(ARGS)
