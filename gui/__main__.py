@@ -30,14 +30,14 @@ import PySimpleGUI as sg
 #                                         (PIC gnd)
 #
 import time
-import serial                                                                # COMMENT THIS OUT FOR TESTING
-# open microcontroller serial port
+import serial
+
+# open serial port
 # For windows the device will be 'COMx'
+device = None
+ser = serial.Serial(device, 38400, timeout=0.001)
 
-ser = serial.Serial('COM3', 38400, timeout=0.001)                            # COMMENT THIS OUT TO TEST
-
-sg.theme('DarkAmber')   # Add a touch of color
-# All the stuff inside your window.
+sg.theme('DarkAmber')
 
 # Encode Char
 def encode_char(c):
@@ -68,7 +68,7 @@ def encode_char(c):
 font_spec = 'Courier 24 bold'
 heading_color = '#3684ad'
 canvas_color = '#3684ad'
-groove_width = 2;
+groove_width = 2
 layout = [  # Header
             [sg.Text('Rubot', font = 'Helvetica 32 bold underline', background_color = canvas_color)],
 

@@ -156,6 +156,7 @@ static Move randomMove(MoveMask exclude) {
     return m;
 }
 
+
 Cube scramble(Cube c, Move *ms, int n) {
     int i;
     for(i=0 ; i<n ; i++) {
@@ -166,4 +167,8 @@ Cube scramble(Cube c, Move *ms, int n) {
 
 int areEqual(Cube c1, Cube c2) {
     return (c1.edges == c2.edges && c1.corners == c2.corners);
+}
+
+Move inverseMove(Move m) {
+    return !(m & MV_MASK_H) ? m : m ^ MV_MASK_I;
 }

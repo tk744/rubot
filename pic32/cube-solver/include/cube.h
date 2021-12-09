@@ -108,6 +108,8 @@ Cube scramble(Cube c, Move *ms, int n);
 
 int areEqual(Cube c1, Cube c2);
 
+Move inverseMove(Move m);
+
 void printCube(Cube c);
 
 void printMove(Move m);
