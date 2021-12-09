@@ -108,7 +108,7 @@ int solve(Cube c, Move *ms) {
     next_phase: while (++phase <= 4) {
         // FOR DEBUGGING PURPOSES ONLY
         printf(phase == 1 ? "" : "\n");
-        Move null[MAX_MOVES];
+        static Move null[MAX_MOVES];
         int num_moves = phaseMoveset(phase, null);
 
         // create goal cube and root node
@@ -165,7 +165,9 @@ int solve(Cube c, Move *ms) {
                 }
             }
         }
+        printf("\n");
         return -1;
     }
+    printf("\n");
     return offset_depth;
 }
