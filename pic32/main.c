@@ -2,7 +2,7 @@
 #include "port_expander_brl4.h"
 #include "config_1_3_2.h"
 #include "pt_cornell_1_3_2.h"
-#include "tft_display.h"
+#include "display.h"
 #include <stdio.h>  // required for serial communication
 
 /* Global state */
@@ -32,13 +32,13 @@ static PT_THREAD (protothread_serial(struct pt *pt)) {
         if (PT_term_buffer[0] == 'p' && tft_move > -1) {
             c = applyMove(c, inverseMove(solution_moves[tft_move--]));
             updateTFT(c, solution_moves[tft_move], tft_move, num_solution_moves);
-            drawTFT();
+            drawTFT(CUBE_SCREEN);
         }
         // NEXT signal
         else if (PT_term_buffer[0] == 'n' && tft_move < num_solution_moves-1) {
             c = applyMove(c, solution_moves[++tft_move]);
             updateTFT(c, solution_moves[tft_move], tft_move, num_solution_moves);
-            drawTFT();
+            drawTFT(CUBE_SCREEN);
         }
         // SOLVE signal
         else if (PT_term_buffer[0] == 's') {
@@ -66,7 +66,7 @@ static PT_THREAD (protothread_serial(struct pt *pt)) {
 
 void main() {
     // initialize hardware
-    ANSELA = 0; ANSELB = 0;
+    // ANSELA = 0; ANSELB = 0;
 
     // initialize TFT
     tft_init_hw();
@@ -74,13 +74,11 @@ void main() {
     tft_setRotation(1); // 320x240 horizontal display
     drawTFT(TITLE_SCREEN);
 
-    // initialize threads and scheduler
+    // initialize serial communication thread
     PT_setup();
     INTEnableSystemMultiVectoredInt();
-
     pt_add(protothread_serial, 0);
     PT_INIT(&pt_sched);
-
     pt_sched_method = SCHED_ROUND_ROBIN;
     PT_SCHEDULE(protothread_sched(&pt_sched));
 }
