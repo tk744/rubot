@@ -1,5 +1,5 @@
 TARGET_EXEC = $(BUILD_DIR)/rubot
-ARGS := D R B2 U2 F\'
+ARGS := 20
 
 # .c, .h, and .o files
 SRC_DIR := ./src

@@ -58,7 +58,7 @@ static Cube phaseCube(int phase, Cube c) {
             setCubie(&c.corners, i, cubie);
         }
     }
-    else if (phase == 3) {  // fix edge slices, corner tetrad pairs
+    else if (phase == 3) {  // fix edge slices, corner tetrad pairs, parity
         // create 3 edge permutation groups: { UF, UB, DF, DB }, { UR, UL, DR, DL}, { FR, FL, BR, BL }
         int i;
         for(i=0 ; i<NUM_EDGES ; i++) {
@@ -75,7 +75,6 @@ static Cube phaseCube(int phase, Cube c) {
             }
             setCubie(&c.edges, i, cubie);
         }
-
         // create 4 corner permutation groups: { UFR, UBL }, { UFL, UBR }, { DFR, DBL }, { DFL, DBR }
         for(i=0 ; i<NUM_CORNERS ; i++) {
             Int8 cubie = getCubie(c.corners, i);
@@ -94,6 +93,21 @@ static Cube phaseCube(int phase, Cube c) {
             }
             setCubie(&c.corners, i, cubie);
         }
+        // // parity
+        // int j, parity = 0;
+        // Int8 cubie1, cubie2;
+        // for(i=0 ; i<NUM_CORNERS ; i++) {
+        //     for (j=i+1 ; j<NUM_CORNERS ; j++) {
+        //         cubie1 = getCubie(c.corners, i);
+        //         cubie2 = getCubie(c.corners, j);
+        //         parity ^= getPermutation(cubie1, 0) < getPermutation(cubie2, 0);
+        //     }
+        // }
+        // if (parity) {   // fuck some shit up if its odd
+        //     Int64 tmp = c.corners;
+        //     c.corners = c.edges;
+        //     c.edges = tmp;
+        // }
     }
     return c;
 }
@@ -128,7 +142,7 @@ int solve(Cube c, Move *ms) {
             push(&s, root_node);
 
             // iterate through stack
-            while (s.size > 0) {
+            while (s.size) {
                 // pop node from stack
                 Node node = pop(&s);
 

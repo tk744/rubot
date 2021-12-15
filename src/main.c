@@ -76,7 +76,6 @@ static Cube parseInput(int argc, char *argv[]) {
         Move ms[n];
         srand(&parseInput);
         c = scramble(cubeFactory(), ms, n);
-        printf("[%d]: ", n);
         printMoves(ms, n);
     }
     // passed move sequence
@@ -95,22 +94,22 @@ static Cube parseInput(int argc, char *argv[]) {
     return c;
 }
 
-int main(int argc, char *argv[]) {
-    // get cube state from arguments
-    Cube c = parseInput(argc, argv);
+// int main(int argc, char *argv[]) {
+//     // get cube state from arguments
+//     Cube c = parseInput(argc, argv);
 
-    // print cube state
-    printf("\n");
-    printCube(c);
-    printf("\n");
+//     // print cube state
+//     printf("\n");
+//     printCube(c);
+//     printf("\n");
 
-    // find solution move sequence
-    Move ms[MAX_MOVES];
-    int n = solve(c, ms);
+//     // find solution move sequence
+//     Move ms[MAX_MOVES];
+//     int n = solve(c, ms);
 
-    // print solution move sequence
-    printf("\n");
-    printMoves(ms, n);
+//     // print solution move sequence
+//     printf("\n");
+//     printMoves(ms, n);
 
-    return 0;
-}
+//     return 0;
+// }
