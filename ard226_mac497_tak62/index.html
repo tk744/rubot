@@ -21,7 +21,7 @@
   <p> </p>
 <h2> Hardware </h2>
   <p> Our project was mostly implemented with software. Visuals on the TFT display
-    show the user the state of the solving algorithm and what moves to execute. 
+    show the user the state of the solving algorithm and what moves to execute.
  </p>
 <h2> Software </h2>
   <h3>Solving Algorithm</h3>
@@ -30,7 +30,27 @@
     <img src="final_gui_pic.JPG">
     <p> </p>
   <h3>Graphics</h3>
-    <p> </p>
+    <p> As they are going through the solution steps, the user is shown what number
+      step they are on, as well as the next move they should do. In addition to this,
+      we also wanted to give them a reference for what their cube should look like after each move.
+      The graphic is made up of two images, each showing three sides of the cube.
+      The locations of the faces on the images are based on how the cube appears
+      when it is looked at from the orientation of the images.
+    </p>
+    <img src="pre_color.jpg" width=800>
+
+    <p> The representation of each face includes two opposite edges and nine unsigned
+      short color values named color0 through color8. These values determine what
+      color a given square on a face is drawn. The color of the square in the 0
+      position is color0 and the color of the square in the 8 position is coclor8.
+      The following image shows how the positions of squares on a face are determined.
+    </p>
+    <img src="face_representation.JPG">
+    <p> In order to color a face, the coordinates of the face and the square position
+      are used to determine where the color should go. Parallel lines of
+       the given color are drawn across the square to give the appearance of a
+       full square of color.
+    </p>
 <h2> Results </h2>
   <p> </p>
 <h2> Conclusions</h2>
