@@ -1,6 +1,6 @@
 body {
-  font-family: monospace;
-  margin: 100px;
+  font-family: sans-serif;
+  margin: 200px;
 }
 
 
@@ -9,7 +9,14 @@ h1{
   text-align: center;
 }
 
-
+.cube{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.inline-block{
+  display: inline-block;
+}
 #authors{
   text-align: center;
 }
