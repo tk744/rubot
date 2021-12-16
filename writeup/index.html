@@ -26,9 +26,22 @@
   </p>
   <center><img src = "high_level_diagram.png" style=" width:80%; height:80%;"></center>
 <h2> Hardware </h2>
-  <p> Our project was mostly implemented with software. Visuals on the TFT display
-    show the user the state of the solving algorithm and what moves to execute.
- </p>
+<p> There are two hardware peripherals in our design: the TFT display and the UART to USB
+  Adafruit serial cable (used for the GUI). To hook up the TFT display, refer to the board 
+  schematic in Appendix C. The TFT is labeled as U5 on the schematic. Next, to hook up the UART to
+   USB serial cable, attack the following wires to the designated pins on the board:
+
+ <div class="unorderlist">
+   <ul>
+     <li> Connect the green wire to the UART receive pin (RA1) </li>
+     <li> Connect the white wire to the UART transmit pin (RB10) </li>
+     <li> I/O expander $5 </li>
+     <li> Connect the black wire to the MCU ground </li>
+     <li> Do not connect the red wire to anything! Leave it floating. </li>
+   </ul>
+   </div>
+ A visual reference and a link to purchase the UART to USB serial cable in given in appendix C.
+</p>
 <h2> Software </h2>
   <p> The software is broken down into 3 modules: <code>solver</code>, <code>gui</code>, and <code>pic32</code>. The <code>solver</code> module implements the Rubik's cube solving algorithm and associated state, the <code>gui</code> module implements the Python GUI to communicate serially with the microcontroller, and the <code>pic32</code> module implements hardware-specific code including for the TFT display. Each module was designed, developed, and tested independently. </p>
   <h3><code>solver</code> Module</h3>
@@ -146,6 +159,8 @@
 <h3>Appendix C: Schematics</h3>
   <p> Board Schematic:</p>
   <img src="board_schematic.JPG" width = "850" height = "800">
+  <p>UART to USB Adafruit serial <a href="https://www.adafruit.com/product/954">cable:</a> </p>
+  <center><img src="uart _to_usb_cable.jpg" style=" width:50%; height:50%;"></center>
 <h3>Appendix D: Cost Details</h3>
 <p> We did not use any additional parts except what was provided to us. </p>
 <div class="unorderlist">
