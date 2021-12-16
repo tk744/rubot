@@ -29,7 +29,7 @@
 <p> There are two hardware peripherals in our design: the TFT display and the UART to USB
   Adafruit serial cable (used for the GUI). To hook up the TFT display, refer to the board 
   schematic in Appendix C. The TFT is labeled as U5 on the schematic. Next, to hook up the UART to
-   USB serial cable, attack the following wires to the designated pins on the board:
+   USB serial cable, attach the following wires to the designated pins on the board:
 
  <div class="unorderlist">
    <ul>
@@ -43,7 +43,7 @@
  A visual reference and a link to purchase the UART to USB serial cable in given in appendix C.
 </p>
 <h2> Software </h2>
-  <p> The software is broken down into 3 modules: <code>solver</code>, <code>gui</code>, and <code>pic32</code>. The <code>solver</code> module implements the Rubik's cube solving algorithm and associated state, the <code>gui</code> module implements the Python GUI to communicate serially with the microcontroller, and the <code>pic32</code> module implements hardware-specific code including for the TFT display. Each module was designed, developed, and tested independently. </p>
+  <p> The software is broken down into 3 modules: <code>solver</code>, <code>gui</code>, and <code>pic32</code>. The <code>solver</code> module implements the Rubik's cube solving algorithm and associated state, the <code>gui</code> module implements the Python GUI to communicate serially with the microcontroller, and the <code>pic32</code> module implements hardware-specific code including for the TFT display. Each module was designed, implemented, and tested independently. </p>
   <h3><code>solver</code> Module</h3>
     <h4>Cube State</h4>
       <p>
@@ -61,39 +61,46 @@
         <table style="width:100%">
           <tr>
             <th>Group</th>
+            <th>Max Depth</th>
             <th>Number of States</th>
             <th>Fixed Properties</th>
           </tr>
           <tr>
             <td>G0 = {F, B, L, R, U, D}</td>
+            <td>7</td>
             <td>2048</td>
             <td>None.</td>
           </tr>
           <tr>
             <td>G1 = {F, B, L, R, U2, D2}</td>
+            <td>10</td>
             <td>1082565</td>
             <td>Edge orientations.</td>
           </tr>
           <tr>
             <td>G2 = {F, B, L2, R2, U2, D2}</td>
+            <td>14</td>
             <td>352800</td>
             <td>Corner orientations, edges in middle slice in correct slice.</td>
           </tr>
           <tr>
             <td>G3 = {F2, B2, L2, R2, U2, D2}</td>
+            <td>15</td>
             <td>663552</td>
             <td>Edges in correct slices, corners in correct tetrad pairs.</td>
           </tr>
           <tr>
             <td>G4 = I = {}</td>
+            <td>0</td>
             <td>1</td>
             <td>Solved cube.</td>
           </tr>
-        </table> 
+        </table>
       </p><p>
-        We implemented Thistletwaite' algorithm as an IDDFS search 
-
-      
+        Each phase is implemented as an iterative-deepening depth-first search (IDDFS) over the state space of cubes in the current group. We implemented a single search function that runs IDDFS once for each phase, and three helper functions that provide phase-specific details to the single search function. Two of these helper functions return the moves and maximum depth allowed in a phase. The third helper function takes a cube state and returns a modified cube state where everything that isn't related to the properties being fixed is removed. Essentially it reduces a cube state to its phase equivalence class, so two different cube states are considered equal if their phase-specific properties are equal. These helper functions allow the phase-specific details to be factored out of the function that handles IDDFS.
+      </p><p>
+        The most constraining feature of the microcontroller in implementing our algorithm was the small memory size. We initially intended to implement the search as a bi-directional BFS because it would have had to search over much fewer states. But after some basic computations we realized the microcontroller simply did not have enough memory to support such a search. Instead we turned to an IDDFS search because it simulates BFS, ensuring each returned solution has minimal length, and because it runs in linear space. Since the largest branching factor of a search is 18 in phase 1, and the largest possible depth of a search is 15 in phase 4, we only needed to allocate a size of 18*15=270 to the search stack. Each search node uses 24 bytes to store a cube state, parent move, and depth. This means the memory requirements of our IDDFS search is under 6.5 kB.
+      </p><p>
 
       </p>
 
