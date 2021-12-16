@@ -18,7 +18,13 @@
   For our final project, we made a Rubik's Cube solver that can guide people how to solve their
   Rubik's Cube after they have been scrambled. </p>
 <h2>High Level Design </h2>
-  <p> </p>
+  <p> In order to operate Rubot, a user must take a solved cube first and scramble it with a set of moves.
+     The user then sends the move set to the PIC32 using a python GUI for the cube to be solved. The PIC32 
+     then proceeds to solve the cube and generates a solution move set. Finally, the solution moveset is 
+     displayed on a TFT screen that is attached to the PIC32. The solution moveset displays one move at a 
+     time and the user can go to the next or previous move in the moveset by using buttons on the GUI.
+  </p>
+  <center><img src = "high_level_diagram.png" style=" width:80%; height:80%;"></center>
 <h2> Hardware </h2>
   <p> Our project was mostly implemented with software. Visuals on the TFT display
     show the user the state of the solving algorithm and what moves to execute.
@@ -27,8 +33,26 @@
   <h3>Solving Algorithm</h3>
     <p> </p>
   <h3>Python Interface</h3>
-    <img src="final_gui_pic.JPG">
-    <p> </p>
+    <center><img src="final_gui_pic.JPG"></center>
+    <p> The user interface was designed with ease of use in mind for the user. With only four buttons 
+      and one input field, this goal was achieved. To use the GUI, a user types in a defined set of moves 
+      that would be explained in a user manual. These moves are: F, R, U, B, L, D, F’, R’, U’, B’, L’, D’, 
+      F2, R2, U2, B2, L2, D2. This nomenclature is very common among the rubik’s cube community. A user 
+      scrambles their cube and writes down each move they’ve chosen to make and inputs this move into the 
+      “Move Input” input field. The user clicks solve and then the solving moves are flashed to the TFT 
+      screen of the PIC32. A user can then step forwards and backwards through the solving moves using 
+      the “TFT Controls” buttons.
+      <br><br>
+      The Python interface also must parse the user input in the background before sending it to the PIC
+       for processing. When the user clicks “Solve”, the GUI takes the user’s input and turns each move into
+        an element in an array. Then, each move in the array is converted into an 8-bit binary representation. 
+        Finally, the array is encoded and a header, the number of moves, and a terminating character is added. 
+        This encoded “package” is then sent to the PIC32 via the UART serial connection.
+      <br><br>
+      The next, “>”, and previous, “<”, move buttons work in the same way as the “Solve” button except only
+       the header and terminating characters are needed because button differentiation is done with the header characters.
+
+    </p>
   <h3>Graphics</h3>
     <p> As they are going through the solution steps, the user is shown what number
       step they are on, as well as the next move they should do. In addition to this,
