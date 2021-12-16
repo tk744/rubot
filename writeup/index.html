@@ -55,7 +55,7 @@
       </p><p>
         Building the cube state model required a lot of testing between incremental improvements. Much of our testing came from taking a solved cube state, applying a random sequence of moves, and printing it to the console. Then we applied the same sequence of moves to a real Rubik's cube and verified that the faces all looked the same. We performed this test hundreds of times on randomly generated sequences of moves before we were convinced our model was working correctly. We also added some automated tests which verified that communicative moves produced equivalent states, and that certain move sequences when applied to a solved cube would produce a solved cube after a pre-computed number of steps.
       </p><p>
-        We went through many different iterations of potential cube state models. We initially chose to represent cubes as a 54-element array, which maps a square on the cube to its current color. This turned out to make the actual cube solver much harder to implement, since the algorithm relies on cubie orientations and permutations. Therefore we found the above model to be most natural for implementation of the cube solver algorithm.
+        We went through many different iterations of potential cube state models. We initially chose to represent cubes as a 54-element array, which maps a square on the cube to its color. This turned out to make the actual cube solver much harder to implement, since the algorithm relies on cubie orientations and permutations. Therefore we found the above model to be most natural for implementation of the cube solver algorithm.
       </p>
     <h4>Cube Solver</h4>
       <p>
