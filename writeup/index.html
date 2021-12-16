@@ -101,11 +101,11 @@
           </tr>
         </table>
       </p><p>
-        Each phase is implemented as an iterative-deepening depth-first search (IDDFS) over the state space of cubes in the current group. We implemented a single search function that runs IDDFS once for each phase, and three helper functions that provide phase-specific details to the single search function. Two of these helper functions return the moves and maximum depth allowed in a phase. The third helper function takes a cube state and returns a modified cube state where everything that isn't related to the properties being fixed is removed. Essentially it reduces a cube state to its phase equivalence class, so two different cube states are considered equal if their phase-specific properties are equal. These helper functions allow the phase-specific details to be factored out of the function that handles IDDFS.
+        Each phase is implemented as an iterative-deepening depth-first search (IDDFS) over the state space of cubes in the current group. We implemented a single search function that runs IDDFS once for each phase, and three helper functions that provide phase-specific details to the single search function. Two of these helper functions return the moves and maximum depth allowed in a phase. The third helper function takes a cube state and returns a modified cube state where everything that isn't related to the properties being fixed is removed. Essentially it reduces a cube state to its phase-equivalence class, so two different cube states are considered equal if their phase-specific properties are equal. These helper functions allow the phase-specific details to be factored out of the function that handles IDDFS.
       </p><p>
         The most constraining feature of the microcontroller in implementing our algorithm was the small memory size. We initially intended to implement the search as a bi-directional BFS because it would have had to search over much fewer states. But after some basic computations we realized the microcontroller simply did not have enough memory to support such a search. Instead we turned to an IDDFS search because it simulates BFS, ensuring each returned solution has minimal length, and because it runs in linear space. Since the largest branching factor of a search is 18 in phase 1, and the largest possible depth of a search is 15 in phase 4, we only needed to allocate a size of 18*15=270 to the search stack. Each search node uses 24 bytes to store a cube state, parent move, and depth. This means the memory requirements of our IDDFS search is under 6.5 kB.
       </p><p>
-        TODO: testing
+        In order to test the cube solver, we wrote a test function to randomly generate a cube, find a sequence of solution moves using the solver, and apply the sequence of solution moves before verifying that the resulting cube is solved. We ran this function on hundreds of randomly generated cubes before we were conviced that the solver generally worked. We also made sure to test the solution sequences on a real Rubik's cube.
       </p>
 
   <h3><code>gui</code> Module</h3>
@@ -154,13 +154,15 @@
        full square of color.
     </p>
 <h2> Results </h2>
- <p> The following video shows the cube image graphic updating. </p>
-  <video width="320" height="240" controls>
-  <source src="moving_graphic.mov" type="video/mp4">
-  Your browser does not support the video tag.
-  </video>
+  <p>
+    While the cube solver worked correctly, it's main issue is that it is painfully slow on sufficiently complex cube states due to using IDDFS to search the massive state space in essentially a brute-force fasion. The number of nodes IDDFS needs to search increases exponentially with depth. More specifically, the number of nodes <code>n</code> IDDFS needs to search at a depth of <code>d</code> is given by: <code>n=b^d</code>, where <code>b</code> is the branching factor of the tree (i.e. number of moves allowed in the phase). So if the minimum solution size of a phase is sufficiently long then IDDFS needs to search a huge number of nodes to discover the solution. There are a number of improvements we can make to the system in the future to make it run faster.
+  </p><p>
+    The first improvement is keeping a hash table of visited cube states and pruning them from the search tree if they are encountered again. This would have the result of effectively reducing the branching factor of the search tree. For example, in G0 the branching factor would reduce from a hard 18 to about 13, allowing deeper levels of the tree to be accessed more quickly. 
+  </p><p>
+    A more general improvement would be to generate a lookup table for each state of each phase. The lookup table would be indexed by the phase-equivalent cube state and would store the depth of a solution from that cube state. Then the solving algorithm would simply walk through the lookup table and select the next move as any move which decreases the solution depth. Such an algorithm would run in constant time, but also require generating a lookup table before use. Generating such a lookup table would take a substantial amount of time and require a substantial amount of space.
+  </p>
 <h2> Conclusions</h2>
-  <h3>Reflection:</h3>
+  <h3>Reflection</h3>
   <p>
     Originally, we wanted to make a fully functional Rubik’s Cube solving machine
     where an unsolved cube could be placed into it, and the machine would solve
@@ -172,7 +174,7 @@
     providing the user with a way to designate the cube’s initial state, so that
     they do not need to always start with a solved cube.
   </p>
-  <h3>Considerations:</h3>
+  <h3>Considerations</h3>
     <p> Because our project is essentially a puzzle solver, we do not think there
       are that many facets of it that require taking ethical, legal, or safety
       considerations into account and we believe it adheres to the IEEE Code of
