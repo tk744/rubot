@@ -30,9 +30,67 @@
     show the user the state of the solving algorithm and what moves to execute.
  </p>
 <h2> Software </h2>
-  <h3>Solving Algorithm</h3>
-    <p> </p>
-  <h3>Python Interface</h3>
+  <p> The software is broken down into 3 modules: <code>solver</code>, <code>gui</code>, and <code>pic32</code>. The <code>solver</code> module implements the Rubik's cube solving algorithm and associated state, the <code>gui</code> module implements the Python GUI to communicate serially with the microcontroller, and the <code>pic32</code> module implements hardware-specific code including for the TFT display. Each module was designed, developed, and tested independently. </p>
+  <h3><code>solver</code> Module</h3>
+    <h4>Cube State</h4>
+      <p>
+        The 26 minature cubes that makes up a full Rubik's cube is called a <i>cubie</i>. Every Rubik's cube has 12 edge cubies that can be in one of two orientations, and 8 corner cubies that can be in one of three orientations. Since the 6 face cubies are not affected by face rotations, we only encode the edge and corner cubies in our cube representation. We enocde edge cubies using 5 bits (first bit encodes orientation, next four bits encode permutation), and corner cubies also using 5 bits (first two bits encode orientation, next three bits encode permutation). Then we encode a cube state with two 64-bit integers, the first integer encoding the 12 edge cubies sequentially, the second integer encoding the 8 corner cubies sequentially. To read the value of an arbitrary cubie, we simply select the appropriate integer and read the orientation and permutation at the index of that cubie.
+      </p><p>
+        Moves are what cause transformations between cube states. Each move must specify the face of rotation; and also specify whether the rotation is a quarter-turn clockwise, quarter-turn counter-clockwise, or a half-turn. We encode the face of rotation for a move as a one-hot encoded 6-bit integer. We encode the rotation value as a one-hot encoded 2-bit integer where the rotation is quarter-turn clockwise by default, one bit flag makes the rotation counter-clockwise, and the other bit flag makes the rotation a half-turn. Then we encode a single move as an 8-bit integer where the first 2 bits encode information about the rotation value, and the last 6 bits encode information about the face of rotation.
+      </p><p>
+        Finally we implemented a transformation function which takes a cube state and a move, and returns the new cube state obtained by applying the move to the original cube state. Decoding moves is relatively simple given their encoding. Each move requires shifting the permutations of four edges and four corners, which is also relatively simple. The tricky part is updating their orientations.
+      </p>
+    <h4>Cube Solver</h4>
+      <p>
+        The Rubik's cube solving algorithm we chose to implement is an improved version of Thistletwaite's algorithm. Thistletwaite's original algorithm is guaranteed to find a solution within 52 moves, while our improved one can find a solution within 46 moves. Thistletwaite's algorithm is an improvement over brute-force search algorithms which would never terminate in such an overwhelmingly large state space, and over ineffecient human algorithms that freqently break properties that are built up in previous stages while progressing towards the next stage. It is a relatively complicated algorithm that is only practical for computer solving and not for humans to memorize.
+      </p><p>
+        Thistletwaite's algorithm is better explained by rudimentary group theory. It divides the space of cube states into 4 nested groups, where a group is defined by a set of moves and contains the set of cube states that can be solved using that set of moves. The algorithm progresses in 4 phases, where phase <code>i</code> aims to bring a cube from group <code>G(i-1)</code> to group <code>Gi</code> only using the set of moves in group <code>G(i-1)</code>. Restricting the set of moves that can be applied to the cubes in a group fixes properties of the cubes that cannot be broken once that group is reached. The four groups of Thistletwaite's algorithm and the fixed properties of their cubes is given below:
+        <table style="width:100%">
+          <tr>
+            <th>Group</th>
+            <th>Number of States</th>
+            <th>Fixed Properties</th>
+          </tr>
+          <tr>
+            <td>G0 = {F, B, L, R, U, D}</td>
+            <td>2048</td>
+            <td>None.</td>
+          </tr>
+          <tr>
+            <td>G1 = {F, B, L, R, U2, D2}</td>
+            <td>1082565</td>
+            <td>Edge orientations.</td>
+          </tr>
+          <tr>
+            <td>G2 = {F, B, L2, R2, U2, D2}</td>
+            <td>352800</td>
+            <td>Corner orientations, edges in middle slice in correct slice.</td>
+          </tr>
+          <tr>
+            <td>G3 = {F2, B2, L2, R2, U2, D2}</td>
+            <td>663552</td>
+            <td>Edges in correct slices, corners in correct tetrad pairs.</td>
+          </tr>
+          <tr>
+            <td>G4 = I = {}</td>
+            <td>1</td>
+            <td>Solved cube.</td>
+          </tr>
+        </table> 
+      </p><p>
+        We implemented Thistletwaite' algorithm as an IDDFS search 
+
+      
+
+      </p>
+
+    <h4>Testing</h4>
+      <p>
+        We initially chose to represent cubes as a 54-element array, which maps a square on the cube to its current color.
+      </p>
+
+  <h3><code>gui</code> Module</h3>
+  <h4>Python Serial GUI</h4>
     <center><img src="final_gui_pic.JPG"></center>
     <p> The user interface was designed with ease of use in mind for the user. With only four buttons 
       and one input field, this goal was achieved. To use the GUI, a user types in a defined set of moves 
@@ -53,7 +111,8 @@
        the header and terminating characters are needed because button differentiation is done with the header characters.
 
     </p>
-  <h3>Graphics</h3>
+    <h3><code>pic32</code> Module</h3>
+    <h4>TFT Display</h4>
     <p> As they are going through the solution steps, the user is shown what number
       step they are on, as well as the next move they should do. In addition to this,
       we also wanted to give them a reference for what their cube should look like after each move.

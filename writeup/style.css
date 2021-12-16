@@ -9,6 +9,14 @@ h1{
   text-align: center;
 }
 
+th, td {
+  padding: 10px;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
 .cube{
   display: block;
   margin-left: auto;
