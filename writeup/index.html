@@ -51,7 +51,11 @@
       </p><p>
         Moves are what cause transformations between cube states. Each move must specify the face of rotation; and also specify whether the rotation is a quarter-turn clockwise, quarter-turn counter-clockwise, or a half-turn. We encode the face of rotation for a move as a one-hot encoded 6-bit integer. We encode the rotation value as a one-hot encoded 2-bit integer where the rotation is quarter-turn clockwise by default, one bit flag makes the rotation counter-clockwise, and the other bit flag makes the rotation a half-turn. Then we encode a single move as an 8-bit integer where the first 2 bits encode information about the rotation value, and the last 6 bits encode information about the face of rotation.
       </p><p>
-        Finally we implemented a transformation function which takes a cube state and a move, and returns the new cube state obtained by applying the move to the original cube state. Decoding moves is relatively simple given their encoding. Each move requires shifting the permutations of four edges and four corners, which is also relatively simple. The tricky part is updating their orientations.
+        Finally we implemented a transformation function which takes a cube state and a move, and returns the new cube state obtained by applying the move to the original cube state. Decoding moves is relatively simple given their encoding. Each move requires shifting the permutations of four edges and four corners, which is also relatively simple. Updating the orientations of the edges and corners was the tricky part that required a lot of trial and error. As it turns out, edges flip their orientation on rotations of two arbitrary opposite faces, which we selected to be the U and D faces. Corners change their orientations on rotations of four arbitrary opposite faces, including the U and D faces. We selected the other pair of opposite faces to be the F and B faces. The value by which their orientations change depends on the which corner they started in on the face of rotation.
+      </p><p>
+        Building the cube state model required a lot of testing between incremental improvements. Much of our testing came from taking a solved cube state, applying a random sequence of moves, and printing it to the console. Then we applied the same sequence of moves to a real Rubik's cube and verified that the faces all looked the same. We performed this test hundreds of times on randomly generated sequences of moves before we were convinced our model was working correctly. We also added some automated tests which verified that communicative moves produced equivalent states, and that certain move sequences when applied to a solved cube would produce a solved cube after a pre-computed number of steps.
+      </p><p>
+        We went through many different iterations of potential cube state models. We initially chose to represent cubes as a 54-element array, which maps a square on the cube to its current color. This turned out to make the actual cube solver much harder to implement, since the algorithm relies on cubie orientations and permutations. Therefore we found the above model to be most natural for implementation of the cube solver algorithm.
       </p>
     <h4>Cube Solver</h4>
       <p>
@@ -101,12 +105,7 @@
       </p><p>
         The most constraining feature of the microcontroller in implementing our algorithm was the small memory size. We initially intended to implement the search as a bi-directional BFS because it would have had to search over much fewer states. But after some basic computations we realized the microcontroller simply did not have enough memory to support such a search. Instead we turned to an IDDFS search because it simulates BFS, ensuring each returned solution has minimal length, and because it runs in linear space. Since the largest branching factor of a search is 18 in phase 1, and the largest possible depth of a search is 15 in phase 4, we only needed to allocate a size of 18*15=270 to the search stack. Each search node uses 24 bytes to store a cube state, parent move, and depth. This means the memory requirements of our IDDFS search is under 6.5 kB.
       </p><p>
-
-      </p>
-
-    <h4>Testing</h4>
-      <p>
-        We initially chose to represent cubes as a 54-element array, which maps a square on the cube to its current color.
+        TODO: testing
       </p>
 
   <h3><code>gui</code> Module</h3>
