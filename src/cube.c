@@ -143,7 +143,6 @@ Cube applyMoves(Cube c, Move *ms, int n) {
 
 static Move randomMove(MoveMask exclude) {
     Move m;
-
     // generate base move
     do {
         m = 1 << (rand() % 6);

@@ -37,7 +37,7 @@ static Cube phaseCube(int phase, Cube c) {
         c.corners = 0;
     }
     else if (phase == 2) {  // fix corner orientations, 1 slice edges
-        // create 2 edge permutation groups: { UR, UL, DR, DL} and rest
+        // create 2 edge permutation groups: { UR, UL, DR, DL } and rest
         int i;
         for(i=0 ; i<NUM_EDGES ; i++) {
             Int8 cubie = getCubie(c.edges, i);
