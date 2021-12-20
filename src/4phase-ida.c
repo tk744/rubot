@@ -2,10 +2,10 @@
 #include "util.h"
 #include <stdio.h> // FOR DEBUGGING
 
-#define P1_TABLE_SIZE 2048
-#define P2_TABLE_SIZE 1082565
-#define P3_TABLE_SIZE 352800
-#define P4_TABLE_SIZE 663552
+#define P1_TABLE_SIZE 2048      // 2^11
+#define P2_TABLE_SIZE 1082565   // 3^7 * 12C4
+#define P3_TABLE_SIZE 352800    // 8C4 * (8C2 * 6C2 * 4C2) 
+#define P4_TABLE_SIZE 663552    // 
 #define TABLE_SIZE P1_TABLE_SIZE + P2_TABLE_SIZE + P3_TABLE_SIZE + P4_TABLE_SIZE
 
 #define EMPTY 0xFF
@@ -95,20 +95,20 @@ static int phaseIndex(int phase, Cube c) {
     int i, index = 0;
     // rank by edge orientation
     if (phase == 1) {
-        //
+        // rank by edge orientation
         for (i=0 ; i<NUM_EDGES-1 ; i++) {
             index = (index << 1) | getOrientation(getCubie(c.edges, i), 1);
         }
     }
-    // rank by corner orientation and middle-slice edge permutation
+    // rank by corner orientation and S-slice edge permutations
     else if (phase == 2) {
-        // 
+        // rank by corner orientation
         for (i=0 ; i<NUM_CORNERS-1 ; i++) {
             index *= 3;
             index += getOrientation(getCubie(c.corners, i), 0);
         }
 
-        // get middle-slice edge permutations in ascending order
+        // get S-slice edge permutations in ascending order
         Int8 slice_edges[4];
         int slice_idx = 0;
         for(i=0 ; i<NUM_EDGES ; i++) {
@@ -118,15 +118,60 @@ static int phaseIndex(int phase, Cube c) {
                 slice_edges[slice_idx++] = i;
             }
         }
-        // map middle-slice edge permutations to linear rank
+        // map S-slice edge permutations to linear rank
         int slice_rank = combinationRank(12, 4, slice_edges);
 
-        // 
+        // TODO: comment
         index += slice_rank * 2187;
+
+        // TODO: remove
+        index = 0;
     }
-    // rank by 
+    // rank by corner tetrad pairs, M-slice edge permutations, and parity
+    // note: this fixes all edge slices since E-slice edges fall into place
     else if (phase == 3) {
-        // TODO
+        // get M-slice edge permutations in ascending order
+        Int8 slice_edges[4];
+        int slice_idx = 0;
+        for(i=0 ; i<NUM_EDGES ; i++) {
+            // ignore S-slice edges
+            if (i == UR || i == UL || i == DR || i == DL) {
+                continue;
+            }
+            Int8 cubie = getCubie(c.edges, i);
+            Int8 p = getPermutation(cubie, 1);
+            if (p == UF || p == UB || p == DF || p == DB) {
+                // map M/E-slice edges to 0-7 for combination indexing
+                if (i == UF) {
+                    slice_edges[slice_idx++] = 0;
+                }
+                else if (i == UB) {
+                    slice_edges[slice_idx++] = 1;
+                }
+                else if (i == DF) {
+                    slice_edges[slice_idx++] = 2;
+                }
+                else if (i == DB) {
+                    slice_edges[slice_idx++] = 3;
+                }
+                else if (i == FR) {
+                    slice_edges[slice_idx++] = 4;
+                }
+                else if (i == FL) {
+                    slice_edges[slice_idx++] = 5;
+                }
+                else if (i == BR) {
+                    slice_edges[slice_idx++] = 6;
+                }
+                else if (i == BL) {
+                    slice_edges[slice_idx++] = 7;
+                }
+            }
+        }
+        // map M-slice edge permutations to linear rank
+        int slice_rank = combinationRank(8, 4, slice_edges);
+
+        index = slice_rank;
     }
     // rank by 
     else if (phase == 4) {
@@ -214,7 +259,7 @@ void generateTable(Table *t) {
         }
 
         printf("phase %d | table size %d \t| correct size? %d | max depth %d\n", phase, t->size, t->size == phaseTableSize(phase), phaseMaxDepth(phase));
-
+        // assert t->size == phaseTableSize(phase)
     }
 
 }
