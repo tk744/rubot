@@ -118,24 +118,8 @@ static int phaseMoveset(int phase, Move *ms) {
     return 0;
 }
 
-static int phaseTableSize(int phase) {
-    if (phase == 1) { 
-        return phaseTableSize(phase-1) + P1_TABLE_SIZE;
-    }
-    else if (phase == 2) {
-        return phaseTableSize(phase-1) + P2_TABLE_SIZE;
-    }
-    else if (phase == 3) {
-        return phaseTableSize(phase-1) + P3_TABLE_SIZE;
-    }
-    else if (phase == 4) {
-        return phaseTableSize(phase-1) + P4_TABLE_SIZE;
-    }
-    return 0;
-}
-
-static int phaseTableIndex(int phase, Cube c) {
-    int i, index = 0;
+static int phaseRank(int phase, Cube c) {
+    int i;
     // rank by edge orientation
     if (phase == 1) {
         // rank by edge orientation
@@ -143,7 +127,7 @@ static int phaseTableIndex(int phase, Cube c) {
         for (i=0 ; i<NUM_EDGES-1 ; i++) {
             edge_rank = (edge_rank << 1) | getOrientation(getCubie(c.edges, i), 1);
         }
-        index = edge_rank;
+        return edge_rank;
     }
     // rank by corner orientation and S-slice edge permutations
     else if (phase == 2) {
@@ -168,7 +152,7 @@ static int phaseTableIndex(int phase, Cube c) {
         int slice_rank = combinationRank(12, 4, slice_edges);
 
         // TODO: comment
-        index = slice_rank * 2187 + corner_rank;
+        return slice_rank * 2187 + corner_rank;
     }
     // rank by corner tetrad pairs, M-slice edge permutations, and parity
     // note: this fixes all edge slices since E-slice edges fall into place
@@ -238,13 +222,33 @@ static int phaseTableIndex(int phase, Cube c) {
 
         // TODO: parity
 
-        index = slice_rank * 2520 + tetrad_rank;
+        return slice_rank * 2520 + tetrad_rank;
     }
     // rank by edge slice permutations and corner tetrad permutations
     else if (phase == 4) {
         // TODO
     }
-    return index + phaseTableSize(phase-1);
+    return 0;
+}
+
+static int phaseTableSize(int phase) {
+    if (phase == 1) { 
+        return phaseTableSize(phase-1) + P1_TABLE_SIZE;
+    }
+    else if (phase == 2) {
+        return phaseTableSize(phase-1) + P2_TABLE_SIZE;
+    }
+    else if (phase == 3) {
+        return phaseTableSize(phase-1) + P3_TABLE_SIZE;
+    }
+    else if (phase == 4) {
+        return phaseTableSize(phase-1) + P4_TABLE_SIZE;
+    }
+    return 0;
+}
+
+static int phaseTableIndex(int phase, Cube c) {
+    return phaseTableSize(phase-1) + phaseRank(phase, c);
 }
 
 void generateTable(Table *t) {
