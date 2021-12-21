@@ -178,6 +178,7 @@ static int phaseRank(int phase, Cube c) {
 
         // TODO: parity
 
+        // TODO: comment
         return slice_rank * 2520 + tetrad_rank;
     }
     // rank by edge slice permutations and corner tetrad permutations
@@ -185,7 +186,6 @@ static int phaseRank(int phase, Cube c) {
         // get all slice edge permutations
         Int8 s_edges[4], m_edges[4], e_edges[2];
         int s_idx = 0, m_idx = 0, e_idx = 0;
-
         for (i=0 ; i<NUM_EDGES ; i++) {
             if (i == BR || i == BL) {
                 continue;
@@ -232,7 +232,7 @@ static int phaseRank(int phase, Cube c) {
             }
         }
 
-        // map edge slice permutations to linear rank
+        // map slice edge permutations to linear rank
         int s_rank = permutationRank(s_edges, 4, 4);
         int m_rank = permutationRank(m_edges, 4, 4);
         int e_rank = permutationRank(e_edges, 4, 2);
@@ -240,7 +240,57 @@ static int phaseRank(int phase, Cube c) {
         // combine edge ranks: 4! * 4P2 = 288; 4P2 = 12
         int edge_rank = s_rank * 288 + m_rank * 12 + e_rank;
 
-        return edge_rank;
+        // get one tetrad corner permutations
+        Int8 tetrad[4];
+        int idx = 0;
+        for (i=0 ; i<NUM_CORNERS ; i++) {
+            // ignore other tetrad
+            if (i == UBR || i == UFL || i == DBL || i == DFR) {
+                continue;
+            }
+
+            // map tetrad corners to 0-3 for ranking
+            Int8 cubie = getCubie(c.corners, i);
+            Int8 p = getPermutation(cubie, 0);
+            if (p == UBL) {
+                tetrad[idx++] = 0;
+            }
+            else if (p == UFR) {
+                tetrad[idx++] = 1;
+            }
+            else if (p == DFL) {
+                tetrad[idx++] = 2;
+            }
+            else if (p == DBR) {
+                tetrad[idx++] = 3;
+            }
+        }
+
+        // map tetrad corner permutations to linear rank
+        int tetrad_rank = permutationRank(tetrad, 4, 4);
+
+        // get rank of one corner from other tetrad
+        int ubr_rank;
+        Int8 cubie = getCubie(c.corners, UBR);
+        Int8 p = getPermutation(cubie, 0);
+        if (p == UBR) {
+            ubr_rank = 0;
+        }
+        else if (p == UFL) {
+            ubr_rank = 1;
+        }
+        else if (p == DBL) {
+            ubr_rank = 2;
+        }
+        else if (p == DFR) {
+            ubr_rank = 3;
+        }
+
+        // combine corner ranks
+        int corner_rank = tetrad_rank * 4 + ubr_rank;
+        
+        // TODO: comment
+        return edge_rank * 96 + corner_rank;
     }
     return 0;
 }
@@ -376,9 +426,9 @@ int solve_a(Cube c, Move *ms, Table *t) {
 
 int main() {
     Cube c = cubeFactory();
-    c = applyMove(c, U);
-    c = applyMove(c, R);
-    c = applyMove(c, F);
+    Move mx[25];
+    c = scramble(c, mx, 25);
+    printMoves(mx, 25);
 
     printCube(c);
     printCubeEncoding(c);
