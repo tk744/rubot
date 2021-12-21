@@ -1,3 +1,4 @@
+#include "rank.h"
 #include "solver.h"
 #include "util.h"
 #include <stdio.h> // FOR DEBUGGING
@@ -5,7 +6,7 @@
 #define P1_TABLE_SIZE 2048      // 2^11
 #define P2_TABLE_SIZE 1082565   // 3^7 * 12C4
 #define P3_TABLE_SIZE 352800/2    // 8C4 * (8C2 * 6C2 * 4C2) 
-#define P4_TABLE_SIZE 663552    // 
+#define P4_TABLE_SIZE 663552    // (4! * 4! * 4P2) * (4! * 4P1)
 #define TABLE_SIZE P1_TABLE_SIZE + P2_TABLE_SIZE + P3_TABLE_SIZE + P4_TABLE_SIZE
 
 #define EMPTY 0xFF
@@ -35,50 +36,6 @@ static void insert(Table *t, int index, Int8 value) {
         t->size += (t->data[index] == EMPTY);
         t->data[index] = value;
     }
-}
-
-static int binomial(int n, int k) {
-    if (n < 0 || k < 0 || k > n) {
-        return 0;
-    }
-    int b, i;
-    for (b=1, i=0; i<k ; b*=((float)n-i)/(i+1), i++);
-    return b;
-}
-
-static int combinationRank(int n, int k, Int8 *x) {
-    int rank, i;
-    for (rank=binomial(n, k), i=0 ; i<k ; rank -= binomial(n-(x[i]+1), k-i), i++);
-    return rank-1;
-}
-
-static int combinationPairRank(int n, Int8 *x) {
-    int rank = 0, pair_rank, i, j;
-    Int8 exclusions[n-2];
-    
-    for (i=n ; i>2 ; i-=2) {
-        // set variable base
-        for (pair_rank=1, j=i; j>2 ; pair_rank*=binomial(j-2, 2), j-=2);
-        
-        // get pair
-        Int8 pair[2] = { x[n-i], x[n-i+1] };
-
-        // update exclusions
-        exclusions[n-i] = pair[0];
-        exclusions[n-i+1] = pair[1];
-
-        // reduce combination values if greater than excluded values
-        Int8 pair_reduced[2] = { pair[0], pair[1] };
-        for (j=0; j<n-i ; j++) {
-            pair_reduced[0] -= exclusions[j] < pair[0] ? 1 : 0;
-            pair_reduced[1] -= exclusions[j] < pair[1] ? 1 : 0;
-        }
-
-        // compute pair rank and updated total rank
-        pair_rank *= combinationRank(i, 2, pair_reduced);
-        rank += pair_rank;
-    }
-    return rank;
 }
 
 static void printCubeEncoding(Cube c) {
@@ -129,7 +86,7 @@ static int phaseRank(int phase, Cube c) {
         }
         return edge_rank;
     }
-    // rank by corner orientation and S-slice edge permutations
+    // rank by corner orientation and S-slice edge combinations
     else if (phase == 2) {
         // rank by corner orientation
         int corner_rank = 0;
@@ -138,7 +95,7 @@ static int phaseRank(int phase, Cube c) {
             corner_rank += getOrientation(getCubie(c.corners, i), 0);
         }
 
-        // get S-slice edge permutations in ascending order
+        // get S-slice edge combinations in ascending order
         Int8 slice_edges[4];
         int idx = 0;
         for(i=0 ; i<NUM_EDGES ; i++) {
@@ -148,14 +105,13 @@ static int phaseRank(int phase, Cube c) {
                 slice_edges[idx++] = i;
             }
         }
-        // map S-slice edge permutations to linear rank
-        int slice_rank = combinationRank(12, 4, slice_edges);
+        // map S-slice edge combinations to linear rank
+        int slice_rank = combinationRank(slice_edges, 12, 4);
 
         // TODO: comment
         return slice_rank * 2187 + corner_rank;
     }
-    // rank by corner tetrad pairs, M-slice edge permutations, and parity
-    // note: this fixes all edge slices since E-slice edges fall into place
+    // rank by corner tetrad pairs, M-slice edge combinations, and parity
     else if (phase == 3) {
         // TODO: comment
         Int8 pair_corners[8];
@@ -177,9 +133,9 @@ static int phaseRank(int phase, Cube c) {
             }
         }
         // TODO: comment
-        int tetrad_rank = combinationPairRank(8, pair_corners);
+        int tetrad_rank = combinationPairRank(pair_corners, 8);
 
-        // get M-slice edge permutations in ascending order
+        // get M-slice edge combinations in ascending order
         Int8 slice_edges[4];
         int idx = 0;
         for (i=0 ; i<NUM_EDGES ; i++) {
@@ -190,7 +146,7 @@ static int phaseRank(int phase, Cube c) {
             Int8 cubie = getCubie(c.edges, i);
             Int8 p = getPermutation(cubie, 1);
             if (p == UF || p == UB || p == DF || p == DB) {
-                // map M/E-slice edges to 0-7 for combination indexing
+                // map M/E-slice edges to 0-7 for ranking
                 if (i == UF) {
                     slice_edges[idx++] = 0;
                 }
@@ -217,8 +173,8 @@ static int phaseRank(int phase, Cube c) {
                 }
             }
         }
-        // map M-slice edge permutations to linear rank
-        int slice_rank = combinationRank(8, 4, slice_edges);
+        // map M-slice edge combinations to linear rank
+        int slice_rank = combinationRank(slice_edges, 8, 4);
 
         // TODO: parity
 
@@ -226,7 +182,65 @@ static int phaseRank(int phase, Cube c) {
     }
     // rank by edge slice permutations and corner tetrad permutations
     else if (phase == 4) {
-        // TODO
+        // get all slice edge permutations
+        Int8 s_edges[4], m_edges[4], e_edges[2];
+        int s_idx = 0, m_idx = 0, e_idx = 0;
+
+        for (i=0 ; i<NUM_EDGES ; i++) {
+            if (i == BR || i == BL) {
+                continue;
+            }
+
+            // map slice edges to 0-3 for ranking
+            Int8 cubie = getCubie(c.edges, i);
+            Int8 p = getPermutation(cubie, 1);
+            if (p == UR) {
+                s_edges[s_idx++] = 0;
+            }
+            else if (p == UL) {
+                s_edges[s_idx++] = 1;
+            }
+            else if (p == DR) {
+                s_edges[s_idx++] = 2;
+            }
+            else if (p == DL) {
+                s_edges[s_idx++] = 3;
+            }
+            else if (p == UF) {
+                m_edges[m_idx++] = 0;
+            }
+            else if (p == UB) {
+                m_edges[m_idx++] = 1;
+            }
+            else if (p == DF) {
+                m_edges[m_idx++] = 2;
+            }
+            else if (p == DB) {
+                m_edges[m_idx++] = 3;
+            }
+            else if (p == FR) {
+                e_edges[e_idx++] = 0;
+            }
+            else if (p == FL) {
+                e_edges[e_idx++] = 1;
+            }
+            else if (p == BR) {
+                e_edges[e_idx++] = 2;
+            }
+            else if (p == BL) {
+                e_edges[e_idx++] = 3;
+            }
+        }
+
+        // map edge slice permutations to linear rank
+        int s_rank = permutationRank(s_edges, 4, 4);
+        int m_rank = permutationRank(m_edges, 4, 4);
+        int e_rank = permutationRank(e_edges, 4, 2);
+
+        // combine edge ranks: 4! * 4P2 = 288; 4P2 = 12
+        int edge_rank = s_rank * 288 + m_rank * 12 + e_rank;
+
+        return edge_rank;
     }
     return 0;
 }
@@ -369,8 +383,8 @@ int main() {
     printCube(c);
     printCubeEncoding(c);
 
-    // Int8 pairs[8] = { 0, 1, 2, 3, 4, 5 };
-    // printf("%d", combinationPairRank(8, pairs));
+    // Int8 permutation[8] = { 2, 1 };
+    // printf("%d", permutationRank(permutation, 3, 2));
 
     Int8 data[TABLE_SIZE];
     Table t = { data, 0 };
