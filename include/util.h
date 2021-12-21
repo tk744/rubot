@@ -1,4 +1,5 @@
 #include "cube.h"
+#include "types.h"
 
 /* DATA STRUCTURE CONSTANTS */
 

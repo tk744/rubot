@@ -5,6 +5,8 @@
 #ifndef CUBE_H
 #define CUBE_H
 
+#include "types.h"
+
 /* CUBE CONSTANTS */
 
 #define NUM_EDGES 12
@@ -16,9 +18,6 @@
 #define CUBIE_BITS 5
 
 /* TYPE DEFINITIONS */
-
-typedef unsigned char Int8;
-typedef unsigned long long Int64;
 
 typedef Int8 Move, MoveMask;
 typedef Int8 CubieEnum;

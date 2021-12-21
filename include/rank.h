@@ -1,4 +1,4 @@
-#include "cube.h"
+#include "types.h"
 
 int permutationRank(Int8 *x, int n, int k);
 
