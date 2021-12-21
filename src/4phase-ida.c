@@ -1,5 +1,6 @@
 #include "rank.h"
 #include "solver.h"
+#include "time.h"
 #include "util.h"
 #include <stdio.h> // FOR DEBUGGING
 
@@ -36,21 +37,6 @@ static void insert(Table *t, int index, Int8 value) {
         t->size += (t->data[index] == EMPTY);
         t->data[index] = value;
     }
-}
-
-static void printCubeEncoding(Cube c) {
-    int i;
-    printf("EDGES: ");
-    for(i=0 ; i<NUM_EDGES ; i++) {
-        Int8 cubie = getCubie(c.edges, i);
-        printf("%d:%d " , getPermutation(cubie, 1), getOrientation(cubie, 1));
-    }
-    printf("\nCORNERS: ");
-    for(i=0 ; i<NUM_CORNERS ; i++) {
-        Int8 cubie = getCubie(c.corners, i);
-        printf("%d:%d " , getPermutation(cubie, 0), getOrientation(cubie, 0));
-    }
-    printf("\n");
 }
 
 static int phaseMaxDepth(int phase) {
@@ -425,34 +411,38 @@ int solve_a(Cube c, Move *ms, Table *t) {
 }
 
 int main() {
-    Cube c = cubeFactory();
-    Move mx[25];
-    c = scramble(c, mx, 25);
-    printMoves(mx, 25);
+    srand(&main);
+    
+    clock_t start, end;
 
-    printCube(c);
-    printCubeEncoding(c);
-
-    // Int8 permutation[8] = { 2, 1 };
-    // printf("%d", permutationRank(permutation, 3, 2));
-
+    Cube c0 = cubeFactory();
+    int n0 = 25;
+    Move ms0[n0];
+    c0 = scramble(c0, ms0, n0);
+    printMoves(ms0, n0);
+    printCube(c0);
+    
+    printf("\nGenerating Lookup Table...\n");
     Int8 data[TABLE_SIZE];
     Table t = { data, 0 };
+    start = clock();
     generateTable(&t);
+    end = clock();
+    printf("Done in %5f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
     
-    printf("\nTable size: %d \n", t.size);
-    printf("Cube index: %d \n", phaseTableIndex(3, c));
-    printf("Cube depth: %d \n", lookup(&t, phaseTableIndex(1, c)));
+    printf("\nGenerating Solution...\n");
+    Move ms1[MAX_MOVES];
+    start = clock();
+    int n1 = solve_a(c0, ms1, &t);
+    end = clock();
+    printMoves(ms1, n1);
+    printf("Done in %5f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
 
-    printf("\nSolve:\n");
-    Move ms[MAX_MOVES];
-    int n = solve_a(c, ms, &t);
-    printMoves(ms, n);
-    
+    Cube c1 = applyMoves(c0, ms1, n1);
+    printCube(c1);
+
+    int solved = areEqual(c1, cubeFactory());
+    printf("\nSolved: %s", solved ? "YES" : "NO");
+
     return 0;
 }
-
-// create lookup table
-// static Int8 data[TABLE_SIZE];
-// static Table t = { data, 0 };
-// int a = initTable(&t);

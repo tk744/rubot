@@ -516,6 +516,7 @@ void printMoves(Move *ms, int n) {
     printf("[%d]: ", n);
     while(n-- > 0) {
         printMove(*ms++);
-        printf(n == 0 ? "\n" : ", ");
+        printf(n == 0 ? "" : ", ");
     }
+    printf("\n");
 }
