@@ -2,7 +2,7 @@
 #include "solver.h"
 #include "time.h"
 #include "util.h"
-#include <stdio.h> // FOR DEBUGGING
+#include <stdio.h>
 
 #define P1_TABLE_SIZE 2048      // 2^11
 #define P2_TABLE_SIZE 1082565   // 3^7 * 12C4
@@ -11,6 +11,8 @@
 #define TABLE_SIZE P1_TABLE_SIZE + P2_TABLE_SIZE + P3_TABLE_SIZE + P4_TABLE_SIZE
 
 #define EMPTY 0xFF
+
+#define TABLE_FILE "t"
 
 typedef struct {
     Int8 *data;
@@ -368,16 +370,43 @@ void generateTable(Table *t) {
 
 }
 
-void saveTable(Table *t);
+void saveTable(Table *t) {
+    // compress two table entries per byte
+    Int8 data[t->size/2];
+    int i;
+    for (i=0 ; i<t->size/2 ; i++) { // TODO: round up instead of truncating 
+        data[i] = (t->data[i*2] << 4) | t->data[i*2+1];
+    }
+
+    // write compressed table entries to file
+    FILE *fp;
+    fp = fopen(TABLE_FILE, "wb");
+    fwrite(data, 1, t->size/2, fp);
+    fclose(fp);
+}
+
+static Int8 lookupTable(FILE *fp, int index) {
+    if (0 <= index && index < TABLE_SIZE) {
+        int ptr;
+        fseek(fp, index/2, SEEK_SET);
+        fread(&ptr, 1, 1, fp);
+        return (index % 2) ? ptr & 0b1111 : ptr >> 4;  
+    }
+    return EMPTY;
+}
 
 void loadTable(Table *t);
 
-int solve_a(Cube c, Move *ms, Table *t) {
+int solve_t(Cube c, Move *ms) {
+    // open lookup table file for reading
+    FILE *fp;
+    fp = fopen(TABLE_FILE, "rb");
+
     int num_moves = 0;
     int phase = 0;
     while (++phase <= 4) {
         // iterate until phase depth is 0
-        while (lookup(t, phaseTableIndex(phase, c))) {
+        while (lookupTable(fp, phaseTableIndex(phase, c))) {
             Move best_move = NOP;
             int best_depth;
 
@@ -387,7 +416,7 @@ int solve_a(Cube c, Move *ms, Table *t) {
             while(i < n) {
                 Move m = moveset[i++];
                 Cube child_cube = applyMove(c, m);
-                int child_depth = lookup(t, phaseTableIndex(phase, child_cube));
+                int child_depth = lookupTable(fp, phaseTableIndex(phase, child_cube));
 
                 // printf("best d: %d child d: %d\n", best_depth, child_depth);
 
@@ -405,10 +434,58 @@ int solve_a(Cube c, Move *ms, Table *t) {
             // apply move
             c = applyMove(c, best_move);
             ms[num_moves++] = best_move;
+
+            if (num_moves == MAX_MOVES) {
+                goto exit;
+            }
         }
     }
+    exit:
+    fclose(fp);
     return num_moves;
 }
+
+// int solve_a(Cube c, Move *ms, Table *t) {
+//     int num_moves = 0;
+//     int phase = 0;
+//     while (++phase <= 4) {
+//         // iterate until phase depth is 0
+//         while (lookup(t, phaseTableIndex(phase, c))) {
+//             Move best_move = NOP;
+//             int best_depth;
+
+//             // iterate through moveset to find a depth reduction
+//             Move moveset[NUM_MOVES];
+//             int i = 0, n = phaseMoveset(phase, moveset);
+//             while(i < n) {
+//                 Move m = moveset[i++];
+//                 Cube child_cube = applyMove(c, m);
+//                 int child_depth = lookup(t, phaseTableIndex(phase, child_cube));
+
+//                 // printf("best d: %d child d: %d\n", best_depth, child_depth);
+
+//                 if (best_move == NOP || child_depth < best_depth) {
+//                     best_move = m;
+//                     best_depth = child_depth;
+//                 }
+
+//                 // TODO: EXPERIMENTAL OPTIMIZATION 1
+//                 // if best_depth > current_depth: break
+//                 // TODO: EXPERIMENTAL OPTIMIZATION 2
+//                 // possibly exclude U/D moves? see how that affects move length
+//             }
+
+//             // apply move
+//             c = applyMove(c, best_move);
+//             ms[num_moves++] = best_move;
+
+//             if (num_moves == MAX_MOVES) {
+//                 return num_moves;
+//             }
+//         }
+//     }
+//     return num_moves;
+// }
 
 int main() {
     srand(&main);
@@ -421,19 +498,20 @@ int main() {
     c0 = scramble(c0, ms0, n0);
     printMoves(ms0, n0);
     printCube(c0);
-    
-    printf("\nGenerating Lookup Table...\n");
-    Int8 data[TABLE_SIZE];
-    Table t = { data, 0 };
-    start = clock();
-    generateTable(&t);
-    end = clock();
-    printf("Done in %5f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+
+    // printf("\nGenerating Lookup Table...\n");
+    // Int8 data[TABLE_SIZE];
+    // Table t = { data, 0 };
+    // start = clock();
+    // generateTable(&t);
+    // saveTable(&t);
+    // end = clock();
+    // printf("Done in %5f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
     
     printf("\nGenerating Solution...\n");
     Move ms1[MAX_MOVES];
     start = clock();
-    int n1 = solve_a(c0, ms1, &t);
+    int n1 = solve_t(c0, ms1);
     end = clock();
     printMoves(ms1, n1);
     printf("Done in %5f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
