@@ -4,49 +4,43 @@
 #include "util.h"
 #include <stdio.h>
 
-#define P1_TABLE_SIZE 2048      // 2^11
-#define P2_TABLE_SIZE 1082565   // 3^7 * 12C4
-#define P3_TABLE_SIZE 352800/2    // 8C4 * (8C2 * 6C2 * 4C2) 
-#define P4_TABLE_SIZE 663552    // (4! * 4! * 4P2) * (4! * 4P1)
-#define TABLE_SIZE P1_TABLE_SIZE + P2_TABLE_SIZE + P3_TABLE_SIZE + P4_TABLE_SIZE
+/*
+TODO: 52-move algorithm and database overview.
 
-#define EMPTY 0xFF
+Phase 1: 2^11 = 2048
+Phase 2: 3^7 * 12C4 = 1082565
+Phase 3: 8C4 * (8C2 * 6C2 * 4C2) = 352800
+Phase 4: (4! * 4! * 4P2) * (4! * 4P1) = 663552
+*/
 
-#define TABLE_FILE "t"
+#define DB_SIZE 2100965 // 2048 + 1082565 + 352800 + 663552
+#define DB_FILE "4PHASE-DB"
 
-typedef struct {
-    Int8 *data;
-    int size;
-} Table;
-
-static void initTable(Table *t) {
-    int i;
-    for (i=0 ; i<TABLE_SIZE ; i++) {
-        t->data[i] = EMPTY;
+static Int4 readNibble(FILE *fp, int index) {
+    if (0 <= index && index < DB_SIZE) {
+        Int8 byte;
+        fseek(fp, index/2, SEEK_SET);
+        fread(&byte, 1, 1, fp);
+        return (index % 2) ? byte & 0b1111 : byte >> 4;  
     }
-    t->size = 0;
+    return 0xFF;
 }
 
-static Int8 lookup(Table *t, int index) {
-    if (0 <= index && index < TABLE_SIZE) {
-        return t->data[index];
+static void writeNibble(FILE *fp, int index, Int4 n) {
+    if (0 <= index && index < DB_SIZE) {
+        Int8 byte;
+        fseek(fp, index/2, SEEK_SET);
+        fread(&byte, 1, 1, fp);
+
+        byte &= (index % 2) ? ~0b1111 : ~(0b1111 << 4);
+        byte |= (index % 2) ? n : n << 4;
+
+        fseek(fp, index/2, SEEK_SET);
+        fwrite(&byte, 1, 1, fp);
     }
-    return EMPTY;
 }
 
-static void insert(Table *t, int index, Int8 value) {
-    if (0 <= index && index < TABLE_SIZE && t->size < TABLE_SIZE) {
-        t->size += (t->data[index] == EMPTY);
-        t->data[index] = value;
-    }
-}
-
-static int phaseMaxDepth(int phase) {
-    static int phase_maxdepth[4] = { 7, 10, 14, 15 };
-    return (1 <= phase && phase <= 4) ? phase_maxdepth[phase-1] : 0;
-}
-
-static int phaseMoveset(int phase, Move *ms) {
+static int phaseMoves(int phase, Move *ms) {
     static Move phase_moveset[4][NUM_MOVES] = { 
         { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
         {         U|H,         D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
@@ -61,6 +55,16 @@ static int phaseMoveset(int phase, Move *ms) {
         return n;
     }
     return 0;
+}
+
+static int phaseDepth(int phase) {
+    static int phase_depth[4] = { 7, 10, 14, 15 };
+    return (1 <= phase && phase <= 4) ? phase_depth[phase-1] : 0;
+}
+
+static int phaseSize(int phase) {
+    static int phase_size[4] = { 2048, 1082565, 352800/2, 663552 };
+    return (1 <= phase && phase <= 4) ? phase_size[phase-1] : 0;
 }
 
 static int phaseRank(int phase, Cube c) {
@@ -283,61 +287,66 @@ static int phaseRank(int phase, Cube c) {
     return 0;
 }
 
-static int phaseTableSize(int phase) {
-    if (phase == 1) { 
-        return phaseTableSize(phase-1) + P1_TABLE_SIZE;
+static int phaseIndex(int phase, Cube c) {
+    int i, size = 0;
+    for (i=1 ; i<phase ; i++) {
+        size += phaseSize(i);
     }
-    else if (phase == 2) {
-        return phaseTableSize(phase-1) + P2_TABLE_SIZE;
-    }
-    else if (phase == 3) {
-        return phaseTableSize(phase-1) + P3_TABLE_SIZE;
-    }
-    else if (phase == 4) {
-        return phaseTableSize(phase-1) + P4_TABLE_SIZE;
-    }
-    return 0;
+    return size + phaseRank(phase, c);
 }
 
-static int phaseTableIndex(int phase, Cube c) {
-    return phaseTableSize(phase-1) + phaseRank(phase, c);
-}
+static void generateDatabase() {
+    // phase statistics variables
+    static clock_t clock_start, clock_end;
+    static int updates, states;
 
-void generateTable(Table *t) {
-    // initialize lookup table
-    initTable(t);
+    // open file for storing database
+    FILE *fp;
+    fp = fopen(DB_FILE, "w+b");
+
+    // initialize each entry in the database to 0xF
+    int i;
+    for (i=0 ; i<DB_SIZE/2 ; i++) {
+        putc(0xFF, fp);
+    }
 
     // create DFS stack
     static Node ns[STACK_SIZE] = {};
-    static Stack s = { ns, 0 };
+    static Stack stack = { ns, 0 };
 
     // iterate through phases
     int phase = 0;
     while (++phase <= 4) {
+        // reset phase statistics variables
+        clock_start = clock();
+        updates = states = 0;
+
         // create phase root node from goal
         Node root_node = { cubeFactory(), NOP, 0 };
-        int index = phaseTableIndex(phase, root_node.cube);
+        int index = phaseIndex(phase, root_node.cube);
+        states++;
 
-        // insert root index into table
-        insert(t, index, root_node.depth);
+        // insert root index into database
+        writeNibble(fp, index, root_node.depth);
+        updates++;
 
         // initialize DFS stack wit root node
-        clear(&s);
-        push(&s, root_node);
+        clear(&stack);
+        push(&stack, root_node);
 
         // iterate until stack is empty
-        while(s.size) {
+        while(stack.size) {
             // pop node from stack
-            root_node = pop(&s);
+            root_node = pop(&stack);
 
             // discard nodes that are too deep
-            if (root_node.depth >= phaseMaxDepth(phase)) {
+            if (root_node.depth >= phaseDepth(phase)) {
                 continue;
             }
 
             // iterate through children
             Move moveset[NUM_MOVES];
-            int i = 0, n = phaseMoveset(phase, moveset);
+            int i = 0, n = phaseMoves(phase, moveset);
             while(i < n) {
                 Move m = moveset[i++];
 
@@ -349,74 +358,53 @@ void generateTable(Table *t) {
                 // create child node
                 Cube cube = applyMove(root_node.cube, m);
                 Node node = { cube, m, root_node.depth+1 };
-                int index = phaseTableIndex(phase, cube);
+                int index = phaseIndex(phase, cube);
+                states++;
 
-                // update table and push to stack if new index or better depth
-                if (lookup(t, index) == EMPTY || node.depth < lookup(t, index)) {
-                    // printf("Updating index %d from %d to %d\n", index, lookup(t, index), node.depth);
-                    insert(t, index, node.depth);
-                    push(&s, node);
+                // update database and push node to stack if better depth
+                if (node.depth < readNibble(fp, index)) {
+                    writeNibble(fp, index, node.depth);
+                    push(&stack, node);
+                    updates++;
                 }
 
             }
 
-            // printf("table size: %d, stack size: %d\n", t->size, s.size);
-
         }
 
-        printf("phase %d | table size %7d | correct size? %d | max depth %d\n", phase, t->size, t->size == phaseTableSize(phase), phaseMaxDepth(phase));
-        // assert t->size == phaseTableSize(phase)
+        // print phase statistics to console
+        clock_end = clock();
+        double time_elapsed = (double)(clock_end - clock_start) / CLOCKS_PER_SEC;
+        printf("PHASE %d | %9d states evaluated | %7d file updates | %3.3f s \n", phase, states, updates, time_elapsed);
     }
 
-}
-
-void saveTable(Table *t) {
-    // compress two table entries per byte
-    Int8 data[t->size/2];
-    int i;
-    for (i=0 ; i<t->size/2 ; i++) { // TODO: round up instead of truncating 
-        data[i] = (t->data[i*2] << 4) | t->data[i*2+1];
-    }
-
-    // write compressed table entries to file
-    FILE *fp;
-    fp = fopen(TABLE_FILE, "wb");
-    fwrite(data, 1, t->size/2, fp);
     fclose(fp);
 }
 
-static Int8 lookupTable(FILE *fp, int index) {
-    if (0 <= index && index < TABLE_SIZE) {
-        int ptr;
-        fseek(fp, index/2, SEEK_SET);
-        fread(&ptr, 1, 1, fp);
-        return (index % 2) ? ptr & 0b1111 : ptr >> 4;  
-    }
-    return EMPTY;
-}
-
-void loadTable(Table *t);
-
-int solve_t(Cube c, Move *ms) {
-    // open lookup table file for reading
+int solve(Cube c, Move *ms) {
+    // open database file or generate it if missing
     FILE *fp;
-    fp = fopen(TABLE_FILE, "rb");
+    fp = fopen(DB_FILE, "rb");
+    if (!fp) {
+        generateDatabase();
+        fp = fopen(DB_FILE, "rb");
+    }
 
     int num_moves = 0;
     int phase = 0;
     while (++phase <= 4) {
         // iterate until phase depth is 0
-        while (lookupTable(fp, phaseTableIndex(phase, c))) {
+        while (readNibble(fp, phaseIndex(phase, c))) {
             Move best_move = NOP;
             int best_depth;
 
             // iterate through moveset to find a depth reduction
             Move moveset[NUM_MOVES];
-            int i = 0, n = phaseMoveset(phase, moveset);
+            int i = 0, n = phaseMoves(phase, moveset);
             while(i < n) {
                 Move m = moveset[i++];
                 Cube child_cube = applyMove(c, m);
-                int child_depth = lookupTable(fp, phaseTableIndex(phase, child_cube));
+                int child_depth = readNibble(fp, phaseIndex(phase, child_cube));
 
                 // printf("best d: %d child d: %d\n", best_depth, child_depth);
 
@@ -443,84 +431,4 @@ int solve_t(Cube c, Move *ms) {
     exit:
     fclose(fp);
     return num_moves;
-}
-
-// int solve_a(Cube c, Move *ms, Table *t) {
-//     int num_moves = 0;
-//     int phase = 0;
-//     while (++phase <= 4) {
-//         // iterate until phase depth is 0
-//         while (lookup(t, phaseTableIndex(phase, c))) {
-//             Move best_move = NOP;
-//             int best_depth;
-
-//             // iterate through moveset to find a depth reduction
-//             Move moveset[NUM_MOVES];
-//             int i = 0, n = phaseMoveset(phase, moveset);
-//             while(i < n) {
-//                 Move m = moveset[i++];
-//                 Cube child_cube = applyMove(c, m);
-//                 int child_depth = lookup(t, phaseTableIndex(phase, child_cube));
-
-//                 // printf("best d: %d child d: %d\n", best_depth, child_depth);
-
-//                 if (best_move == NOP || child_depth < best_depth) {
-//                     best_move = m;
-//                     best_depth = child_depth;
-//                 }
-
-//                 // TODO: EXPERIMENTAL OPTIMIZATION 1
-//                 // if best_depth > current_depth: break
-//                 // TODO: EXPERIMENTAL OPTIMIZATION 2
-//                 // possibly exclude U/D moves? see how that affects move length
-//             }
-
-//             // apply move
-//             c = applyMove(c, best_move);
-//             ms[num_moves++] = best_move;
-
-//             if (num_moves == MAX_MOVES) {
-//                 return num_moves;
-//             }
-//         }
-//     }
-//     return num_moves;
-// }
-
-int main() {
-    srand(&main);
-    
-    clock_t start, end;
-
-    Cube c0 = cubeFactory();
-    int n0 = 25;
-    Move ms0[n0];
-    c0 = scramble(c0, ms0, n0);
-    printMoves(ms0, n0);
-    printCube(c0);
-
-    // printf("\nGenerating Lookup Table...\n");
-    // Int8 data[TABLE_SIZE];
-    // Table t = { data, 0 };
-    // start = clock();
-    // generateTable(&t);
-    // saveTable(&t);
-    // end = clock();
-    // printf("Done in %5f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
-    
-    printf("\nGenerating Solution...\n");
-    Move ms1[MAX_MOVES];
-    start = clock();
-    int n1 = solve_t(c0, ms1);
-    end = clock();
-    printMoves(ms1, n1);
-    printf("Done in %5f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
-
-    Cube c1 = applyMoves(c0, ms1, n1);
-    printCube(c1);
-
-    int solved = areEqual(c1, cubeFactory());
-    printf("\nSolved: %s", solved ? "YES" : "NO");
-
-    return 0;
 }

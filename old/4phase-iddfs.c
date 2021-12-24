@@ -93,21 +93,21 @@ static Cube phaseCube(int phase, Cube c) {
             }
             setCubie(&c.corners, i, cubie);
         }
-        // // parity
-        // int j, parity = 0;
-        // Int8 cubie1, cubie2;
-        // for(i=0 ; i<NUM_CORNERS ; i++) {
-        //     for (j=i+1 ; j<NUM_CORNERS ; j++) {
-        //         cubie1 = getCubie(c.corners, i);
-        //         cubie2 = getCubie(c.corners, j);
-        //         parity ^= getPermutation(cubie1, 0) < getPermutation(cubie2, 0);
-        //     }
-        // }
-        // if (parity) {   // fuck some shit up if its odd
-        //     Int64 tmp = c.corners;
-        //     c.corners = c.edges;
-        //     c.edges = tmp;
-        // }
+        // parity
+        int j, parity = 0;
+        Int8 cubie1, cubie2;
+        for(i=0 ; i<NUM_CORNERS ; i++) {
+            for (j=i+1 ; j<NUM_CORNERS ; j++) {
+                cubie1 = getCubie(c.corners, i);
+                cubie2 = getCubie(c.corners, j);
+                parity ^= getPermutation(cubie1, 0) < getPermutation(cubie2, 0);
+            }
+        }
+        if (parity) {   // fuck some shit up if its odd
+            Int64 tmp = c.corners;
+            c.corners = c.edges;
+            c.edges = tmp;
+        }
     }
     return c;
 }
