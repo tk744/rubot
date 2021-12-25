@@ -158,7 +158,7 @@ static Move randomMove(MoveMask exclude) {
 Cube scramble(Cube c, Move *ms, int n) {
     int i;
     for(i=0 ; i<n ; i++) {
-        *(ms+i) = randomMove(i == 0 ? 0 : *(ms+i-1));
+        *(ms+i) = randomMove(i == 0 ? NOP : *(ms+i-1));
     }
     return applyMoves(c, ms, n);
 }

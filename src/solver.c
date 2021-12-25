@@ -63,7 +63,7 @@ static int phaseDepth(int phase) {
 }
 
 static int phaseSize(int phase) {
-    static int phase_size[4] = { 2048, 1082565, 352800/2, 663552 };
+    static int phase_size[4] = { 2048, 1082565, 352800, 663552 };
     return (1 <= phase && phase <= 4) ? phase_size[phase-1] : 0;
 }
 
@@ -168,10 +168,19 @@ static int phaseRank(int phase, Cube c) {
         // map M-slice edge combinations to linear rank
         int slice_rank = combinationRank(slice_edges, 8, 4);
 
-        // TODO: parity
+        // compute corner parity
+        int j, parity = 0;
+        for (i=0 ; i<NUM_CORNERS ; i++) {
+            for (j=i+1 ; j<NUM_CORNERS ; j++) {
+                int p1, p2;
+                p1 = getPermutation(getCubie(c.corners, i), 0);
+                p2 = getPermutation(getCubie(c.corners, j), 0);
+                parity ^= p1 > p2;
+            }
+        }
 
         // TODO: comment
-        return slice_rank * 2520 + tetrad_rank;
+        return (slice_rank * 2520 + tetrad_rank) * 2 + parity;
     }
     // rank by edge slice permutations and corner tetrad permutations
     else if (phase == 4) {
@@ -296,9 +305,9 @@ static int phaseIndex(int phase, Cube c) {
 }
 
 static void generateDatabase() {
-    // phase statistics variables
-    static clock_t clock_start, clock_end;
-    static int updates, states;
+    // statistics variables
+    printf("\nGENERATING DATABASE:\n");
+    clock_t clock_start = clock();
 
     // open file for storing database
     FILE *fp;
@@ -306,7 +315,7 @@ static void generateDatabase() {
 
     // initialize each entry in the database to 0xF
     int i;
-    for (i=0 ; i<DB_SIZE/2 ; i++) {
+    for (i=0 ; i<(DB_SIZE/2)+(DB_SIZE%2) ; i++) {
         putc(0xFF, fp);
     }
 
@@ -317,18 +326,15 @@ static void generateDatabase() {
     // iterate through phases
     int phase = 0;
     while (++phase <= 4) {
-        // reset phase statistics variables
-        clock_start = clock();
-        updates = states = 0;
+        printf("\rPhase %d/4 ...", phase);
+        fflush(stdout);
 
         // create phase root node from goal
         Node root_node = { cubeFactory(), NOP, 0 };
         int index = phaseIndex(phase, root_node.cube);
-        states++;
 
         // insert root index into database
         writeNibble(fp, index, root_node.depth);
-        updates++;
 
         // initialize DFS stack wit root node
         clear(&stack);
@@ -359,26 +365,19 @@ static void generateDatabase() {
                 Cube cube = applyMove(root_node.cube, m);
                 Node node = { cube, m, root_node.depth+1 };
                 int index = phaseIndex(phase, cube);
-                states++;
 
                 // update database and push node to stack if better depth
                 if (node.depth < readNibble(fp, index)) {
                     writeNibble(fp, index, node.depth);
                     push(&stack, node);
-                    updates++;
                 }
-
             }
-
         }
-
-        // print phase statistics to console
-        clock_end = clock();
-        double time_elapsed = (double)(clock_end - clock_start) / CLOCKS_PER_SEC;
-        printf("PHASE %d | %9d states evaluated | %7d file updates | %3.3f s \n", phase, states, updates, time_elapsed);
     }
 
     fclose(fp);
+    double time = (double)(clock() - clock_start) / CLOCKS_PER_SEC;
+    printf("\rDone in %2.1f seconds\n", time);
 }
 
 int solve(Cube c, Move *ms) {
@@ -390,23 +389,22 @@ int solve(Cube c, Move *ms) {
         fp = fopen(DB_FILE, "rb");
     }
 
+    // iterate through phases
     int num_moves = 0;
     int phase = 0;
     while (++phase <= 4) {
         // iterate until phase depth is 0
         while (readNibble(fp, phaseIndex(phase, c))) {
             Move best_move = NOP;
-            int best_depth;
+            Int4 best_depth;
 
             // iterate through moveset to find a depth reduction
             Move moveset[NUM_MOVES];
             int i = 0, n = phaseMoves(phase, moveset);
-            while(i < n) {
+            while (i < n) {
                 Move m = moveset[i++];
                 Cube child_cube = applyMove(c, m);
-                int child_depth = readNibble(fp, phaseIndex(phase, child_cube));
-
-                // printf("best d: %d child d: %d\n", best_depth, child_depth);
+                Int4 child_depth = readNibble(fp, phaseIndex(phase, child_cube));
 
                 if (best_move == NOP || child_depth < best_depth) {
                     best_move = m;
@@ -428,6 +426,7 @@ int solve(Cube c, Move *ms) {
             }
         }
     }
+
     exit:
     fclose(fp);
     return num_moves;
