@@ -1,5 +1,5 @@
-TARGET_EXEC = $(BUILD_DIR)/rubot
-ARGS := 20
+TARGET_EXEC = ./rubot
+ARGS := 25
 
 # .c, .h, and .o files
 SRC_DIR := ./src
@@ -29,8 +29,8 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 
 .PHONY: clean
 clean:
-	rm -r $(BUILD_DIR)
+	rm -r $(TARGET_EXEC) $(BUILD_DIR)
 
-.PHONY: run
-run: $(TARGET_EXEC)
+.PHONY: demo
+demo: $(TARGET_EXEC)
 	$(TARGET_EXEC) $(ARGS)
