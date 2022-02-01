@@ -6,7 +6,7 @@ typedef struct {
 } ShiftRegister;
 
 static ShiftRegister
-    RotarySR = { PIN_SR_ORIENTED_SER, PIN_SR_ORIENTED_SRCLK, PIN_SR_ORIENTED_RCLK },
-    LinearSR = { PIN_SR_EXTENDED_SER, PIN_SR_EXTENDED_SRCLK, PIN_SR_EXTENDED_RCLK };
+    RotarySR = { PIN_SR_ROTARY_SER, PIN_SR_ROTARY_SRCLK, PIN_SR_ROTARY_RCLK },
+    LinearSR = { PIN_SR_LINEAR_SER, PIN_SR_LINEAR_SRCLK, PIN_SR_LINEAR_RCLK };
 
 void writeShiftRegister(ShiftRegister sr, Int8 data);

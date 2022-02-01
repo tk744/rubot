@@ -1,10 +1,10 @@
 // pins for CD74HC595E shift registers
-#define PIN_SR_ORIENTED_SER     0
-#define PIN_SR_ORIENTED_SRCLK   0
-#define PIN_SR_ORIENTED_RCLK    0
-#define PIN_SR_EXTENDED_SER     0
-#define PIN_SR_EXTENDED_SRCLK   0
-#define PIN_SR_EXTENDED_RCLK    0
+#define PIN_SR_ROTARY_SER     0
+#define PIN_SR_ROTARY_SRCLK   0
+#define PIN_SR_ROTARY_RCLK    0
+#define PIN_SR_LINEAR_SER     0
+#define PIN_SR_LINEAR_SRCLK   0
+#define PIN_SR_LINEAR_RCLK    0
 
 // pins for OV7670 camera
 #define PIN_CAMERA_SCL          0
