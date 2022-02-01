@@ -1,6 +1,14 @@
+#include <time.h>
 #include "peripherals.h"
 
 #define SHIFT_REGISTER_DELAY 10
+
+void delay(int ms) {
+    clock_t start = clock(), end;
+    do {
+        end = clock();
+    } while (end-start < CLOCKS_PER_SEC/1000 * ms);
+}
 
 void writeShiftRegister(ShiftRegister sr, Int8 data) {
     // write data to internal memory of shift register
