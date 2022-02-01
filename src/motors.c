@@ -51,12 +51,12 @@ static void executeRotaryTransform(RotaryTransform rt) {
     }
 
     // set directions of motors
-    writeShiftRegister(&RotarySR, d);
+    writeShiftRegister(RotarySR, d);
 
     // send step pulses to motors
     for (i = 0 ; i < MOTOR_STEPS/4 ; i++) {
         delay(MOTOR_DELAY);
-        writeShiftRegister(&RotarySR, d^=s);
+        writeShiftRegister(RotarySR, d^=s);
     }
 }
 
