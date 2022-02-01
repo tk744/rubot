@@ -1,21 +1,17 @@
-#include "solver.h"
+#include "pins.h"
+#include "types.h"
 
-// REP: x1, x2, f1a, f1b, f2a, f2b
+typedef struct {
+    Int8 step_pin, dir_pin;
+} Motor;
 
-// x_[2]: 0-stay 1-extend 2-retreat
-// f_[2]: 0-stay 1-90R 2-90L 3-180
-// 2*6 = 12 bits < 2 bytes
-typedef unsigned short MotorMove;
+static Motor F_MOTOR = { PIN_MOTOR_F_STEP, PIN_MOTOR_F_DIR },
+             B_MOTOR = { PIN_MOTOR_B_STEP, PIN_MOTOR_B_DIR },
+             R_MOTOR = { PIN_MOTOR_R_STEP, PIN_MOTOR_R_DIR }, 
+             L_MOTOR = { PIN_MOTOR_L_STEP, PIN_MOTOR_L_DIR },
+             FB_MOTOR = { PIN_MOTOR_FB_STEP, PIN_MOTOR_FB_DIR }, 
+             RL_MOTOR = { PIN_MOTOR_RL_STEP, PIN_MOTOR_RL_DIR };
 
-// x_[1]: 0-extended 1-retreated
-// f_[1]: 0-horizontal 1-vertical
-// 1*6 = 6 bits < 1 byte
-typedef char MotorState;
+void rotateCW(Motor m);
 
-static MotorMove convertMove(Move m);
-
-static MotorMove *convertMoves(Move* ms, int n);
-
-MotorState executeMove(Move m);
-
-MotorState executeMoves(Move *ms, int n);
+void rotateCCW(Motor m);
