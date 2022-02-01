@@ -1,7 +1,7 @@
 #include "rank.h"
 #include "solver.h"
 #include "time.h"
-#include "util.h"
+#include "stack.h"
 #include <stdio.h>
 
 /*

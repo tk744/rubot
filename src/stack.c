@@ -1,4 +1,4 @@
-#include "util.h"
+#include "stack.h"
 #include <stdio.h>
 
 /* FUNCTION IMPLEMENTATION */

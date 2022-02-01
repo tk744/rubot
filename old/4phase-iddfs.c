@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "solver.h"
-#include "util.h"
+#include "stack.h"
 
 static int phaseMaxDepth(int phase) {
     static int phase_maxdepth[4] = { 7, 10, 14, 15 };
