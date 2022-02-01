@@ -77,7 +77,7 @@ void executeMoves(Move *ms, int n) {
     }
 }
 
-// int main() {
-//     Transform t = convertMove(F);
-//     executeRotaryTransform(t.rt);
-// }
+int main() {
+    Transform t = convertMove(F);
+    executeRotaryTransform(t.rt);
+}

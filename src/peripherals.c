@@ -1,8 +1,5 @@
+#include "hardware.h"
 #include "peripherals.h"
-
-static void digitalWrite(int pin, int x) {
-    
-}
 
 void writeShiftRegister(ShiftRegister sr, Int8 data) {
     // shift in
