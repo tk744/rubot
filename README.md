@@ -31,15 +31,13 @@ Rubot solves Rubik's cubes using [Thistletwaite's algorithm](https://en.wikipedi
 
 ### Thistletwaite's Algorithm
 
-<!-- Rubik's cube solving algorithms are generally divided into multiple stages, where each stage is defined by some property (e.g. one layer solved) and stages are solved sequentially. But algorithms designed for humans to memorize are inherently inefficient because they all require methodically destroying and rebuilding previous stages as progress is made towards the next stage. Thistletwaite's algorithm is efficient because it was designed so that once a stage is reached, it will never be destroyed in making progress towards subsequent stages.
+A brute-force search over the space of all cube states would be infeasible. With a branching factor of 12 quarter-turn moves, and a [theoretical maximum depth of 20 moves](https://www.cube20.org/), the state-space contains up to 12^20 possible cubes. Thistletwaite's algorithm instead divides the search into sequential phases, each with smaller branching factor and depth to make searching feasible. 
 
-Each stage in Thistletwaite's algorithm is described as a group using group theory. Each group is defined by a set of moves, and contains the set of cubes that can be solved using the moves defined in that group. The first group is defined by the set of all moves and therefore contains every possible cube, and the last group is defined by the empty set and therefore contains only the solved cube. -->
+Many algorithms divide the solving process into multiple stages, where each subsequent stage is defined by a more restrictive property (e.g. one layer solved, two layers solved, etc.). But algorithms that contain few enough sequences for a human to memorize often require many moves because they require destroying and rebuilding properties established in previous stages to make progress towards the next one. Thistletwaite's algorithm uses far fewer moves because it never destroys such properties once they are established. 
 
-<!-- <hr> -->
+This is cleverly achieved by searching for a cube at each phase which can be solved without quarter-turns of opposite faces, and then solving subsequent phases without quarter-turns of those faces. Half-turns are still allowed on those faces because they preserve the no-quarter-turn property. Then the final phase can be solved using only half-turns. Reducing the moveset at each phase has two desirable outcomes: first, it gradually reduces the branching factor for each successive search; second, it prevents the property established at each phase from being destroyed in subsequent stages. These two outcomes make the algorithm feasible and efficient.
 
-<!-- It is clear that the last group is a subset of the first group.
-
-Then each phase of the algorithm brings a cube from one group to the next until eventually reaching the identity group which only contains the solved cube. The five groups are described below:
+Thistletwaite uses group theory to describe the state-space of cubes in each phase. A group is defined by a set of moves, and contains the set of cubes that can be solved using only those moves. The group which contains all cubes is defined by the set of all moves, while the identity group which only contains the solved cube is defined by the set of no moves. Each phase of the algorithm performs a brute-force search for a progressively more restrictive subgroup until reaching the identity group. The 5 groups used by the algorithm are listed below:
 
 group | move set | 
 :- | :- |
@@ -47,15 +45,26 @@ G0 | U, D, R, L, F, B
 G1 | U2, D2, R, L, F, B
 G2 | U2, D2, R2, L2, F, B
 G3 | U2, D2, R2, L2, F2, B2
-G4 | - -->
+G4 | -
 
-TODO: explanation
+In general it is not trivial to verify whether a given cube is contained within a particular group. However the groups used by Thistletwiate are equivalent to fixing the orientations and positions of certain edge and corner cubies. For example, if we define the orientation of edges to change on U and D quarter-turns, then restricting such turns fixes the orientation of all the edges. Therefore any cube in G1 must have the correct orientation on all its edges, which is trivial to verify.
 
 ### Implementation
 
-TODO: cube model
+#### Cube Model
+
+A cubie is one of the 20 mini-cubes which rotate together on the actual cube. An arbitrary cubie state has a unique orientation and position. Edge cubies can have 1 of 2 orientations and 12 positions, which take 1 and 4 bits to encode respectively. Corner cubies can have 1 of 3 orientations and 8 positions, which take 2 and 3 bits respectively. The entire cube state is represented by 2 64-bit integers, one encoding all 12 5-bit edge states and the other all 8 5-bit corner states in arbitrary order. 
+
+<!--
+
+Moves are represented by 8-bit chars. The right 6 bits are a one-hot encoding of the face the move applies to, and the left 2 bits are flags encoding whether the move is  
+-->
 
 TODO: table generation
+
+<!-- 
+
+-->
 
 TODO: table lookup
 
