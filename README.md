@@ -1,6 +1,10 @@
 # Rubot
 
-Rubot is a blazing fast Rubik's cube solver written in C. Utilizing a highly efficient 1MB lookup table, it delivers instantations solutions with a max of 46 moves and an average of 32 moves.
+Rubot is a blazing fast Rubik's cube solver written in C. It generates a 1.05 MB lookup table to produce solutions in under 1 ms. Guarantees solutions with a max of 46 moves, with an average of 32 moves.
+
+Rubot implements [Thistletwaite's](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Thistlethwaite's_algorithm) algorithm, a major breakthrough which introduced a novel approach using group theory in 1981. This algorithm was selected over later approaches such as [Kociemba's](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Kociemba's_algorithm) algorithm and [Korf's](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Korf's_algorithm) algorithm which produce even fewer moves because those methods either take more time to solve or require significantly larger lookup tables.
+
+This project started as a final project for ECE4670: Digital Systems Design Using Microcontrollers in Fall 2021.
 
 # Installation
 
@@ -15,43 +19,22 @@ D' F' R L' U R L F R2 U2 F L R2 D2 R2 F U2 F R2 B2 D2 B U2 R2 U2 F2 R2 U2 F2 U2 
 ```
 The state is represented as a 54-character string: 6 segments (one per face) of 9 characters (one per tile). The faces are arranged in the order U, L, F, R, B, D, and the tiles in each face are arranged in row-major order. The program is flexible and does not specify a fixed set of characters to use for each color. The graphic below depicts the index of each tile in the string representation.
 
-<center><img alt="cube string encoding" src="cube-encoding.png" width="300"></center>
+You can also optionally pass the following flags to `./rubot` to modify its behavior:
+- `-h` or `--help`: prints the help screen
+<!-- - `-v`: verbose output -->
 
-Alternatively the program also accepts the sequence of moves used to scramble the cube. It does not simply reverse this sequence to provide a solution.
-```
-$ ./rubot L D2 R L\' R\' B F D L\' U\'
-U L D U2 F' B' R D2 R' U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
-```
+## Database Generation
 
-The program can also generate a random sequence of non-redundant moves for scrambling by accepting the number of moves as an integer. It also accepts an optional second parameter to seed the RNG for deterministic results.
+The first time `./rubot` is run it will generate a 1.05 MB database. This will take either minutes or seconds, depending on your hardware. The chart below shows how long each phase took on my Intel Core i7-13700K.
 
-```
-$ ./rubot 15 0
-D' B' L' R B' F' D2 R U' R2 F B2 F2 D' L
-```
-
-Note that the program will generate a 1MB lookup table the first time it is run, which will take a few extra seconds (my Intel Core i7-13700K takes about 17.5 seconds).
-
-<!-- TODO:
-# Performance
-
- -->
-
-# How It Works
-
-This program implements [Thistletwaite's algorithm](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Thistlethwaite's_algorithm) because it provides the optimal compromise between speed and memory. The algorithm divides the solving process into four phases, each with an increasingly restrictive moveset to prevent destroying progress made in a previous phase. The state space of possible cubes in each phase is relatively small, so we can explore it once and store it in a lookup table. Then when presented with a new cube, we simply lookup the next move in the lookup table for each phase until we arrive at the solved cube. This is just a high-level overview of a beautiful group theory idea which should be researched further if interesting to the reader.
-
-<!-- TODO:
-- To achieve maximum performance, we encode cubes into 128-bits. This is critical because generating the lookup table requires exploring approximately 50 million cube states.
-
-- To achieve maximum memory efficiency, we encode two enties per byte in the lookup table. This is possible because the depth cannot exceed 15 for any phase, so it can be encoded into 4 bits.
-
-- other implementation details.
- -->
+phase | database size | database updates | states generated | time
+-: | -: | -: | -: | -: 
+1 | 2048 | 6491 | 68464 | 0.02 s
+2 | 1082565 | 3319998 | 25938961 | 14.3 s
+3 | 352800 | 1965338 | 13069024 | 11.1 s
+4 | 663552 | 1766474 | 8832372 | 7.0 s
 
 # References
-
-Here are some links I found useful while developing this program.
 
 1. https://www.jaapsch.net/puzzles/thistle.htm
 
