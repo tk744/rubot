@@ -1,6 +1,6 @@
 # Rubot
 
-Rubot is a blazing fast Rubik's cube solver written in C. It generates a 1.05 MB lookup table to produce solutions in under 1 ms. Guarantees solutions with a max of 46 moves, with an average of 32 moves.
+Rubot is a blazing fast Rubik's cube solver written in C. It generates a tiny ~1 MB lookup table which can be searched in nanoseconds. Solutions average 32 moves, with a guaranteed max of 46.
 
 Rubot implements [Thistletwaite's](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Thistlethwaite's_algorithm) algorithm, a major breakthrough which introduced a novel approach using group theory in 1981. This algorithm was selected over later approaches such as [Kociemba's](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Kociemba's_algorithm) algorithm and [Korf's](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Korf's_algorithm) algorithm which produce even fewer moves because those methods either take more time to solve or require significantly larger lookup tables.
 
