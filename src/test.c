@@ -18,7 +18,7 @@
 //     // generate data
 //     Move ms_scramble[n], ms_solved[MAX_MOVES];
 //     for (i=0 ; i<s; i++) {
-//         int m = solve(scramble(cubeFactory(), ms_scramble, n), ms_solved);
+//         int m = solve(scramble(solvedCube(), ms_scramble, n), ms_solved);
 //         ds[m]++;
 //     }
 
@@ -47,4 +47,22 @@
 // int main() {
 //     analysis1();
 //     return 0;
+// }
+
+// #include "color.c"
+// #include <stdio.h>
+
+// int main() {
+//     int n = 1524; // todo - shouldn't have to write 10 twice
+//     Move ms_scramble[n];
+//     Cube128 c1 = scramble(solvedCube(), ms_scramble, n);
+//     ColorCube cc = convertCube(c1);
+//     Cube128 c2 = convertColorCube(cc);
+    
+
+
+//     printCube(c1);
+//     printColorCube(cc);
+//     printCube(c2);
+
 // }

@@ -1,12 +1,10 @@
 #include "rank.h"
 #include "solver.h"
 #include "time.h"
-#include "util.h"
+#include "stack.h"
 #include <stdio.h>
 
 /*
-TODO: 52-move algorithm and database overview.
-
 Phase 1: 2^11 = 2048
 Phase 2: 3^7 * 12C4 = 1082565
 Phase 3: 8C4 * (8C2 * 6C2 * 4C2) = 352800
@@ -67,7 +65,7 @@ static int phaseSize(int phase) {
     return (1 <= phase && phase <= 4) ? phase_size[phase-1] : 0;
 }
 
-static int phaseRank(int phase, Cube c) {
+static int phaseRank(int phase, Cube128 c) {
     int i;
     // rank by edge orientation
     if (phase == 1) {
@@ -296,7 +294,7 @@ static int phaseRank(int phase, Cube c) {
     return 0;
 }
 
-static int phaseIndex(int phase, Cube c) {
+static int phaseIndex(int phase, Cube128 c) {
     int i, size = 0;
     for (i=1 ; i<phase ; i++) {
         size += phaseSize(i);
@@ -330,7 +328,7 @@ static void generateDatabase() {
         fflush(stdout);
 
         // create phase root node from goal
-        Node root_node = { cubeFactory(), NOP, 0 };
+        Node root_node = { solvedCube(), NOP, 0 };
         int index = phaseIndex(phase, root_node.cube);
 
         // insert root index into database
@@ -362,7 +360,7 @@ static void generateDatabase() {
                 }
 
                 // create child node
-                Cube cube = applyMove(root_node.cube, m);
+                Cube128 cube = applyMove(root_node.cube, m);
                 Node node = { cube, m, root_node.depth+1 };
                 int index = phaseIndex(phase, cube);
 
@@ -380,7 +378,7 @@ static void generateDatabase() {
     printf("\rDone in %2.1f seconds\n", time);
 }
 
-int solve(Cube c, Move *ms) {
+int solve(Cube128 c, Move *ms) {
     // open database file or generate it if missing
     FILE *fp;
     fp = fopen(DB_FILE, "rb");
@@ -403,7 +401,7 @@ int solve(Cube c, Move *ms) {
             int i = 0, n = phaseMoves(phase, moveset);
             while (i < n) {
                 Move m = moveset[i++];
-                Cube child_cube = applyMove(c, m);
+                Cube128 child_cube = applyMove(c, m);
                 Int4 child_depth = readNibble(fp, phaseIndex(phase, child_cube));
 
                 if (best_move == NOP || child_depth < best_depth) {

@@ -1,27 +1,20 @@
-#include <stdio.h>
 #include "cube.h"
+#include <stdio.h>
 
-/* Returns a new solved ColorCube. */
-ColorCube colorCubeFactory() {
-    ColorCube cc;
-    Face *faces[6] = { &cc.U, &cc.D, &cc.F, &cc.B, &cc.L, &cc.R };
-    FaceMask colors[6] = { U, D, F, B, L, R };
-    
-    int i;
-    for (i=0 ; i<6 ; i++) {
-        Face *f = faces[i];
-        FaceMask color = colors[i];
-        f->C = f->U = f->D = f->R = f->L = f->UL = f->UR = f->DL = f->DR = color;
-    }
+typedef MoveMask Color; // to use same enums
 
-    return cc;
-}
+typedef struct {
+    Color C, U, D, R, L, UR, UL, DR, DL;
+} ColorFace;
 
-/* Returns representation of a cubie from ColorCube `cc` specified by cubie enum. */
-static Int8 getColorCubie(ColorCube cc, CubieEnum ce, int isEdge) {
+typedef struct {
+    ColorFace U, D, F, B, R, L;
+} ColorCube;
+
+static Int8 colorToCubie(ColorCube cc, CubieEnum ce, int isEdge) {
     Int8 permutation, orientation;
     
-    FaceMask colors[3] = {};
+    Color colors[3] = {};
 
     // read colors
     if (isEdge) {
@@ -124,13 +117,26 @@ static Int8 getColorCubie(ColorCube cc, CubieEnum ce, int isEdge) {
     return cubie;
 }
 
-/* Returns color of a square from Cube `c` specified by cubie enum and face enum. */
-static FaceMask getColor(Cube c, CubieEnum ce, int isEdge, FaceMask fm) {
+static Cube128 convertColorCube(ColorCube cc) {
+    Cube128 c = { 0, 0 };
+
+    Int64 i;
+    for(i=0 ; i<NUM_EDGES ; i++) {
+        setCubie(&c.edges, i, colorToCubie(cc, i, 1));
+    }
+    for(i=0 ; i<NUM_CORNERS ; i++) {
+        setCubie(&c.corners, i, colorToCubie(cc, i, 0));
+    }
+
+    return c;
+}
+
+static Color cubieToColor(Cube128 c, CubieEnum ce, int isEdge, Color fm) {
     Int8 cubie = getCubie(isEdge ? c.edges : c.corners, ce);
     Int8 permutation = getPermutation(cubie, isEdge);
     Int8 orientation = getOrientation(cubie, isEdge);
 
-    FaceMask colors[3] = {};
+    Color colors[3] = {};
     int idx = 0;
 
     if (isEdge) {
@@ -303,8 +309,7 @@ static FaceMask getColor(Cube c, CubieEnum ce, int isEdge, FaceMask fm) {
     return colors[idx];
 }
 
-/* Returns ColorCube representation of Cube `c`. */
-ColorCube convertCube(Cube c) {
+static ColorCube convertCube(Cube128 c) {
     ColorCube cc;
     
     // set center cubies
@@ -316,77 +321,61 @@ ColorCube convertCube(Cube c) {
     cc.L.C = L;
     
     // set edge cubies
-    cc.U.D = getColor(c, UF, 1, U);
-    cc.F.U = getColor(c, UF, 1, F);
-    cc.U.U = getColor(c, UB, 1, U);
-    cc.B.U = getColor(c, UB, 1, B);
-    cc.U.R = getColor(c, UR, 1, U);
-    cc.R.U = getColor(c, UR, 1, R);
-    cc.U.L = getColor(c, UL, 1, U);
-    cc.L.U = getColor(c, UL, 1, L);
-    cc.D.U = getColor(c, DF, 1, D);
-    cc.F.D = getColor(c, DF, 1, F);
-    cc.D.D = getColor(c, DB, 1, D);
-    cc.B.D = getColor(c, DB, 1, B);
-    cc.D.R = getColor(c, DR, 1, D);
-    cc.R.D = getColor(c, DR, 1, R);
-    cc.D.L = getColor(c, DL, 1, D);
-    cc.L.D = getColor(c, DL, 1, L);
-    cc.F.R = getColor(c, FR, 1, F);
-    cc.R.L = getColor(c, FR, 1, R);
-    cc.F.L = getColor(c, FL, 1, F);
-    cc.L.R = getColor(c, FL, 1, L);
-    cc.B.L = getColor(c, BR, 1, B);
-    cc.R.R = getColor(c, BR, 1, R);
-    cc.B.R = getColor(c, BL, 1, B);
-    cc.L.L = getColor(c, BL, 1, L);
+    cc.U.D = cubieToColor(c, UF, 1, U);
+    cc.F.U = cubieToColor(c, UF, 1, F);
+    cc.U.U = cubieToColor(c, UB, 1, U);
+    cc.B.U = cubieToColor(c, UB, 1, B);
+    cc.U.R = cubieToColor(c, UR, 1, U);
+    cc.R.U = cubieToColor(c, UR, 1, R);
+    cc.U.L = cubieToColor(c, UL, 1, U);
+    cc.L.U = cubieToColor(c, UL, 1, L);
+    cc.D.U = cubieToColor(c, DF, 1, D);
+    cc.F.D = cubieToColor(c, DF, 1, F);
+    cc.D.D = cubieToColor(c, DB, 1, D);
+    cc.B.D = cubieToColor(c, DB, 1, B);
+    cc.D.R = cubieToColor(c, DR, 1, D);
+    cc.R.D = cubieToColor(c, DR, 1, R);
+    cc.D.L = cubieToColor(c, DL, 1, D);
+    cc.L.D = cubieToColor(c, DL, 1, L);
+    cc.F.R = cubieToColor(c, FR, 1, F);
+    cc.R.L = cubieToColor(c, FR, 1, R);
+    cc.F.L = cubieToColor(c, FL, 1, F);
+    cc.L.R = cubieToColor(c, FL, 1, L);
+    cc.B.L = cubieToColor(c, BR, 1, B);
+    cc.R.R = cubieToColor(c, BR, 1, R);
+    cc.B.R = cubieToColor(c, BL, 1, B);
+    cc.L.L = cubieToColor(c, BL, 1, L);
             
     // set corner cubies
-    cc.U.DR = getColor(c, UFR, 0, U);
-    cc.F.UR = getColor(c, UFR, 0, F);
-    cc.R.UL = getColor(c, UFR, 0, R);
-    cc.U.DL = getColor(c, UFL, 0, U);
-    cc.F.UL = getColor(c, UFL, 0, F);
-    cc.L.UR = getColor(c, UFL, 0, L);
-    cc.U.UR = getColor(c, UBR, 0, U);
-    cc.B.UL = getColor(c, UBR, 0, B);
-    cc.R.UR = getColor(c, UBR, 0, R);
-    cc.U.UL = getColor(c, UBL, 0, U);
-    cc.B.UR = getColor(c, UBL, 0, B);
-    cc.L.UL = getColor(c, UBL, 0, L);
-    cc.D.UR = getColor(c, DFR, 0, D);
-    cc.F.DR = getColor(c, DFR, 0, F);
-    cc.R.DL = getColor(c, DFR, 0, R);
-    cc.D.UL = getColor(c, DFL, 0, D);
-    cc.F.DL = getColor(c, DFL, 0, F);
-    cc.L.DR = getColor(c, DFL, 0, L);
-    cc.D.DR = getColor(c, DBR, 0, D);
-    cc.B.DL = getColor(c, DBR, 0, B);
-    cc.R.DR = getColor(c, DBR, 0, R);
-    cc.D.DL = getColor(c, DBL, 0, D);
-    cc.B.DR = getColor(c, DBL, 0, B);
-    cc.L.DL = getColor(c, DBL, 0, L);
+    cc.U.DR = cubieToColor(c, UFR, 0, U);
+    cc.F.UR = cubieToColor(c, UFR, 0, F);
+    cc.R.UL = cubieToColor(c, UFR, 0, R);
+    cc.U.DL = cubieToColor(c, UFL, 0, U);
+    cc.F.UL = cubieToColor(c, UFL, 0, F);
+    cc.L.UR = cubieToColor(c, UFL, 0, L);
+    cc.U.UR = cubieToColor(c, UBR, 0, U);
+    cc.B.UL = cubieToColor(c, UBR, 0, B);
+    cc.R.UR = cubieToColor(c, UBR, 0, R);
+    cc.U.UL = cubieToColor(c, UBL, 0, U);
+    cc.B.UR = cubieToColor(c, UBL, 0, B);
+    cc.L.UL = cubieToColor(c, UBL, 0, L);
+    cc.D.UR = cubieToColor(c, DFR, 0, D);
+    cc.F.DR = cubieToColor(c, DFR, 0, F);
+    cc.R.DL = cubieToColor(c, DFR, 0, R);
+    cc.D.UL = cubieToColor(c, DFL, 0, D);
+    cc.F.DL = cubieToColor(c, DFL, 0, F);
+    cc.L.DR = cubieToColor(c, DFL, 0, L);
+    cc.D.DR = cubieToColor(c, DBR, 0, D);
+    cc.B.DL = cubieToColor(c, DBR, 0, B);
+    cc.R.DR = cubieToColor(c, DBR, 0, R);
+    cc.D.DL = cubieToColor(c, DBL, 0, D);
+    cc.B.DR = cubieToColor(c, DBL, 0, B);
+    cc.L.DL = cubieToColor(c, DBL, 0, L);
     
     return cc;
 }
 
-/* Returns Cube representation of ColorCube `cc`. */
-Cube convertColorCube(ColorCube cc) {
-    Cube c = { 0, 0 };
-
-    Int64 i;
-    for(i=0 ; i<NUM_EDGES ; i++) {
-        setCubie(&c.edges, i, getColorCubie(cc, i, 1));
-    }
-    for(i=0 ; i<NUM_CORNERS ; i++) {
-        setCubie(&c.corners, i, getColorCubie(cc, i, 0));
-    }
-
-    return c;
-}
-
-/* Print colored square to console. */
-static void printColor(FaceMask color) {
+static void printColor(Color color) {
     if (color & U) {
         printf("\033[0;37m"); // white
     }
@@ -408,9 +397,8 @@ static void printColor(FaceMask color) {
     printf("▣\033[0m");
 }
 
-/* Print ColorCube graphic to console. */
-void printColorCube(ColorCube cc) {
-    Face faces[6] = { cc.U, cc.L, cc.F, cc.R, cc.B, cc.D };
+static void printColorCube(ColorCube cc) {
+    ColorFace faces[6] = { cc.U, cc.L, cc.F, cc.R, cc.B, cc.D };
 
     printf("┌──┤U├──┬──┤L├──┬──┤F├──┬──┤R├──┬──┤B├──┬──┤D├──┐\n");
 
@@ -455,68 +443,19 @@ void printColorCube(ColorCube cc) {
     printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
 }
 
-/* Print Cube representation to console. */
-static void printCubeEncoding(Cube c) {
-    int i;
-    printf("EDGES:   ");
-    for(i=0 ; i<NUM_EDGES ; i++) {
-        Int8 cubie = getCubie(c.edges, i);
-        printf("%2u:%u ", getPermutation(cubie, 1), getOrientation(cubie, 1));
-    }
-    printf("\nCORNERS: ");
-    for(i=0 ; i<NUM_CORNERS ; i++) {
-        Int8 cubie = getCubie(c.corners, i);
-        printf("%2u:%u ", getPermutation(cubie, 0), getOrientation(cubie, 0));
-    }
-    printf("\n");   
-}
-
-/* Print Cube graphic to console. */
-void printCube(Cube c) {
+void printCube(Cube128 c) {
     ColorCube cc = convertCube(c);
     printColorCube(cc);
-    //printCubeEncoding(c);
 }
 
-/* Print single Move to console without terminating characters. */ 
-void printMove(Move m) {
-    if (m & U) {
-        printf("U");
-    }
-    else if (m & D) {
-        printf("D");
-    }
-    else if (m & F) {
-        printf("F");
-    }
-    else if (m & B) {
-        printf("B");
-    }
-    else if (m & R) {
-        printf("R");
-    }
-    else if (m & L) {
-        printf("L");
-    }
-    else {
-        printf("NOP");
-        return;
-    }
-
-    if (m & H) {
-        printf("2");
-    }
-    else if (m & I) {
-        printf("'");
-    }
-}
-
-/* Print list of Moves to console. */
-void printMoves(Move *ms, int n) {
-    printf("[%d]: ", n);
-    while(n-- > 0) {
-        printMove(*ms++);
-        printf(n == 0 ? "" : ", ");
-    }
-    printf("\n");
+int main() {
+    int n = 1524; // todo - shouldn't have to write 10 twice
+    Move ms_scramble[n];
+    Cube128 c1 = scramble(solvedCube(), ms_scramble, n);
+    ColorCube cc = convertCube(c1);
+    Cube128 c2 = convertColorCube(cc);
+    
+    printCube(c1);
+    printColorCube(cc);
+    printCube(c2);
 }
