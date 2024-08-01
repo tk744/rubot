@@ -365,21 +365,20 @@ static int cubeIndex(Cube128 c, int phase) {
 
 static void writeNibble(Int8 *table, int index, Int4 n) {
     Int8 byte = table[index/2];
-    byte &= (index % 2) ? ~0b1111 : ~(0b1111 << 4);
-    byte |= (index % 2) ? n : n << 4;
+    byte &= ~(0b1111 << 4 * (index % 2));
+    byte |= n << 4 * (index % 2);
     table[index/2] = byte;
 }
 
 static Int4 readNibble(const Int8 *table, int index) {
-    Int8 byte = table[index/2];
-    return (index % 2) ? byte & 0b1111 : byte >> 4;
+    return table[index/2] >> 4 * (index % 2) & 0b1111;
 }
 
 static Int4 indexLT(FILE *lt, int index) {
     Int8 byte;
     fseek(lt, index/2, SEEK_SET);
     fread(&byte, 1, 1, lt);
-    return (index % 2) ? byte & 0b1111 : byte >> 4;
+    return byte >> 4 * (index % 2) & 0b1111;
 }
 
 static int buildLT(FILE *lt) {
