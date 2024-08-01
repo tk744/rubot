@@ -487,17 +487,3 @@ void printCube(Cube128 c) {
     ColorCube cc = encodeCube(c);
     printColorCube(cc);
 }
-
-int main() {
-    int n = 200;
-    Move ms_scramble[n];
-    Cube128 c1 = scramble(solvedCube(), ms_scramble, n);
-    ColorCube cc1 = encodeCube(c1);
-    Cube128 c2 = decodeCube(cc1);
-    
-    printCube(c1);
-    printColorCube(cc1);
-    printCube(c2);
-
-    return !areEqual(c1, c2);
-}

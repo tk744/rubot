@@ -94,21 +94,25 @@ static Cube128 parseInput(int argc, char *argv[]) {
     return c;
 }
 
-// int main(int argc, char *argv[]) {
-//     // get cube state from arguments
-//     Cube128 c = parseInput(argc, argv);
+int main(int argc, char *argv[]) {
+    // get cube state from arguments
+    Cube128 c = parseInput(argc, argv);
 
-//     // print cube state
-//     printf("\nINITIAL STATE:\n");
-//     printCube(c);
+    // print cube state
+    printf("\nINITIAL STATE:\n");
+    printCube(c);
 
-//     // find solution move sequence
-//     Move ms[MAX_MOVES];
-//     int n = solve(c, ms);
+    // find solution move sequence
+    Move ms[MAX_MOVES];
+    int n = solve(c, ms);
 
-//     // print solution move sequence
-//     printf("\nSOLUTION:\n");
-//     printMoves(ms, n);
+    // print solution move sequence
+    printf("\nSOLUTION:\n");
+    printMoves(ms, n);
 
-//     return 0;
-// }
+    printf("\n");
+    c = applyMoves(c, ms, n);
+    printCube(c);
+
+    return 0;
+}
