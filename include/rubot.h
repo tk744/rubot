@@ -24,13 +24,13 @@ typedef struct {
 
 Cube128 cubeSolved();
 
-int initFromString(Cube128 *c, char cs[54]);
+int parseCube(Cube128 *c, char *str);
+
+int parseMove(Move *m, char *str);
 
 int solve(Cube128 c, Move *ms);
 
 void setRandomMoves(Move *ms, int n);
-
-void setRandomMovesSeeded(Move *ms, int n, unsigned int seed);
 
 Cube128 applyMove(Cube128 c, Move m);
 

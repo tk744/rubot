@@ -1,5 +1,4 @@
 #include "rubot.h"
-#include <stdio.h>
 
 #define CUBIE_BITS 5
 
@@ -128,16 +127,11 @@ static Move randomMove(Move exclude) {
     return m;
 }
 
-void setRandomMovesSeeded(Move *ms, int n, unsigned int seed) {
-    srand(seed);
+void setRandomMoves(Move *ms, int n) {
     int i;
     for(i=0 ; i<n ; i++) {
         *(ms+i) = randomMove(i == 0 ? NOP : *(ms+i-1));
     }
-}
-
-void setRandomMoves(Move *ms, int n) {
-    setRandomMovesSeeded(ms, n, time(NULL));
 }
 
 Cube128 scramble(Cube128 c, Move *ms, int n) {
@@ -178,45 +172,4 @@ void setOrientation(Int8 *cubie, int isEdge, Int8 orientation) {
 
 int areEqual(Cube128 c1, Cube128 c2) {
     return (c1.edges == c2.edges && c1.corners == c2.corners);
-}
-
-void printMove(Move m) {
-    if (m & U) {
-        printf("U");
-    }
-    else if (m & D) {
-        printf("D");
-    }
-    else if (m & F) {
-        printf("F");
-    }
-    else if (m & B) {
-        printf("B");
-    }
-    else if (m & R) {
-        printf("R");
-    }
-    else if (m & L) {
-        printf("L");
-    }
-    else {
-        printf("NOP");
-        return;
-    }
-
-    if (m & H) {
-        printf("2");
-    }
-    else if (m & I) {
-        printf("'");
-    }
-}
-
-void printMoves(Move *ms, int n) {
-    printf("[%d]: ", n);
-    while(n-- > 0) {
-        printMove(*ms++);
-        printf(n == 0 ? "" : ", ");
-    }
-    printf("\n");
 }

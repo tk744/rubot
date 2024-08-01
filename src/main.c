@@ -1,118 +1,82 @@
 #include "rubot.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-static Move parseMove(char *str) {
-    Move m = NOP;
-    
-    int i;
-    for (i=0; *str != '\0'; i++, str++) {
-        // either U, D, F, B, R, L
-        if (i == 0) {
-            if (*str == 'U') {
-                m |= U;
-            }
-            else if (*str == 'D') {
-                m |= D;
-            }
-            else if (*str == 'F') {
-                m |= F;
-            }
-            else if (*str == 'B') {
-                m |= B;
-            }
-            else if (*str == 'R') {
-                m |= R;
-            }
-            else if (*str == 'L') {
-                m |= L;
+int main(int argc, char *argv[]) {
+    // 0 args: help
+    if (argc == 1 || !strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")) {
+        printf("Usage: %s [n <s>|ms|cs]\n", argv[0]);
+        printf("    n: (int) get n random moves, optionally seed with s\n");
+        printf("   ms: (str) whitespace-seperated list of moves\n");
+        printf("   cs: (str) 54-length string of colors\n");
+        return 0;
+    }
+
+    // 1-2 int args: get shuffled moves
+    int n, seed;
+    if (sscanf(argv[1], "%i", &n)) {
+        if (argc == 2) {
+            srand(time(NULL));
+        }
+        else if (argc == 3) {
+            if (sscanf(argv[2], "%i", &seed)) {
+                srand(seed);
             }
             else {
-                m = NOP;
-                break;
+                printf("ERROR: Invalid seed. Expected integer, recieved '%s'.\n", argv[2]);
+                return -1;
             }
         }
-        // either ', 2
-        else if (i == 1) {
-            if (*str == '\'') {
-                m |= I;
-            }
-            else if (*str == '2') {
-                m |= H;
-            }
-            else if (*str != ',') {
-                m = NOP;
-                break;
-            }
+        else {
+            printf("ERROR: Too many integer arguments. Expected 1 or 2, recieved %i.\n", argc-1);
+            return -1;
         }
-        // error if not seperator
-        else if (*str != ',') {
-            m = NOP;
-            break;
-        }
-    }
 
-    return m;
-}
-
-static Cube128 parseInput(int argc, char *argv[]) {
-    Cube128 c = cubeSolved();
-
-    // no passed args
-    if (argc == 1) {
-        return c;
-    }
-
-    // help
-    if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-help")) {
-        printf("Usage: %s [n|ms]\n", argv[0]);
-        printf("    n: (int) number of random scramble moves\n");
-        printf("   ms: (str) sequence of scramble moves\n");
-        return c;
-    }
-
-    // passed int
-    int n;
-    if (sscanf(argv[1], "%i", &n) == 1) {
         Move ms[n];
         setRandomMoves(ms, n);
         printMoves(ms, n);
-        c = applyMoves(c, ms, n);
+        return 0;
     }
-    // passed move sequence
-    else {
+
+    // 1 string arg: get solution moves from initial colors
+    int arg1_len = strlen(argv[1]);
+    if (argc == 2 && arg1_len != 1 && arg1_len != 2) {
+        if (arg1_len == 54) {
+            Cube128 c = cubeSolved();
+            if (parseCube(&c, argv[1])) {
+                Move ms[MAX_MOVES];
+                int n = solve(c, ms);
+                printMoves(ms, n);
+            }
+            else {
+                printf("ERROR: Invalid color string '%s'.\n", argv[1]);
+                return -1;
+            }
+        }
+        else {
+            printf("ERROR: Invalid color string length. Expected 54, recieved %i.\n", arg1_len);
+            return -1;
+        }
+        return 0;
+    }
+
+    // 1+ string args: get solution moves from initial move
+    if (argc > 1) {
+        Cube128 c = cubeSolved();
+        Move m;
         while (--argc > 0) {
-            Move m = parseMove(*(++argv));
-            if (m == NOP) {
-                printf("Skipping invalid move: %s\n", *argv);
+            if ((parseMove(&m, *(++argv))) == -1) {
+                printf("ERROR: Invalid move '%s'.\n", *argv);
+                return -1;
             }
             else {
                 c = applyMove(c, m);
             }
         }
+        Move ms[MAX_MOVES];
+        int n = solve(c, ms);
+        printMoves(ms, n);
+        return 0;
     }
-
-    return c;
-}
-
-int main(int argc, char *argv[]) {
-    // get cube state from arguments
-    Cube128 c = parseInput(argc, argv);
-
-    // print cube state
-    printf("\nINITIAL STATE:\n");
-    printCube(c);
-
-    // find solution move sequence
-    Move ms[MAX_MOVES];
-    int n = solve(c, ms);
-
-    // print solution move sequence
-    printf("\nSOLUTION:\n");
-    printMoves(ms, n);
-
-    printf("\n");
-    c = applyMoves(c, ms, n);
-    printCube(c);
-
-    return 0;
 }

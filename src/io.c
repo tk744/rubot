@@ -434,46 +434,7 @@ static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, ch
     else if (x == cD) {
         return D;
     }
-    else {
-        return -1;
-    }
-}
-
-int initFromString(Cube128 *c, char cs[54]) {
-    ColorCube cc;
-    int i;
-    for (i=0 ; i<54 ; i++) {
-        ColorFace *face;
-        switch (i/9) {
-            case 0: face = &cc.U; break;
-            case 1: face = &cc.L; break;
-            case 2: face = &cc.F; break;
-            case 3: face = &cc.R; break;
-            case 4: face = &cc.B; break;
-            case 5: face = &cc.D; break;
-        }
-        
-        Color *color;
-        switch (i%9) {
-            case 0: color = &face->UL; break;
-            case 1: color = &face->U; break;
-            case 2: color = &face->UR; break;
-            case 3: color = &face->L; break;
-            case 4: color = &face->C; break;
-            case 5: color = &face->R; break;
-            case 6: color = &face->DL; break;
-            case 7: color = &face->D; break;
-            case 8: color = &face->DR; break;
-        }
-
-        *color = charToColor(*(cs+i), *(cs+4), *(cs+13), *(cs+22), *(cs+31), *(cs+40), *(cs+49));
-        if (*color == -1) {
-            printf("Invalid color %c in position %d\n", *(cs+i), i);
-            return -1;
-        }
-    }
-
-    *c = encodeCube(cc);
+    return -1;
 }
 
 static void printColor(Color color) {
@@ -547,4 +508,122 @@ static void printColorCube(ColorCube cc) {
 void printCube(Cube128 c) {
     ColorCube cc = decodeCube(c);
     printColorCube(cc);
+}
+
+void printMove(Move m) {
+    if (m & U) {
+        printf("U");
+    }
+    else if (m & D) {
+        printf("D");
+    }
+    else if (m & F) {
+        printf("F");
+    }
+    else if (m & B) {
+        printf("B");
+    }
+    else if (m & R) {
+        printf("R");
+    }
+    else if (m & L) {
+        printf("L");
+    }
+    else {
+        printf("NOP");
+        return;
+    }
+
+    if (m & H) {
+        printf("2");
+    }
+    else if (m & I) {
+        printf("'");
+    }
+}
+
+void printMoves(Move *ms, int n) {
+    // printf("[%d]: ", n);
+    while(n-- > 0) {
+        printMove(*ms++);
+        printf(n == 0 ? "" : " ");
+    }
+    printf("\n");
+}
+
+int parseCube(Cube128 *c, char *str) {
+    ColorCube cc;
+    int i;
+    for (i=0 ; i<54 ; i++) {
+        ColorFace *face;
+        switch (i/9) {
+            case 0: face = &cc.U; break;
+            case 1: face = &cc.L; break;
+            case 2: face = &cc.F; break;
+            case 3: face = &cc.R; break;
+            case 4: face = &cc.B; break;
+            case 5: face = &cc.D; break;
+        }
+        
+        Color *color;
+        switch (i%9) {
+            case 0: color = &face->UL; break;
+            case 1: color = &face->U; break;
+            case 2: color = &face->UR; break;
+            case 3: color = &face->L; break;
+            case 4: color = &face->C; break;
+            case 5: color = &face->R; break;
+            case 6: color = &face->DL; break;
+            case 7: color = &face->D; break;
+            case 8: color = &face->DR; break;
+        }
+
+        *color = charToColor(*(str+i), *(str+4), *(str+13), *(str+22), *(str+31), *(str+40), *(str+49));
+        if (*color == -1) {
+            printf("Invalid color %c in position %d\n", *(str+i), i);
+            return -1;
+        }
+    }
+
+    *c = encodeCube(cc);
+    return 0;
+}
+
+int parseMove(Move *m, char *str) {
+    Move mm = 0;
+
+    // check first character
+    switch (*str++) {
+        case 'U': mm |= U; break;
+        case 'D': mm |= D; break;
+        case 'F': mm |= F; break;
+        case 'B': mm |= B; break;
+        case 'R': mm |= R; break;
+        case 'L': mm |= L; break;
+        default: 
+            return -1;
+    }
+
+    // check second character
+    if (*str == '\0') {
+        *m = mm;
+        return 0;
+    }
+    else if (*str == '\'') {
+        mm |= I;
+    }
+    else if (*str == '2') {
+        mm |= H;
+    }
+    else {
+        return -1;
+    }
+    
+    // check for trailing characters
+    if (*(str+1) != '\0') {
+        return -1;
+    }
+
+    *m = mm;
+    return 0;
 }
