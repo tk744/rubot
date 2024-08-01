@@ -20,159 +20,7 @@ static Int8 cornerTetrad(CubieEnum ce) {
     }
 }
 
-static Color encodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color f) {
-    Int8 cubie = getCubie(isEdge ? c.edges : c.corners, ce);
-    Int8 permutation = getPermutation(cubie, isEdge);
-    Int8 orientation = getOrientation(cubie, isEdge);
-
-    Color colors[3] = {};
-    int idx = 0;
-
-    if (isEdge) {
-        // set color array
-        if (permutation == UF) {
-            colors[0] = U; colors[1] = F;
-        }
-        else if (permutation == UB) {
-            colors[0] = U; colors[1] = B;
-        }
-        else if (permutation == UR) {
-            colors[0] = U; colors[1] = R;
-        }
-        else if (permutation == UL) {
-            colors[0] = U; colors[1] = L;
-        }
-        else if (permutation == DF) {
-            colors[0] = D; colors[1] = F;
-        }
-        else if (permutation == DB) {
-            colors[0] = D; colors[1] = B;
-        }
-        else if (permutation == DR) {
-            colors[0] = D; colors[1] = R;
-        }
-        else if (permutation == DL) {
-            colors[0] = D; colors[1] = L;
-        }
-        else if (permutation == FR) {
-            colors[0] = F; colors[1] = R;
-        }
-        else if (permutation == FL) {
-            colors[0] = F; colors[1] = L;
-        }
-        else if (permutation == BR) {
-            colors[0] = B; colors[1] = R;
-        }
-        else if (permutation == BL) {
-            colors[0] = B; colors[1] = L;
-        }
-
-        // set color index
-        idx = (colors[1] & (L|R)) ? !orientation : orientation;
-        if ((f & (F|B)) || ((f & (U|D)) && (ce == UR || ce == UL || ce == DR || ce == DL))) {
-            idx = !idx;
-        }
-    }
-    else {
-        // set color array
-        if (permutation == UFR) {
-            colors[0] = F; colors[1] = R; colors[2] = U;
-        }
-        else if (permutation == UFL) {
-            colors[0] = F; colors[1] = L; colors[2] = U;
-        }
-        else if (permutation == UBR) {
-            colors[0] = B; colors[1] = R; colors[2] = U;
-        }
-        else if (permutation == UBL) {
-            colors[0] = B; colors[1] = L; colors[2] = U;
-        }
-        else if (permutation == DFR) {
-            colors[0] = F; colors[1] = R; colors[2] = D;
-        }
-        else if (permutation == DFL) {
-            colors[0] = F; colors[1] = L; colors[2] = D;
-        }
-        else if (permutation == DBR) {
-            colors[0] = B; colors[1] = R; colors[2] = D;
-        }
-        else if (permutation == DBL) {
-            colors[0] = B; colors[1] = L; colors[2] = D;
-        }
-
-        // set color index
-        Int8 true_tetrad = cornerTetrad(permutation);
-        Int8 curr_tetrad = cornerTetrad(ce);
-
-        if (f & (F|B)) {
-            if (orientation == 0) {
-                idx = 0;
-            }
-            else if (orientation == 1) {
-                if (curr_tetrad == 0) {
-                    idx = (true_tetrad == curr_tetrad) ? 1 : 2;
-                }
-                else {
-                    idx = (true_tetrad == curr_tetrad) ? 2 : 1;
-                }
-            }
-            else if (orientation == 2) {
-                if (curr_tetrad == 1) {
-                    idx = (true_tetrad == curr_tetrad) ? 1 : 2;
-                }
-                else {
-                    idx = (true_tetrad == curr_tetrad) ? 2 : 1;
-                }
-            }
-        }
-        else if (f & (R|L)) {
-            if (orientation == 0) {
-                idx = (true_tetrad == curr_tetrad) ? 1 : 2;
-            }
-            else if (orientation == 1) {
-                if (curr_tetrad == 0) {
-                    idx = (true_tetrad == curr_tetrad) ? 2 : 1;
-                }
-                else {
-                    idx = 0;
-                }
-            }
-            else if (orientation == 2) {
-                if (curr_tetrad == 1) {
-                    idx = (true_tetrad == curr_tetrad) ? 2 : 1;
-                }
-                else {
-                    idx = 0;
-                }
-            }
-        }
-        else if (f & (U|D)) {
-            if (orientation == 0) {
-                idx = (true_tetrad == curr_tetrad) ? 2 : 1;
-            }
-            else if (orientation == 1) {
-                if (curr_tetrad == 0) {
-                    idx = 0;
-                }
-                else {
-                    idx = (true_tetrad == curr_tetrad) ? 1 : 2;
-                }
-            }
-            else if (orientation == 2) {
-                if (curr_tetrad == 1) {
-                    idx = 0;
-                }
-                else {
-                    idx = (true_tetrad == curr_tetrad) ? 1 : 2;
-                }
-            }
-        }
-    }
-
-    return colors[idx];
-}
-
-static Int8 decodeCubie(ColorCube cc, CubieEnum ce, int isEdge) {
+static Int8 encodeCubie(ColorCube cc, CubieEnum ce, int isEdge) {
     Int8 permutation, orientation;
     
     Color colors[3] = {};
@@ -335,7 +183,173 @@ static Int8 decodeCubie(ColorCube cc, CubieEnum ce, int isEdge) {
     return cubie;
 }
 
-static ColorCube encodeCube(Cube128 c) {
+static Color decodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color f) {
+    Int8 cubie = getCubie(isEdge ? c.edges : c.corners, ce);
+    Int8 permutation = getPermutation(cubie, isEdge);
+    Int8 orientation = getOrientation(cubie, isEdge);
+
+    Color colors[3] = {};
+    int idx = 0;
+
+    if (isEdge) {
+        // set color array
+        if (permutation == UF) {
+            colors[0] = U; colors[1] = F;
+        }
+        else if (permutation == UB) {
+            colors[0] = U; colors[1] = B;
+        }
+        else if (permutation == UR) {
+            colors[0] = U; colors[1] = R;
+        }
+        else if (permutation == UL) {
+            colors[0] = U; colors[1] = L;
+        }
+        else if (permutation == DF) {
+            colors[0] = D; colors[1] = F;
+        }
+        else if (permutation == DB) {
+            colors[0] = D; colors[1] = B;
+        }
+        else if (permutation == DR) {
+            colors[0] = D; colors[1] = R;
+        }
+        else if (permutation == DL) {
+            colors[0] = D; colors[1] = L;
+        }
+        else if (permutation == FR) {
+            colors[0] = F; colors[1] = R;
+        }
+        else if (permutation == FL) {
+            colors[0] = F; colors[1] = L;
+        }
+        else if (permutation == BR) {
+            colors[0] = B; colors[1] = R;
+        }
+        else if (permutation == BL) {
+            colors[0] = B; colors[1] = L;
+        }
+
+        // set color index
+        idx = (colors[1] & (L|R)) ? !orientation : orientation;
+        if ((f & (F|B)) || ((f & (U|D)) && (ce == UR || ce == UL || ce == DR || ce == DL))) {
+            idx = !idx;
+        }
+    }
+    else {
+        // set color array
+        if (permutation == UFR) {
+            colors[0] = F; colors[1] = R; colors[2] = U;
+        }
+        else if (permutation == UFL) {
+            colors[0] = F; colors[1] = L; colors[2] = U;
+        }
+        else if (permutation == UBR) {
+            colors[0] = B; colors[1] = R; colors[2] = U;
+        }
+        else if (permutation == UBL) {
+            colors[0] = B; colors[1] = L; colors[2] = U;
+        }
+        else if (permutation == DFR) {
+            colors[0] = F; colors[1] = R; colors[2] = D;
+        }
+        else if (permutation == DFL) {
+            colors[0] = F; colors[1] = L; colors[2] = D;
+        }
+        else if (permutation == DBR) {
+            colors[0] = B; colors[1] = R; colors[2] = D;
+        }
+        else if (permutation == DBL) {
+            colors[0] = B; colors[1] = L; colors[2] = D;
+        }
+
+        // set color index
+        Int8 true_tetrad = cornerTetrad(permutation);
+        Int8 curr_tetrad = cornerTetrad(ce);
+
+        if (f & (F|B)) {
+            if (orientation == 0) {
+                idx = 0;
+            }
+            else if (orientation == 1) {
+                if (curr_tetrad == 0) {
+                    idx = (true_tetrad == curr_tetrad) ? 1 : 2;
+                }
+                else {
+                    idx = (true_tetrad == curr_tetrad) ? 2 : 1;
+                }
+            }
+            else if (orientation == 2) {
+                if (curr_tetrad == 1) {
+                    idx = (true_tetrad == curr_tetrad) ? 1 : 2;
+                }
+                else {
+                    idx = (true_tetrad == curr_tetrad) ? 2 : 1;
+                }
+            }
+        }
+        else if (f & (R|L)) {
+            if (orientation == 0) {
+                idx = (true_tetrad == curr_tetrad) ? 1 : 2;
+            }
+            else if (orientation == 1) {
+                if (curr_tetrad == 0) {
+                    idx = (true_tetrad == curr_tetrad) ? 2 : 1;
+                }
+                else {
+                    idx = 0;
+                }
+            }
+            else if (orientation == 2) {
+                if (curr_tetrad == 1) {
+                    idx = (true_tetrad == curr_tetrad) ? 2 : 1;
+                }
+                else {
+                    idx = 0;
+                }
+            }
+        }
+        else if (f & (U|D)) {
+            if (orientation == 0) {
+                idx = (true_tetrad == curr_tetrad) ? 2 : 1;
+            }
+            else if (orientation == 1) {
+                if (curr_tetrad == 0) {
+                    idx = 0;
+                }
+                else {
+                    idx = (true_tetrad == curr_tetrad) ? 1 : 2;
+                }
+            }
+            else if (orientation == 2) {
+                if (curr_tetrad == 1) {
+                    idx = 0;
+                }
+                else {
+                    idx = (true_tetrad == curr_tetrad) ? 1 : 2;
+                }
+            }
+        }
+    }
+
+    return colors[idx];
+}
+
+static Cube128 encodeCube(ColorCube cc) {
+    Cube128 c = { 0, 0 };
+
+    Int64 i;
+    for(i=0 ; i<NUM_EDGES ; i++) {
+        setCubie(&c.edges, i, encodeCubie(cc, i, 1));
+    }
+    for(i=0 ; i<NUM_CORNERS ; i++) {
+        setCubie(&c.corners, i, encodeCubie(cc, i, 0));
+    }
+
+    return c;
+}
+
+static ColorCube decodeCube(Cube128 c) {
     ColorCube cc;
     
     // set center cubies
@@ -347,72 +361,119 @@ static ColorCube encodeCube(Cube128 c) {
     cc.L.C = L;
     
     // set edge cubies
-    cc.U.D = encodeCubie(c, UF, 1, U);
-    cc.F.U = encodeCubie(c, UF, 1, F);
-    cc.U.U = encodeCubie(c, UB, 1, U);
-    cc.B.U = encodeCubie(c, UB, 1, B);
-    cc.U.R = encodeCubie(c, UR, 1, U);
-    cc.R.U = encodeCubie(c, UR, 1, R);
-    cc.U.L = encodeCubie(c, UL, 1, U);
-    cc.L.U = encodeCubie(c, UL, 1, L);
-    cc.D.U = encodeCubie(c, DF, 1, D);
-    cc.F.D = encodeCubie(c, DF, 1, F);
-    cc.D.D = encodeCubie(c, DB, 1, D);
-    cc.B.D = encodeCubie(c, DB, 1, B);
-    cc.D.R = encodeCubie(c, DR, 1, D);
-    cc.R.D = encodeCubie(c, DR, 1, R);
-    cc.D.L = encodeCubie(c, DL, 1, D);
-    cc.L.D = encodeCubie(c, DL, 1, L);
-    cc.F.R = encodeCubie(c, FR, 1, F);
-    cc.R.L = encodeCubie(c, FR, 1, R);
-    cc.F.L = encodeCubie(c, FL, 1, F);
-    cc.L.R = encodeCubie(c, FL, 1, L);
-    cc.B.L = encodeCubie(c, BR, 1, B);
-    cc.R.R = encodeCubie(c, BR, 1, R);
-    cc.B.R = encodeCubie(c, BL, 1, B);
-    cc.L.L = encodeCubie(c, BL, 1, L);
+    cc.U.D = decodeCubie(c, UF, 1, U);
+    cc.F.U = decodeCubie(c, UF, 1, F);
+    cc.U.U = decodeCubie(c, UB, 1, U);
+    cc.B.U = decodeCubie(c, UB, 1, B);
+    cc.U.R = decodeCubie(c, UR, 1, U);
+    cc.R.U = decodeCubie(c, UR, 1, R);
+    cc.U.L = decodeCubie(c, UL, 1, U);
+    cc.L.U = decodeCubie(c, UL, 1, L);
+    cc.D.U = decodeCubie(c, DF, 1, D);
+    cc.F.D = decodeCubie(c, DF, 1, F);
+    cc.D.D = decodeCubie(c, DB, 1, D);
+    cc.B.D = decodeCubie(c, DB, 1, B);
+    cc.D.R = decodeCubie(c, DR, 1, D);
+    cc.R.D = decodeCubie(c, DR, 1, R);
+    cc.D.L = decodeCubie(c, DL, 1, D);
+    cc.L.D = decodeCubie(c, DL, 1, L);
+    cc.F.R = decodeCubie(c, FR, 1, F);
+    cc.R.L = decodeCubie(c, FR, 1, R);
+    cc.F.L = decodeCubie(c, FL, 1, F);
+    cc.L.R = decodeCubie(c, FL, 1, L);
+    cc.B.L = decodeCubie(c, BR, 1, B);
+    cc.R.R = decodeCubie(c, BR, 1, R);
+    cc.B.R = decodeCubie(c, BL, 1, B);
+    cc.L.L = decodeCubie(c, BL, 1, L);
             
     // set corner cubies
-    cc.U.DR = encodeCubie(c, UFR, 0, U);
-    cc.F.UR = encodeCubie(c, UFR, 0, F);
-    cc.R.UL = encodeCubie(c, UFR, 0, R);
-    cc.U.DL = encodeCubie(c, UFL, 0, U);
-    cc.F.UL = encodeCubie(c, UFL, 0, F);
-    cc.L.UR = encodeCubie(c, UFL, 0, L);
-    cc.U.UR = encodeCubie(c, UBR, 0, U);
-    cc.B.UL = encodeCubie(c, UBR, 0, B);
-    cc.R.UR = encodeCubie(c, UBR, 0, R);
-    cc.U.UL = encodeCubie(c, UBL, 0, U);
-    cc.B.UR = encodeCubie(c, UBL, 0, B);
-    cc.L.UL = encodeCubie(c, UBL, 0, L);
-    cc.D.UR = encodeCubie(c, DFR, 0, D);
-    cc.F.DR = encodeCubie(c, DFR, 0, F);
-    cc.R.DL = encodeCubie(c, DFR, 0, R);
-    cc.D.UL = encodeCubie(c, DFL, 0, D);
-    cc.F.DL = encodeCubie(c, DFL, 0, F);
-    cc.L.DR = encodeCubie(c, DFL, 0, L);
-    cc.D.DR = encodeCubie(c, DBR, 0, D);
-    cc.B.DL = encodeCubie(c, DBR, 0, B);
-    cc.R.DR = encodeCubie(c, DBR, 0, R);
-    cc.D.DL = encodeCubie(c, DBL, 0, D);
-    cc.B.DR = encodeCubie(c, DBL, 0, B);
-    cc.L.DL = encodeCubie(c, DBL, 0, L);
+    cc.U.DR = decodeCubie(c, UFR, 0, U);
+    cc.F.UR = decodeCubie(c, UFR, 0, F);
+    cc.R.UL = decodeCubie(c, UFR, 0, R);
+    cc.U.DL = decodeCubie(c, UFL, 0, U);
+    cc.F.UL = decodeCubie(c, UFL, 0, F);
+    cc.L.UR = decodeCubie(c, UFL, 0, L);
+    cc.U.UR = decodeCubie(c, UBR, 0, U);
+    cc.B.UL = decodeCubie(c, UBR, 0, B);
+    cc.R.UR = decodeCubie(c, UBR, 0, R);
+    cc.U.UL = decodeCubie(c, UBL, 0, U);
+    cc.B.UR = decodeCubie(c, UBL, 0, B);
+    cc.L.UL = decodeCubie(c, UBL, 0, L);
+    cc.D.UR = decodeCubie(c, DFR, 0, D);
+    cc.F.DR = decodeCubie(c, DFR, 0, F);
+    cc.R.DL = decodeCubie(c, DFR, 0, R);
+    cc.D.UL = decodeCubie(c, DFL, 0, D);
+    cc.F.DL = decodeCubie(c, DFL, 0, F);
+    cc.L.DR = decodeCubie(c, DFL, 0, L);
+    cc.D.DR = decodeCubie(c, DBR, 0, D);
+    cc.B.DL = decodeCubie(c, DBR, 0, B);
+    cc.R.DR = decodeCubie(c, DBR, 0, R);
+    cc.D.DL = decodeCubie(c, DBL, 0, D);
+    cc.B.DR = decodeCubie(c, DBL, 0, B);
+    cc.L.DL = decodeCubie(c, DBL, 0, L);
     
     return cc;
 }
 
-static Cube128 decodeCube(ColorCube cc) {
-    Cube128 c = { 0, 0 };
-
-    Int64 i;
-    for(i=0 ; i<NUM_EDGES ; i++) {
-        setCubie(&c.edges, i, decodeCubie(cc, i, 1));
+static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, char cD) {
+    if (x == cU) {
+        return U;
     }
-    for(i=0 ; i<NUM_CORNERS ; i++) {
-        setCubie(&c.corners, i, decodeCubie(cc, i, 0));
+    else if (x == cL) {
+        return L;
+    }
+    else if (x == cF) {
+        return F;
+    }
+    else if (x == cR) {
+        return R;
+    }
+    else if (x == cB) {
+        return B;
+    }
+    else if (x == cD) {
+        return D;
+    }
+    else {
+        return -1;
+    }
+}
+
+int initFromString(Cube128 *c, char cs[54]) {
+    ColorCube cc;
+    int i;
+    for (i=0 ; i<54 ; i++) {
+        ColorFace *face;
+        switch (i/9) {
+            case 0: face = &cc.U; break;
+            case 1: face = &cc.L; break;
+            case 2: face = &cc.F; break;
+            case 3: face = &cc.R; break;
+            case 4: face = &cc.B; break;
+            case 5: face = &cc.D; break;
+        }
+        
+        Color *color;
+        switch (i%9) {
+            case 0: color = &face->UL; break;
+            case 1: color = &face->U; break;
+            case 2: color = &face->UR; break;
+            case 3: color = &face->L; break;
+            case 4: color = &face->C; break;
+            case 5: color = &face->R; break;
+            case 6: color = &face->DL; break;
+            case 7: color = &face->D; break;
+            case 8: color = &face->DR; break;
+        }
+
+        *color = charToColor(*(cs+i), *(cs+4), *(cs+13), *(cs+22), *(cs+31), *(cs+40), *(cs+49));
+        if (*color == -1) {
+            printf("Invalid color %c in position %d\n", *(cs+i), i);
+            return -1;
+        }
     }
 
-    return c;
+    *c = encodeCube(cc);
 }
 
 static void printColor(Color color) {
@@ -484,6 +545,6 @@ static void printColorCube(ColorCube cc) {
 }
 
 void printCube(Cube128 c) {
-    ColorCube cc = encodeCube(c);
+    ColorCube cc = decodeCube(c);
     printColorCube(cc);
 }

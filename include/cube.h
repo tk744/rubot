@@ -21,11 +21,9 @@ typedef struct {
     Int64 corners;
 } Cube128;
 
-/* Identity constructor */
 Cube128 cubeSolved();
 
-/* Initial state constructor */
-Cube128 cube();
+int initFromString(Cube128 *c, char cs[54]);
 
 void setRandomMoves(Move *ms, int n);
 
