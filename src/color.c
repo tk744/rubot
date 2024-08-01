@@ -1,7 +1,7 @@
 #include "cube.h"
 #include <stdio.h>
 
-typedef MoveMask Color; // to reuse cubie enums
+typedef Move Color; // to reuse cubie enums
 
 typedef struct {
     Color C, U, D, R, L, UR, UL, DR, DL;
@@ -20,7 +20,7 @@ static Int8 cornerTetrad(CubieEnum ce) {
     }
 }
 
-static Color encodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color fm) {
+static Color encodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color f) {
     Int8 cubie = getCubie(isEdge ? c.edges : c.corners, ce);
     Int8 permutation = getPermutation(cubie, isEdge);
     Int8 orientation = getOrientation(cubie, isEdge);
@@ -69,7 +69,7 @@ static Color encodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color fm) {
 
         // set color index
         idx = (colors[1] & (L|R)) ? !orientation : orientation;
-        if ((fm & (F|B)) || ((fm & (U|D)) && (ce == UR || ce == UL || ce == DR || ce == DL))) {
+        if ((f & (F|B)) || ((f & (U|D)) && (ce == UR || ce == UL || ce == DR || ce == DL))) {
             idx = !idx;
         }
     }
@@ -104,7 +104,7 @@ static Color encodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color fm) {
         Int8 true_tetrad = cornerTetrad(permutation);
         Int8 curr_tetrad = cornerTetrad(ce);
 
-        if (fm & (F|B)) {
+        if (f & (F|B)) {
             if (orientation == 0) {
                 idx = 0;
             }
@@ -125,7 +125,7 @@ static Color encodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color fm) {
                 }
             }
         }
-        else if (fm & (R|L)) {
+        else if (f & (R|L)) {
             if (orientation == 0) {
                 idx = (true_tetrad == curr_tetrad) ? 1 : 2;
             }
@@ -146,7 +146,7 @@ static Color encodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color fm) {
                 }
             }
         }
-        else if (fm & (U|D)) {
+        else if (f & (U|D)) {
             if (orientation == 0) {
                 idx = (true_tetrad == curr_tetrad) ? 2 : 1;
             }

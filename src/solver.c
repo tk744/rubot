@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define LUT_FILE "LUT"
+#define BIN_FILE "4PHASE.bin"
 #define NUM_STATES 2100965
 /*
 Phase 1: 2^11 = 2048
@@ -99,7 +99,7 @@ static int combinationPairRank(Int8 *x, int n) {
     return rank;
 }
 
-static int phaseMoves(int phase, Move *ms) {
+static int setPhaseMoves(Move *ms, int phase) {
     static Move phase_moveset[4][NUM_MOVES] = { 
         { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
         {         U|H,         D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
@@ -126,7 +126,7 @@ static int phaseSize(int phase) {
     return (1 <= phase && phase <= 4) ? phase_size[phase-1] : 0;
 }
 
-static int phaseRank(int phase, Cube128 c) {
+static int cubeRank(Cube128 c, int phase) {
     int i;
     // rank by edge orientation
     if (phase == 1) {
@@ -355,36 +355,42 @@ static int phaseRank(int phase, Cube128 c) {
     return 0;
 }
 
-static int phaseIndex(int phase, Cube128 c) {
+static int cubeIndex(Cube128 c, int phase) {
     int i, size = 0;
     for (i=1 ; i<phase ; i++) {
         size += phaseSize(i);
     }
-    return size + phaseRank(phase, c);
+    return size + cubeRank(c, phase);
 }
 
-static Int4 readNibble(FILE *fp, int index) {
-    Int8 byte;
-    fseek(fp, index/2, SEEK_SET);
-    fread(&byte, 1, 1, fp);
-    return (index % 2) ? byte & 0b1111 : byte >> 4;
-}
-
-static Int4 readTable(const Int8 *table, int index) {
-    Int8 byte = table[index/2];
-    return (index % 2) ? byte & 0b1111 : byte >> 4;
-}
-
-static void updateTable(Int8 *table, int index, Int4 n) {
+static void writeNibble(Int8 *table, int index, Int4 n) {
     Int8 byte = table[index/2];
     byte &= (index % 2) ? ~0b1111 : ~(0b1111 << 4);
     byte |= (index % 2) ? n : n << 4;
     table[index/2] = byte;
 }
 
-static int computeTable(Int8 *table) {
-    // initialize DFS stack
-    // 15 (max depth) * 18 (max branching factor) = 270
+static Int4 readNibble(const Int8 *table, int index) {
+    Int8 byte = table[index/2];
+    return (index % 2) ? byte & 0b1111 : byte >> 4;
+}
+
+static Int4 indexLT(FILE *lt, int index) {
+    Int8 byte;
+    fseek(lt, index/2, SEEK_SET);
+    fread(&byte, 1, 1, lt);
+    return (index % 2) ? byte & 0b1111 : byte >> 4;
+}
+
+static int buildLT(FILE *lt) {
+    // initialize table
+    int i, size = (NUM_STATES/2)+(NUM_STATES%2);
+    Int8 table[size];
+    for (i=0 ; i<size ; i++) {
+        table[i] = 0xFF;
+    }
+
+    // initialize DFS stack, 15 (max depth) * 18 (max branching factor) = 270
     #define STACK_SIZE 270
     static Node ns[STACK_SIZE] = {};
     static Stack stack = { ns, 0 };
@@ -392,15 +398,18 @@ static int computeTable(Int8 *table) {
     // compute each phase and insert into table
     int phase = 0;
     while (++phase <= 4) {
-        printf("\rPhase %d/4 ...", phase);
+        if (phase > 1) {
+            printf(", ");
+        }
+        printf("%d",  phase);
         fflush(stdout);
 
         // create phase root node from goal
-        Node root_node = { solvedCube(), NOP, 0 };
-        int index = phaseIndex(phase, root_node.cube);
+        Node root_node = { cubeSolved(), NOP, 0 };
+        int index = cubeIndex(root_node.cube, phase);
 
-        // insert root index into database
-        updateTable(table, index, root_node.depth);
+        // insert root index into table
+        writeNibble(table, index, root_node.depth);
 
         // initialize DFS stack with root node
         stack.size = 0;
@@ -418,7 +427,7 @@ static int computeTable(Int8 *table) {
 
             // iterate through children
             Move moveset[NUM_MOVES];
-            int i = 0, n = phaseMoves(phase, moveset);
+            int i = 0, n = setPhaseMoves(moveset, phase);
             while(i < n) {
                 Move m = moveset[i++];
 
@@ -430,11 +439,11 @@ static int computeTable(Int8 *table) {
                 // create child node
                 Cube128 cube = applyMove(root_node.cube, m);
                 Node node = { cube, m, root_node.depth+1 };
-                int index = phaseIndex(phase, cube);
+                int index = cubeIndex(cube, phase);
 
-                // update database and push node to stack if shorter depth
-                if (node.depth < readTable(table, index)) {
-                    updateTable(table, index, node.depth);
+                // update table and push node to stack if shorter depth
+                if (node.depth < readNibble(table, index)) {
+                    writeNibble(table, index, node.depth);
                     if (stack.size >= STACK_SIZE) {
                         printf("ERROR: Stack overflow!\n");
                         return -1;
@@ -444,59 +453,45 @@ static int computeTable(Int8 *table) {
             }
         }
     }
-}
-
-static int generateTable() {
-    // start clock
-    printf("\nGENERATING LOOKUP TABLE:\n");
-    clock_t clock_start = clock();
-
-    // initialize table
-    int i, num_bytes = (NUM_STATES/2)+(NUM_STATES%2);
-    Int8 table[num_bytes];
-    for (i=0 ; i<num_bytes ; i++) {
-        table[i] = 0xFF;
-    }
-
-    // compute table
-    computeTable(table);
 
     // write table to file
-    FILE *fp;
-    fp = fopen(LUT_FILE, "w+b");
-    fwrite(table, 1, num_bytes, fp);
-    fclose(fp);
+    return fwrite(table, 1, size, lt);
+}
 
-    // print clock time
-    double time = (double)(clock() - clock_start) / CLOCKS_PER_SEC;
-    printf("\rDone in %2.1f seconds\n", time);
-    return 0;
+static FILE *openLT() {
+    FILE *lt = fopen(BIN_FILE, "rb");
+    if (!lt) {
+        lt = fopen(BIN_FILE, "w+b");
+        printf("\nMEMOIZING DATA: PHASE ");
+        clock_t clock_start = clock();
+        buildLT(lt);
+        double seconds_elapsed = (double)(clock() - clock_start) / CLOCKS_PER_SEC;
+        printf(" - DONE (%2.1fs)\n", seconds_elapsed);
+        fclose(lt);
+        lt = fopen(BIN_FILE, "rb");
+    }
+    return lt;
 }
 
 int solve(Cube128 c, Move *ms) {
-    // open table file or generate it if missing
-    FILE *fp;
-    fp = fopen(LUT_FILE, "rb");
-    if (!fp) {
-        generateTable();
-        fp = fopen(LUT_FILE, "rb");
-    }
+    // open lookup table file
+    FILE *lt = openLT();
 
     // iterate through phases
     int num_moves = 0, phase = 0;
     while (++phase <= 4) {
         // iterate until phase depth is 0
-        while (readNibble(fp, phaseIndex(phase, c))) {
+        while (indexLT(lt, cubeIndex(c, phase))) {
             Move best_move = NOP;
             Int4 best_depth;
 
             // iterate through moveset to find a depth reduction
             Move moveset[NUM_MOVES];
-            int i = 0, n = phaseMoves(phase, moveset);
+            int i = 0, n = setPhaseMoves(moveset, phase);
             while (i < n) {
                 Move m = moveset[i++];
                 Cube128 child_cube = applyMove(c, m);
-                Int4 child_depth = readNibble(fp, phaseIndex(phase, child_cube));
+                Int4 child_depth = indexLT(lt, cubeIndex(child_cube, phase));
 
                 if (best_move == NOP || child_depth < best_depth) {
                     best_move = m;
@@ -508,14 +503,14 @@ int solve(Cube128 c, Move *ms) {
             c = applyMove(c, best_move);
             ms[num_moves++] = best_move;
 
-            // check if unsolvable
+            // check if max possible moves exceeded
             if (num_moves > MAX_MOVES) {
-                fclose(fp);
+                fclose(lt);
                 return -1;
             }
         }
     }
 
-    fclose(fp);
+    fclose(lt);
     return num_moves;
 }

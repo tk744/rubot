@@ -55,7 +55,7 @@ static Move parseMove(char *str) {
 }
 
 static Cube128 parseInput(int argc, char *argv[]) {
-    Cube128 c = solvedCube();
+    Cube128 c = cubeSolved();
 
     // no passed args
     if (argc == 1) {
@@ -74,9 +74,9 @@ static Cube128 parseInput(int argc, char *argv[]) {
     int n;
     if (sscanf(argv[1], "%i", &n) == 1) {
         Move ms[n];
-        srand(&parseInput);
-        c = scramble(solvedCube(), ms, n);
+        setRandomMoves(ms, n);
         printMoves(ms, n);
+        c = applyMoves(c, ms, n);
     }
     // passed move sequence
     else {

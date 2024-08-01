@@ -3,10 +3,9 @@
 
 #define CUBIE_BITS 5
 
-Cube128 solvedCube() {
+Cube128 cubeSolved() {
     Cube128 c = { 0, 0 };
 
-    // set `c` to { 407901468851537952, 247132686368 }
     Int64 i;
     for(i=0 ; i<NUM_EDGES ; i++) {
         c.edges |= i << (CUBIE_BITS * i);
@@ -15,6 +14,7 @@ Cube128 solvedCube() {
         c.corners |= i << (CUBIE_BITS * i);
     }
 
+    // `c` = { 407901468851537952, 247132686368 }
     return c;
 }
 
@@ -114,7 +114,7 @@ Cube128 applyMoves(Cube128 c, Move *ms, int n) {
     return c;
 }
 
-static Move randomMove(MoveMask exclude) {
+static Move randomMove(Move exclude) {
     Move m;
     // generate base move
     do {
@@ -126,6 +126,18 @@ static Move randomMove(MoveMask exclude) {
     m |= mod == 0 ? 0 : mod == 1 ? I : H;
 
     return m;
+}
+
+void setRandomMovesSeeded(Move *ms, int n, unsigned int seed) {
+    srand(seed);
+    int i;
+    for(i=0 ; i<n ; i++) {
+        *(ms+i) = randomMove(i == 0 ? NOP : *(ms+i-1));
+    }
+}
+
+void setRandomMoves(Move *ms, int n) {
+    setRandomMovesSeeded(ms, n, time(NULL));
 }
 
 Cube128 scramble(Cube128 c, Move *ms, int n) {
