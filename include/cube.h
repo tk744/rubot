@@ -1,15 +1,10 @@
-/**
- * This library defines the state and behavior of a Rubik's cube.
- */
-
-#ifndef CUBE_H
-#define CUBE_H
-
 #define NUM_EDGES 12
 #define NUM_CORNERS 8
 #define NUM_MOVES 18
 
-#include "types.h"
+typedef unsigned char Int4;
+typedef unsigned char Int8;
+typedef unsigned long long Int64;
 
 typedef struct {
     Int64 edges;
@@ -52,5 +47,3 @@ void printCube(Cube128 c);
 void printMove(Move m);
 
 void printMoves(Move *ms, int n);
-
-#endif
