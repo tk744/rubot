@@ -1,6 +1,7 @@
 #define NUM_EDGES 12
 #define NUM_CORNERS 8
 #define NUM_MOVES 18
+#define MAX_MOVES 46
 
 typedef unsigned char Int4;
 typedef unsigned char Int8;
@@ -24,6 +25,8 @@ typedef struct {
 Cube128 cubeSolved();
 
 int initFromString(Cube128 *c, char cs[54]);
+
+int solve(Cube128 c, Move *ms);
 
 void setRandomMoves(Move *ms, int n);
 
