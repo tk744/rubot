@@ -1,7 +1,5 @@
 #include "rubot.h"
-#include <time.h>
 #include <stdio.h>
-#include <string.h>
 
 #define BIN_FILE "4PHASE.bin"
 #define NUM_STATES 2100965
@@ -397,12 +395,6 @@ static int buildLT(FILE *lt) {
     // compute each phase and insert into table
     int phase = 0;
     while (++phase <= 4) {
-        if (phase > 1) {
-            printf(", ");
-        }
-        printf("%d",  phase);
-        fflush(stdout);
-
         // create phase root node from goal
         Node root_node = { cubeSolved(), NOP, 0 };
         int index = cubeIndex(root_node.cube, phase);
@@ -443,10 +435,6 @@ static int buildLT(FILE *lt) {
                 // update table and push node to stack if shorter depth
                 if (node.depth < readNibble(table, index)) {
                     writeNibble(table, index, node.depth);
-                    if (stack.size >= STACK_SIZE) {
-                        printf("ERROR: Stack overflow!\n");
-                        return -1;
-                    }
                     stack.ns[stack.size++] = node;
                 }
             }
@@ -461,11 +449,7 @@ static FILE *openLT() {
     FILE *lt = fopen(BIN_FILE, "rb");
     if (!lt) {
         lt = fopen(BIN_FILE, "w+b");
-        printf("\nMEMOIZING DATA: PHASE ");
-        clock_t clock_start = clock();
         buildLT(lt);
-        double seconds_elapsed = (double)(clock() - clock_start) / CLOCKS_PER_SEC;
-        printf(" - DONE (%2.1fs)\n", seconds_elapsed);
         fclose(lt);
         lt = fopen(BIN_FILE, "rb");
     }
