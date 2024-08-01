@@ -1,4 +1,4 @@
-#include "cube.h"
+#include "rubot.h"
 #include <stdio.h>
 
 typedef Move Color; // to reuse cubie enums

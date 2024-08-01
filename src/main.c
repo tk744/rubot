@@ -1,4 +1,4 @@
-#include "solver.h"
+#include "rubot.h"
 #include <stdio.h>
 
 static Move parseMove(char *str) {

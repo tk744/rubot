@@ -1,4 +1,4 @@
-#include "cube.h"
+#include "rubot.h"
 #include <stdio.h>
 
 #define CUBIE_BITS 5
