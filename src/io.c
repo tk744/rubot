@@ -434,7 +434,7 @@ static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, ch
     else if (x == cD) {
         return D;
     }
-    return -1;
+    return NOP;
 }
 
 static void printColor(Color color) {
@@ -579,9 +579,8 @@ int parseCube(Cube128 *c, char *str) {
         }
 
         *color = charToColor(*(str+i), *(str+4), *(str+13), *(str+22), *(str+31), *(str+40), *(str+49));
-        if (*color == -1) {
-            printf("Invalid color %c in position %d\n", *(str+i), i);
-            return -1;
+        if (*color == NOP) {
+            return i;
         }
     }
 
