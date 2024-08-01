@@ -1,7 +1,6 @@
 #include "rank.h"
 #include "solver.h"
 #include "time.h"
-#include "stack.h"
 #include <stdio.h>
 
 /*
@@ -11,8 +10,20 @@ Phase 3: 8C4 * (8C2 * 6C2 * 4C2) = 352800
 Phase 4: (4! * 4! * 4P2) * (4! * 4P1) = 663552
 */
 
-#define DB_SIZE 2100965 // 2048 + 1082565 + 352800 + 663552
 #define DB_FILE "4PHASE-DB"
+#define DB_SIZE 2100965 // 2048 + 1082565 + 352800 + 663552
+#define STACK_SIZE 270  // 15 (max depth) * 18 (max branching factor) = 270
+
+typedef struct {
+    Cube128 cube;
+    Move move;
+    Int4 depth;
+} Node;
+
+typedef struct {
+    Node *ns;
+    int size;
+} Stack;
 
 static Int4 readNibble(FILE *fp, int index) {
     if (0 <= index && index < DB_SIZE) {
@@ -302,7 +313,7 @@ static int phaseIndex(int phase, Cube128 c) {
     return size + phaseRank(phase, c);
 }
 
-static void generateDatabase() {
+static int generateDatabase() {
     // statistics variables
     printf("\nGENERATING DATABASE:\n");
     clock_t clock_start = clock();
@@ -334,14 +345,14 @@ static void generateDatabase() {
         // insert root index into database
         writeNibble(fp, index, root_node.depth);
 
-        // initialize DFS stack wit root node
-        clear(&stack);
-        push(&stack, root_node);
+        // initialize DFS stack with root node
+        stack.size = 0;
+        stack.ns[stack.size++] = root_node;
 
         // iterate until stack is empty
         while(stack.size) {
             // pop node from stack
-            root_node = pop(&stack);
+            root_node = stack.ns[--stack.size];
 
             // discard nodes that are too deep
             if (root_node.depth >= phaseDepth(phase)) {
@@ -364,10 +375,14 @@ static void generateDatabase() {
                 Node node = { cube, m, root_node.depth+1 };
                 int index = phaseIndex(phase, cube);
 
-                // update database and push node to stack if better depth
+                // update database and push node to stack if shorter depth
                 if (node.depth < readNibble(fp, index)) {
                     writeNibble(fp, index, node.depth);
-                    push(&stack, node);
+                    if (stack.size >= STACK_SIZE) {
+                        printf("Error: stack overflow!\n");
+                        return -1;
+                    }
+                    stack.ns[stack.size++] = node;
                 }
             }
         }
@@ -376,6 +391,7 @@ static void generateDatabase() {
     fclose(fp);
     double time = (double)(clock() - clock_start) / CLOCKS_PER_SEC;
     printf("\rDone in %2.1f seconds\n", time);
+    return 0;
 }
 
 int solve(Cube128 c, Move *ms) {
