@@ -6,27 +6,34 @@ typedef unsigned char Int4;
 typedef unsigned char Int8;
 typedef unsigned long long Int64;
 
+typedef Int8 Move;
+typedef Int8 CubieEnum;
+
+static const Move
+    NOP=0, U=1, D=2, F=4, B=8, R=16, L=32, I=64, H=128;
+static const CubieEnum
+    UF=0, UB=1, UR=2, UL=3, DF=4, DB=5, DR=6, DL=7, FR=8, FL=9, BR=10, BL=11;
+static const CubieEnum
+    UFR=0, UFL=1, UBR=2, UBL=3, DFR=4, DFL=5, DBR=6, DBL=7;
+
 typedef struct {
     Int64 edges;
     Int64 corners;
 } Cube128;
 
-typedef Int8 Move, MoveMask;
-typedef Int8 CubieEnum;
+/* Identity constructor */
+Cube128 cubeSolved();
 
-static const MoveMask NOP=0, U=1, D=2, F=4, B=8, R=16, L=32, I=64, H=128; // one-hot
+/* Initial state constructor */
+Cube128 cube();
 
-static const CubieEnum UF=0, UB=1, UR=2, UL=3, DF=4, DB=5, DR=6, DL=7, FR=8, FL=9, BR=10, BL=11;
+void setRandomMoves(Move *ms, int n);
 
-static const CubieEnum UFR=0, UFL=1, UBR=2, UBL=3, DFR=4, DFL=5, DBR=6, DBL=7;
-
-Cube128 solvedCube();
+void setRandomMovesSeeded(Move *ms, int n, unsigned int seed);
 
 Cube128 applyMove(Cube128 c, Move m);
 
 Cube128 applyMoves(Cube128 c, Move *ms, int n);
-
-Cube128 scramble(Cube128 c, Move *ms, int n);
 
 Int8 getCubie(Int64 encoding, CubieEnum ce);
 
