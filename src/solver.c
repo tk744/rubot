@@ -3,16 +3,14 @@
 #include "time.h"
 #include <stdio.h>
 #include <string.h>
-#define LUT_FILE "lut.h"
-#include LUT_FILE
 
-#define LUT_SIZE 2100965
+#define LUT_FILE "LUT"
+#define NUM_STATES 2100965
 /*
 Phase 1: 2^11 = 2048
 Phase 2: 3^7 * 12C4 = 1082565
 Phase 3: 8C4 * (8C2 * 6C2 * 4C2) = 352800
 Phase 4: (4! * 4! * 4P2) * (4! * 4P1) = 663552
-LUT_SIZE: 2048 + 1082565 + 352800 + 663552 = 2100965
 */
 
 typedef struct {
@@ -290,9 +288,16 @@ static int phaseIndex(int phase, Cube128 c) {
     return size + phaseRank(phase, c);
 }
 
+static Int4 readNibble(FILE *fp, int index) {
+    Int8 byte;
+    fseek(fp, index/2, SEEK_SET);
+    fread(&byte, 1, 1, fp);
+    return (index % 2) ? byte & 0b1111 : byte >> 4;
+}
+
 static Int4 readTable(const Int8 *table, int index) {
     Int8 byte = table[index/2];
-    return (index % 2) ? byte & 0b1111 : byte >> 4;  
+    return (index % 2) ? byte & 0b1111 : byte >> 4;
 }
 
 static void updateTable(Int8 *table, int index, Int4 n) {
@@ -302,21 +307,14 @@ static void updateTable(Int8 *table, int index, Int4 n) {
     table[index/2] = byte;
 }
 
-static int generateTable(Int8 *table) {
-    // initialize each entry in the database to 0xF
-    int i;
-    for (i=0 ; i<(LUT_SIZE/2)+(LUT_SIZE%2) ; i++) {
-        table[i] = 0xFF;
-    }
-
+static int computeTable(Int8 *table) {
+    // initialize DFS stack
     // 15 (max depth) * 18 (max branching factor) = 270
     #define STACK_SIZE 270
-
-    // create DFS stack
     static Node ns[STACK_SIZE] = {};
     static Stack stack = { ns, 0 };
 
-    // iterate through phases
+    // compute each phase and insert into table
     int phase = 0;
     while (++phase <= 4) {
         printf("\rPhase %d/4 ...", phase);
@@ -363,7 +361,7 @@ static int generateTable(Int8 *table) {
                 if (node.depth < readTable(table, index)) {
                     updateTable(table, index, node.depth);
                     if (stack.size >= STACK_SIZE) {
-                        printf("Error: stack overflow!\n");
+                        printf("ERROR: Stack overflow!\n");
                         return -1;
                     }
                     stack.ns[stack.size++] = node;
@@ -373,42 +371,47 @@ static int generateTable(Int8 *table) {
     }
 }
 
-static int generateTableFile() {
+static int generateTable() {
     // start clock
-    printf("\nGenerating lookup table ... \n");
+    printf("\nGENERATING LOOKUP TABLE:\n");
     clock_t clock_start = clock();
 
-    // generate database
-    Int8 table[(LUT_SIZE/2)+(LUT_SIZE%2)];
-    if (generateTable(table) == -1) {
-        return -1;
+    // initialize table
+    int i, num_bytes = (NUM_STATES/2)+(NUM_STATES%2);
+    Int8 table[num_bytes];
+    for (i=0 ; i<num_bytes ; i++) {
+        table[i] = 0xFF;
     }
 
-    // write database to .h file
+    // compute table
+    computeTable(table);
+
+    // write table to file
     FILE *fp;
-    char db_path[16] = "include/";
-    strcat(db_path, LUT_FILE);
-    fp = fopen(db_path, "w+b");
-    fprintf(fp, "static const unsigned char LUT[%d] = { ", (LUT_SIZE/2)+(LUT_SIZE%2));
-    int i;
-    for (i=0 ; i<(LUT_SIZE/2)+(LUT_SIZE%2) ; i++) {
-        fprintf(fp, "%d,", table[i]);
-    }
-    fprintf(fp, "};");
+    fp = fopen(LUT_FILE, "w+b");
+    fwrite(table, 1, num_bytes, fp);
     fclose(fp);
 
     // print clock time
     double time = (double)(clock() - clock_start) / CLOCKS_PER_SEC;
     printf("\rDone in %2.1f seconds\n", time);
+    return 0;
 }
 
 int solve(Cube128 c, Move *ms) {
+    // open table file or generate it if missing
+    FILE *fp;
+    fp = fopen(LUT_FILE, "rb");
+    if (!fp) {
+        generateTable();
+        fp = fopen(LUT_FILE, "rb");
+    }
+
     // iterate through phases
-    int num_moves = 0;
-    int phase = 0;
+    int num_moves = 0, phase = 0;
     while (++phase <= 4) {
         // iterate until phase depth is 0
-        while (readTable(LUT, phaseIndex(phase, c))) {
+        while (readNibble(fp, phaseIndex(phase, c))) {
             Move best_move = NOP;
             Int4 best_depth;
 
@@ -418,29 +421,26 @@ int solve(Cube128 c, Move *ms) {
             while (i < n) {
                 Move m = moveset[i++];
                 Cube128 child_cube = applyMove(c, m);
-                Int4 child_depth = readTable(LUT, phaseIndex(phase, child_cube));
+                Int4 child_depth = readNibble(fp, phaseIndex(phase, child_cube));
 
                 if (best_move == NOP || child_depth < best_depth) {
                     best_move = m;
                     best_depth = child_depth;
                 }
-
-                // TODO: EXPERIMENTAL OPTIMIZATION 1
-                // if best_depth > current_depth: break
-                // TODO: EXPERIMENTAL OPTIMIZATION 2
-                // possibly exclude U/D moves? see how that affects move length
             }
 
             // apply move
             c = applyMove(c, best_move);
             ms[num_moves++] = best_move;
 
-            if (num_moves == MAX_MOVES) {
-                goto exit;
+            // check if unsolvable
+            if (num_moves > MAX_MOVES) {
+                fclose(fp);
+                return -1;
             }
         }
     }
 
-    exit:
+    fclose(fp);
     return num_moves;
 }
