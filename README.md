@@ -1,58 +1,75 @@
 # Overview
 
-`rubot` is a blazing fast Rubik's cube solver written in C. Using  a highly efficient 1MB lookup table, it delivers instantations solutions with an average of 32 moves and a max of 46 moves.
+`rubot` is a blazing fast Rubik's cube library written in C. It uses a highly efficient 1MB lookup table to deliver instantations solutions with an average of 32 moves and a max of 46 moves.
 
 # Installation
 
-Build the executable `rubot` from source by running `make`.
+Build the executable `rubot` by running `make`.
 
 # Usage
 
-## Solve a Color Representation
+For a full list of commands, check `rubot -h`.
 
-`rubot` takes a color representation of a cube, and returns a sequence of moves to solve it.
 
-```
-$ ./rubot PBBWWBRGGWRWPPRBBRGPPGGWYYPYWWGRPBRYRPGWBYBRRGGWYYBYYP
-D' F' R L' U R L F R2 U2 F L R2 D2 R2 F U2 F R2 B2 D2 B U2 R2 U2 F2 R2 U2 F2 U2 L2 B2 L2 U2
-```
+## Color Strings
 
-The colors of a cube are represented by a 54-character string: 6 substings (one per face) of 9 characters (one per color). It does not matter which characters are used to represent each color, as long as they are consistent. The faces are arranged in the order U, L, F, R, B, D, and the tiles in each face are arranged in row-major order. The figure below depicts the index of each tile in the string representation.
+`rubot` serializes cube states into color strings. A color string is 54 characters long, and is encoded as 6 substrings (one per face) of 9 characters (one per tile). The faces are arranged in the order U, L, F, R, B, D, and the tiles in each face are arranged in row-major order. It does not matter what characters are used for each color, as long as they are consistent. The figure below depicts the index of each tile in a color string:
 
-<p align="center"><img alt="cube string encoding" src="cube-encoding.png" width="500"></p>
+<p align="center"><img alt="cube string encoding" src="cube-string.png" width="500"></p>
 
-## Solve a Scramble Sequence
+## Cube Solving
 
-`rubot` also takes a sequence of moves used to scramble a solved cube, and returns a sequence of moves to solve it. It does not simply reverse this sequence to produce a solution.
-```
-$ ./rubot L D2 R L\' R\' B F D L\' U\'
-U L D U2 F' B' R D2 R' U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
-```
+`rubot` can take a scrambled cube and return a solution sequence in one of two ways:
+- From a color string:
+    ```
+    $ ./rubot PBBWWBRGGWRWPPRBBRGPPGGWYYPYWWGRPBRYRPGWBYBRRGGWYYBYYP
+    D' F' R L' U R L F R2 U2 F L R2 D2 R2 F U2 F R2 B2 D2 B U2 R2 U2 F2 R2 U2 F2 U2 L2 B2 L2 U2
+    ```
+- From a scramble sequence: 
+    ```
+    $ ./rubot L D2 R L\' R\' B F D L\' U\'
+    U L D U2 F' B' R D2 R' U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
+    ```
 
-## Generate a Scramble Sequence
+`rubot` can also print the state of the scrambled cube using one of two flags:
+- (`-c`) print the color string:
+    ```
+    $ ./rubot -c L D2 R L\' R\' B F D L\' U\'
+    LURRURDBUUBRLLBUUBFDBLFFLLFLDDURDDFFBRFFBUULRDDLBDRBFR
+    ```
 
-`rubot` can also generate a random sequence of non-redundant moves for scrambling a solved cube. Pass it an integer for the number of moves to generate, optionally followed by a second integer to seed the RNG for deterministic results.
+- (`-d`) draw an ANSII graphic:
+    ```
+    $ ./rubot -d LURRURDBUUBRLLBUUBFDBLFFLLFLDDURDDFFBRFFBUULRDDLBDRBFR
+    TODO
+    ```
 
-## Database Generation
+## Cube Scrambling
 
-## Optional Flags
+`rubot` also provides functionality for generating random scramble sequences.
 
-`rubot` can take one of four flags as its first argument:
+- Pass the number of moves to generate, optionally followed by an RNG seed:
+    ```
+    $ ./rubot 25 5
+    D2 U F' B D F U' F' U' F2 D B F' D2 U R' B' F R L2 B2 D' B U' B'
+    ```
 
-- `-h`/`--help`: Prints the help screen.
-- `-c`: Prints the 54-character string representation of the cube.
-- `-d`: Draws the cube as an ANSII graphic. This is useful for visualizing the cube.
-- `-b`: Runs a benchmark by taking an integer argument and solving that many scrambled cubes, then prints a summary of the results.
+- As with cube solving, we can use the `-c` or `-d` flag to print the state of the scrambled cube:
+    ```
+    $ ./rubot -c 1000
+    URBFULFDULLRULRLDBUBLFFBRBDFUDLRDRUDLDBFBFFUDURBLDBFRR
+    ```
 
-<!-- TODO:
-# Performance
+## Performance Benchmarking
 
-```
-$ ./rubot -b 250000
-Throughput: 4585.70 solves per second
-Length: 32.19 moves per solve
-```
- -->
+`rubot` can even run a performance benchmark by solving a large number of cubes.
+
+- (`-b N`) benchmark on `N` scrambled cubes (output from my i7-13700K):
+    ```
+    $ ./rubot -b 250000
+    Throughput: 4585.70 solves per second
+    Length: 32.19 moves per solve
+    ```
 
 # How It Works
 
