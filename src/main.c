@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     int c_flag = 0, d_flag = 0;
     if (*argv[1] == '-') {
         // -b: benchmark
-        if (!strcmp(argv[1], "-b") || !strcmp(argv[1], "--benchmark")) {
+        if (!strcmp(argv[1], "-b")) {
             if (argc != 3) {
                 printf("ERROR: Expected 1 argument to %s, recieved %i.\n", argv[1], argc-2);
                 return -1;
@@ -53,13 +53,13 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         // -c: color
-        else if (!strcmp(argv[1], "-c") || !strcmp(argv[1], "--color")) {
+        else if (!strcmp(argv[1], "-c")) {
             c_flag = 1;
             argc--;
             argv++;
         }            
         // -d: display
-        else if (!strcmp(argv[1], "-g") || !strcmp(argv[1], "--graphic")) {
+        else if (!strcmp(argv[1], "-g")) {
             d_flag = 1;
             argc--;
             argv++;
