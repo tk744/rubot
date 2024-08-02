@@ -1,46 +1,103 @@
-#include "rank.h"
-#include "solver.h"
-#include "time.h"
-#include "util.h"
+#include "rubot.h"
 #include <stdio.h>
 
+#define BIN_FILE "4PHASE.bin"
+#define NUM_STATES 2100965
 /*
-TODO: 52-move algorithm and database overview.
-
 Phase 1: 2^11 = 2048
 Phase 2: 3^7 * 12C4 = 1082565
 Phase 3: 8C4 * (8C2 * 6C2 * 4C2) = 352800
 Phase 4: (4! * 4! * 4P2) * (4! * 4P1) = 663552
 */
 
-#define DB_SIZE 2100965 // 2048 + 1082565 + 352800 + 663552
-#define DB_FILE "4PHASE-DB"
+typedef struct {
+    Cube128 cube;
+    Move move;
+    Int4 depth;
+} Node;
 
-static Int4 readNibble(FILE *fp, int index) {
-    if (0 <= index && index < DB_SIZE) {
-        Int8 byte;
-        fseek(fp, index/2, SEEK_SET);
-        fread(&byte, 1, 1, fp);
-        return (index % 2) ? byte & 0b1111 : byte >> 4;  
+typedef struct {
+    Node *ns;
+    int size;
+} Stack;
+
+static int factorial(int n) {
+    if (n <= 1) {
+        return 1;
     }
-    return 0xFF;
-}
-
-static void writeNibble(FILE *fp, int index, Int4 n) {
-    if (0 <= index && index < DB_SIZE) {
-        Int8 byte;
-        fseek(fp, index/2, SEEK_SET);
-        fread(&byte, 1, 1, fp);
-
-        byte &= (index % 2) ? ~0b1111 : ~(0b1111 << 4);
-        byte |= (index % 2) ? n : n << 4;
-
-        fseek(fp, index/2, SEEK_SET);
-        fwrite(&byte, 1, 1, fp);
+    else {
+        return n * factorial(n-1);
     }
 }
 
-static int phaseMoves(int phase, Move *ms) {
+static int permutation(int n, int k) {
+    return (int)(((float)factorial(n)) / factorial(n-k));
+}
+
+static int combination(int n, int k) {
+    if (n < 0 || k < 0 || k > n) {
+        return 0;
+    }
+    int b, i;
+    for (b=1, i=0; i<k ; b*=((float)n-i)/(i+1), i++);
+    return b;
+}
+
+static int binaryOnes(int b) {
+    int n = 0;
+    while (b > 0) {
+        n += b % 2;
+        b /= 2;
+    }
+    return n;
+}
+
+static int permutationRank(Int8 *x, int n, int k) {
+    int rank = 0, bits = 0, i;
+    for (i=0 ; i<n ; i++) {
+        bits |= (1 << (n-1-x[i]));
+        rank += permutation(n-1-i, k-1-i) * (x[i] - binaryOnes(bits >> (n-x[i])));
+    }
+
+    return rank;
+}
+
+static int combinationRank(Int8 *x, int n, int k) {
+    int rank, i;
+    for (rank=combination(n, k), i=0 ; i<k ; rank -= combination(n-(x[i]+1), k-i), i++);
+    return rank-1;
+}
+
+static int combinationPairRank(Int8 *x, int n) {
+    int rank = 0, pair_rank, i, j;
+    Int8 exclusions[n-2];
+    
+    for (i=n ; i>2 ; i-=2) {
+        // set variable base
+        for (pair_rank=1, j=i; j>2 ; pair_rank*=combination(j-2, 2), j-=2);
+        
+        // get pair
+        Int8 pair[2] = { x[n-i], x[n-i+1] };
+
+        // update exclusions
+        exclusions[n-i] = pair[0];
+        exclusions[n-i+1] = pair[1];
+
+        // reduce combination values if greater than excluded values
+        Int8 pair_reduced[2] = { pair[0], pair[1] };
+        for (j=0; j<n-i ; j++) {
+            pair_reduced[0] -= exclusions[j] < pair[0] ? 1 : 0;
+            pair_reduced[1] -= exclusions[j] < pair[1] ? 1 : 0;
+        }
+
+        // compute pair rank and updated total rank
+        pair_rank *= combinationRank(pair_reduced, i, 2);
+        rank += pair_rank;
+    }
+    return rank;
+}
+
+static int setPhaseMoves(Move *ms, int phase) {
     static Move phase_moveset[4][NUM_MOVES] = { 
         { U, U|I, U|H, D, D|I, D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
         {         U|H,         D|H, R, R|I, R|H, L, L|I, L|H, F, F|I, F|H, B, B|I, B|H },
@@ -67,7 +124,7 @@ static int phaseSize(int phase) {
     return (1 <= phase && phase <= 4) ? phase_size[phase-1] : 0;
 }
 
-static int phaseRank(int phase, Cube c) {
+static int cubeRank(Cube128 c, int phase) {
     int i;
     // rank by edge orientation
     if (phase == 1) {
@@ -296,54 +353,63 @@ static int phaseRank(int phase, Cube c) {
     return 0;
 }
 
-static int phaseIndex(int phase, Cube c) {
+static int cubeIndex(Cube128 c, int phase) {
     int i, size = 0;
     for (i=1 ; i<phase ; i++) {
         size += phaseSize(i);
     }
-    return size + phaseRank(phase, c);
+    return size + cubeRank(c, phase);
 }
 
-static void generateDatabase() {
-    // statistics variables
-    printf("\nGENERATING DATABASE:\n");
-    clock_t clock_start = clock();
+static void writeNibble(Int8 *table, int index, Int4 n) {
+    Int8 byte = table[index/2];
+    byte &= ~(0b1111 << 4 * (index % 2));
+    byte |= n << 4 * (index % 2);
+    table[index/2] = byte;
+}
 
-    // open file for storing database
-    FILE *fp;
-    fp = fopen(DB_FILE, "w+b");
+static Int4 readNibble(const Int8 *table, int index) {
+    return table[index/2] >> 4 * (index % 2) & 0b1111;
+}
 
-    // initialize each entry in the database to 0xF
-    int i;
-    for (i=0 ; i<(DB_SIZE/2)+(DB_SIZE%2) ; i++) {
-        putc(0xFF, fp);
+static Int4 indexLT(FILE *lt, int index) {
+    Int8 byte;
+    fseek(lt, index/2, SEEK_SET);
+    fread(&byte, 1, 1, lt);
+    return byte >> 4 * (index % 2) & 0b1111;
+}
+
+static int buildLT(FILE *lt) {
+    // initialize table
+    int i, size = (NUM_STATES/2)+(NUM_STATES%2);
+    Int8 table[size];
+    for (i=0 ; i<size ; i++) {
+        table[i] = 0xFF;
     }
 
-    // create DFS stack
+    // initialize DFS stack, 15 (max depth) * 18 (max branching factor) = 270
+    #define STACK_SIZE 270
     static Node ns[STACK_SIZE] = {};
     static Stack stack = { ns, 0 };
 
-    // iterate through phases
+    // compute each phase and insert into table
     int phase = 0;
     while (++phase <= 4) {
-        printf("\rPhase %d/4 ...", phase);
-        fflush(stdout);
-
         // create phase root node from goal
-        Node root_node = { cubeFactory(), NOP, 0 };
-        int index = phaseIndex(phase, root_node.cube);
+        Node root_node = { cubeSolved(), NOP, 0 };
+        int index = cubeIndex(root_node.cube, phase);
 
-        // insert root index into database
-        writeNibble(fp, index, root_node.depth);
+        // insert root index into table
+        writeNibble(table, index, root_node.depth);
 
-        // initialize DFS stack wit root node
-        clear(&stack);
-        push(&stack, root_node);
+        // initialize DFS stack with root node
+        stack.size = 0;
+        stack.ns[stack.size++] = root_node;
 
         // iterate until stack is empty
         while(stack.size) {
             // pop node from stack
-            root_node = pop(&stack);
+            root_node = stack.ns[--stack.size];
 
             // discard nodes that are too deep
             if (root_node.depth >= phaseDepth(phase)) {
@@ -352,7 +418,7 @@ static void generateDatabase() {
 
             // iterate through children
             Move moveset[NUM_MOVES];
-            int i = 0, n = phaseMoves(phase, moveset);
+            int i = 0, n = setPhaseMoves(moveset, phase);
             while(i < n) {
                 Move m = moveset[i++];
 
@@ -362,72 +428,81 @@ static void generateDatabase() {
                 }
 
                 // create child node
-                Cube cube = applyMove(root_node.cube, m);
+                Cube128 cube = applyMove(root_node.cube, m);
                 Node node = { cube, m, root_node.depth+1 };
-                int index = phaseIndex(phase, cube);
+                int index = cubeIndex(cube, phase);
 
-                // update database and push node to stack if better depth
-                if (node.depth < readNibble(fp, index)) {
-                    writeNibble(fp, index, node.depth);
-                    push(&stack, node);
+                // update table and push node to stack if shorter depth
+                if (node.depth < readNibble(table, index)) {
+                    writeNibble(table, index, node.depth);
+                    stack.ns[stack.size++] = node;
                 }
             }
         }
     }
 
-    fclose(fp);
-    double time = (double)(clock() - clock_start) / CLOCKS_PER_SEC;
-    printf("\rDone in %2.1f seconds\n", time);
+    // write table to file
+    return fwrite(table, 1, size, lt);
 }
 
-int solve(Cube c, Move *ms) {
-    // open database file or generate it if missing
-    FILE *fp;
-    fp = fopen(DB_FILE, "rb");
-    if (!fp) {
-        generateDatabase();
-        fp = fopen(DB_FILE, "rb");
+static FILE *openLT() {
+    FILE *lt = fopen(BIN_FILE, "rb");
+    if (!lt) {
+        lt = fopen(BIN_FILE, "w+b");
+        buildLT(lt);
+        fclose(lt);
+        lt = fopen(BIN_FILE, "rb");
     }
+    return lt;
+}
+
+int solve(Cube128 c, Move *ms) {
+    // open lookup table file
+    FILE *lt = openLT();
 
     // iterate through phases
-    int num_moves = 0;
-    int phase = 0;
+    int num_moves = 0, phase = 0;
     while (++phase <= 4) {
         // iterate until phase depth is 0
-        while (readNibble(fp, phaseIndex(phase, c))) {
+        while (indexLT(lt, cubeIndex(c, phase))) {
             Move best_move = NOP;
             Int4 best_depth;
 
             // iterate through moveset to find a depth reduction
             Move moveset[NUM_MOVES];
-            int i = 0, n = phaseMoves(phase, moveset);
+            int i = 0, n = setPhaseMoves(moveset, phase);
             while (i < n) {
                 Move m = moveset[i++];
-                Cube child_cube = applyMove(c, m);
-                Int4 child_depth = readNibble(fp, phaseIndex(phase, child_cube));
+                Cube128 child_cube = applyMove(c, m);
+                Int4 child_depth = indexLT(lt, cubeIndex(child_cube, phase));
 
                 if (best_move == NOP || child_depth < best_depth) {
                     best_move = m;
                     best_depth = child_depth;
                 }
-
-                // TODO: EXPERIMENTAL OPTIMIZATION 1
-                // if best_depth > current_depth: break
-                // TODO: EXPERIMENTAL OPTIMIZATION 2
-                // possibly exclude U/D moves? see how that affects move length
             }
+
+            // TODO: optimization
+            // if best_move and parent move are on same face, then reduce
+            // e.g. R and R2 -> R'
+            // e.g. R' and R2 -> R
+            // e.g. R and R' -> NOP (do num_moves--)
+            // e.g. R2 and R2 -> NOP (do num_moves--)
 
             // apply move
             c = applyMove(c, best_move);
             ms[num_moves++] = best_move;
 
-            if (num_moves == MAX_MOVES) {
+            // check if max moves are exceeded
+            if (num_moves > MAX_MOVES) {
                 goto exit;
             }
         }
     }
 
-    exit:
-    fclose(fp);
-    return num_moves;
+    exit: 
+    fclose(lt);
+
+    // check if solved
+    return areEqual(c, cubeSolved()) ? num_moves : -1;
 }

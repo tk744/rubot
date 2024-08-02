@@ -1,11 +1,10 @@
-#include "cube.h"
+#include "rubot.h"
 
-/* FUNCTION IMPLEMENTATION */
+#define CUBIE_BITS 5
 
-Cube cubeFactory() {
-    Cube c = { 0, 0 };
+Cube128 cubeSolved() {
+    Cube128 c = { 0, 0 };
 
-    // set `c` to { 407901468851537952, 247132686368 }
     Int64 i;
     for(i=0 ; i<NUM_EDGES ; i++) {
         c.edges |= i << (CUBIE_BITS * i);
@@ -14,38 +13,11 @@ Cube cubeFactory() {
         c.corners |= i << (CUBIE_BITS * i);
     }
 
+    // `c` = { 407901468851537952, 247132686368 }
     return c;
 }
 
-Int8 getCubie(Int64 encoding, CubieEnum ce) {
-    return (encoding >> (CUBIE_BITS * ce)) & ((1 << CUBIE_BITS) - 1);
-}
-
-Int8 getPermutation(Int8 cubie, int isEdge) {
-    return cubie & ((1 << (CUBIE_BITS - (isEdge ? 1 : 2))) - 1);
-}
-
-Int8 getOrientation(Int8 cubie, int isEdge) {
-    return cubie >> (CUBIE_BITS - (isEdge ? 1 : 2));
-}
-
-void setCubie(Int64 *encoding, CubieEnum ce, Int8 cubie) {
-    *encoding &= ~((((Int64) 1 << CUBIE_BITS) - 1) << (CUBIE_BITS * ce));
-    *encoding |= (Int64) cubie << (CUBIE_BITS * ce);
-}
-
-void setPermutation(Int8 *cubie, int isEdge, Int8 permutation) {
-    *cubie &= ~((1 << (CUBIE_BITS - (isEdge ? 1 : 2))) - 1);
-    *cubie |= permutation;
-}
-
-void setOrientation(Int8 *cubie, int isEdge, Int8 orientation) {
-    Int8 permutation = getPermutation(*cubie, isEdge);
-    *cubie = orientation << (CUBIE_BITS - (isEdge ? 1 : 2));
-    setPermutation(cubie, isEdge, permutation);
-}
-
-Cube applyMove(Cube c, Move m) {
+Cube128 applyMove(Cube128 c, Move m) {
     // recursive calls for double and inverse rotations
     if (m & H) {
         m &= ~(H|I);
@@ -104,7 +76,7 @@ Cube applyMove(Cube c, Move m) {
     }
 
     // update permutations and orientations of affected cubies
-    Cube old_c = c;
+    Cube128 old_c = c;
     int i, isEdge;
     for (i=0 ; i<4 ; i++) {
         // alternate between edge and corner cubies
@@ -134,14 +106,14 @@ Cube applyMove(Cube c, Move m) {
     return c;
 }
 
-Cube applyMoves(Cube c, Move *ms, int n) {
+Cube128 applyMoves(Cube128 c, Move *ms, int n) {
     while(n-- > 0) {
         c = applyMove(c, *ms++);
     }
     return c;
 }
 
-static Move randomMove(MoveMask exclude) {
+static Move randomMove(Move exclude) {
     Move m;
     // generate base move
     do {
@@ -155,7 +127,14 @@ static Move randomMove(MoveMask exclude) {
     return m;
 }
 
-Cube scramble(Cube c, Move *ms, int n) {
+void setRandomMoves(Move *ms, int n) {
+    int i;
+    for(i=0 ; i<n ; i++) {
+        *(ms+i) = randomMove(i == 0 ? NOP : *(ms+i-1));
+    }
+}
+
+Cube128 scramble(Cube128 c, Move *ms, int n) {
     int i;
     for(i=0 ; i<n ; i++) {
         *(ms+i) = randomMove(i == 0 ? NOP : *(ms+i-1));
@@ -163,10 +142,34 @@ Cube scramble(Cube c, Move *ms, int n) {
     return applyMoves(c, ms, n);
 }
 
-int areEqual(Cube c1, Cube c2) {
-    return (c1.edges == c2.edges && c1.corners == c2.corners);
+Int8 getCubie(Int64 encoding, CubieEnum ce) {
+    return (encoding >> (CUBIE_BITS * ce)) & ((1 << CUBIE_BITS) - 1);
 }
 
-Move inverseMove(Move m) {
-    return (m & H) ? m : m^I;
+Int8 getPermutation(Int8 cubie, int isEdge) {
+    return cubie & ((1 << (CUBIE_BITS - (isEdge ? 1 : 2))) - 1);
+}
+
+Int8 getOrientation(Int8 cubie, int isEdge) {
+    return cubie >> (CUBIE_BITS - (isEdge ? 1 : 2));
+}
+
+void setCubie(Int64 *encoding, CubieEnum ce, Int8 cubie) {
+    *encoding &= ~((((Int64) 1 << CUBIE_BITS) - 1) << (CUBIE_BITS * ce));
+    *encoding |= (Int64) cubie << (CUBIE_BITS * ce);
+}
+
+void setPermutation(Int8 *cubie, int isEdge, Int8 permutation) {
+    *cubie &= ~((1 << (CUBIE_BITS - (isEdge ? 1 : 2))) - 1);
+    *cubie |= permutation;
+}
+
+void setOrientation(Int8 *cubie, int isEdge, Int8 orientation) {
+    Int8 permutation = getPermutation(*cubie, isEdge);
+    *cubie = orientation << (CUBIE_BITS - (isEdge ? 1 : 2));
+    setPermutation(cubie, isEdge, permutation);
+}
+
+int areEqual(Cube128 c1, Cube128 c2) {
+    return (c1.edges == c2.edges && c1.corners == c2.corners);
 }
