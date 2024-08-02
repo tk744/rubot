@@ -41,7 +41,7 @@ U L D U2 F' B' R D2 R' U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
 
 - `-h`/`--help`: Prints the help screen.
 - `-c`: Prints the 54-character string representation of the cube.
-- `-g`: Displays the cube as an ANSII graphic. This is useful for visualizing the cube.
+- `-d`: Draws the cube as an ANSII graphic. This is useful for visualizing the cube.
 - `-b`: Runs a benchmark by taking an integer argument and solving that many scrambled cubes, then prints a summary of the results.
 
 <!-- TODO:

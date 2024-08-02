@@ -58,8 +58,8 @@ int main(int argc, char *argv[]) {
             argc--;
             argv++;
         }            
-        // -d: display
-        else if (!strcmp(argv[1], "-g")) {
+        // -d: draw
+        else if (!strcmp(argv[1], "-d")) {
             d_flag = 1;
             argc--;
             argv++;
