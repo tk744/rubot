@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     }
 
     // flags
-    int print_flag = 0;
+    int d_flag = 0;
     if (*argv[1] == '-') {
         // -b: benchmark
         if (!strcmp(argv[1], "-b") || !strcmp(argv[1], "--benchmark")) {
@@ -52,9 +52,9 @@ int main(int argc, char *argv[]) {
             benchmark(n);
             return 0;
         }
-        // -p: print cube
-        else if (!strcmp(argv[1], "-p") || !strcmp(argv[1], "--print")) {
-            print_flag = 1;
+        // -d: display cube
+        else if (!strcmp(argv[1], "-d") || !strcmp(argv[1], "--display")) {
+            d_flag = 1;
             argc--;
             argv++;
         }
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
         Move ms[n];
         setRandomMoves(ms, n);
-        if (print_flag) {
+        if (d_flag) {
             c = applyMoves(c, ms, n);
             printCube(c);
         }
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
         printf("Invalid cube\n");
         return 1;
     }
-    else if (print_flag) {
+    else if (d_flag) {
         printCube(c);
     }
     printMoves(ms, l);
