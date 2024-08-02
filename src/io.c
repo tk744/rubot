@@ -415,28 +415,6 @@ static ColorCube decodeCube(Cube128 c) {
     return cc;
 }
 
-static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, char cD) {
-    if (x == cU) {
-        return U;
-    }
-    else if (x == cL) {
-        return L;
-    }
-    else if (x == cF) {
-        return F;
-    }
-    else if (x == cR) {
-        return R;
-    }
-    else if (x == cB) {
-        return B;
-    }
-    else if (x == cD) {
-        return D;
-    }
-    return NOP;
-}
-
 static void printColor(Color color) {
     if (color & U) {
         printf("\033[0;37m"); // white
@@ -505,50 +483,26 @@ static void printColorCube(ColorCube cc) {
     printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
 }
 
-void printCube(Cube128 c) {
-    ColorCube cc = decodeCube(c);
-    printColorCube(cc);
-}
-
-void printMove(Move m) {
-    if (m & U) {
-        printf("U");
+static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, char cD) {
+    if (x == cU) {
+        return U;
     }
-    else if (m & D) {
-        printf("D");
+    else if (x == cL) {
+        return L;
     }
-    else if (m & F) {
-        printf("F");
+    else if (x == cF) {
+        return F;
     }
-    else if (m & B) {
-        printf("B");
+    else if (x == cR) {
+        return R;
     }
-    else if (m & R) {
-        printf("R");
+    else if (x == cB) {
+        return B;
     }
-    else if (m & L) {
-        printf("L");
+    else if (x == cD) {
+        return D;
     }
-    else {
-        printf("NOP");
-        return;
-    }
-
-    if (m & H) {
-        printf("2");
-    }
-    else if (m & I) {
-        printf("'");
-    }
-}
-
-void printMoves(Move *ms, int n) {
-    // printf("[%d]: ", n);
-    while(n-- > 0) {
-        printMove(*ms++);
-        printf(n == 0 ? "" : " ");
-    }
-    printf("\n");
+    return NOP;
 }
 
 int parseCube(Cube128 *c, char *str) {
@@ -625,4 +579,49 @@ int parseMove(Move *m, char *str) {
 
     *m = mm;
     return 0;
+}
+
+void printCube(Cube128 c) {
+    ColorCube cc = decodeCube(c);
+    printColorCube(cc);
+}
+
+void printMove(Move m) {
+    if (m & U) {
+        printf("U");
+    }
+    else if (m & D) {
+        printf("D");
+    }
+    else if (m & F) {
+        printf("F");
+    }
+    else if (m & B) {
+        printf("B");
+    }
+    else if (m & R) {
+        printf("R");
+    }
+    else if (m & L) {
+        printf("L");
+    }
+    else {
+        printf("NOP");
+        return;
+    }
+
+    if (m & H) {
+        printf("2");
+    }
+    else if (m & I) {
+        printf("'");
+    }
+}
+
+void printMoves(Move *ms, int n) {
+    while(n-- > 0) {
+        printMove(*ms++);
+        printf(n == 0 ? "" : " ");
+    }
+    printf("\n");
 }
