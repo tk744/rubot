@@ -630,7 +630,7 @@ int parseMoveStr(Move *m, char *str) {
         *m = mm;
         return 0;
     }
-    else if (*str == '\'') {
+    else if (*str == 'i') {
         mm |= I;
     }
     else if (*str == '2') {
@@ -677,7 +677,7 @@ static void printMove(Move m) {
         printf("2");
     }
     else if (m & I) {
-        printf("'");
+        printf("i");
     }
 }
 
