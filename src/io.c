@@ -415,7 +415,7 @@ static ColorCube toColor(Cube128 c) {
     return cc;
 }
 
-static void printColor(Color color) {
+static void drawColor(Color color) {
     if (color & U) {
         printf("\033[0;37m"); // white
     }
@@ -437,7 +437,7 @@ static void printColor(Color color) {
     printf("▣\033[0m");
 }
 
-static void printColorCube(ColorCube cc) {
+static void drawColorCube(ColorCube cc) {
     int i, j; // i = row, j = column
     Color up_face[3][3] = {
         { cc.U.UL, cc.U.U, cc.U.UR },
@@ -448,7 +448,7 @@ static void printColorCube(ColorCube cc) {
     for (i=0 ; i<3 ; i++) {
         printf("        │ ");
         for (j=0 ; j<3 ; j++) {
-            printColor(up_face[i][j]);
+            drawColor(up_face[i][j]);
             printf(" ");
         }
         printf("│\n");
@@ -462,31 +462,31 @@ static void printColorCube(ColorCube cc) {
             printf("│ ");
             for (j=0 ; j<3 ; j++) {
                 if (i==0 && j==0) {
-                    printColor(faces[k].UL);
+                    drawColor(faces[k].UL);
                 }
                 else if (i==0 && j==1) {
-                    printColor(faces[k].U);
+                    drawColor(faces[k].U);
                 }
                 else if (i==0 && j==2) {
-                    printColor(faces[k].UR);
+                    drawColor(faces[k].UR);
                 }
                 else if (i==1 && j==0) {
-                    printColor(faces[k].L);
+                    drawColor(faces[k].L);
                 }
                 else if (i==1 && j==1) {
-                    printColor(faces[k].C);
+                    drawColor(faces[k].C);
                 }
                 else if (i==1 && j==2) {
-                    printColor(faces[k].R);
+                    drawColor(faces[k].R);
                 }
                 else if (i==2 && j==0) {
-                    printColor(faces[k].DL);
+                    drawColor(faces[k].DL);
                 }
                 else if (i==2 && j==1) {
-                    printColor(faces[k].D);
+                    drawColor(faces[k].D);
                 }
                 else if (i==2 && j==2) {
-                    printColor(faces[k].DR);
+                    drawColor(faces[k].DR);
                 }
                 printf(" ");
             }
@@ -503,7 +503,7 @@ static void printColorCube(ColorCube cc) {
     for (i=0 ; i<3 ; i++) {
         printf("        │ ");
         for (j=0 ; j<3 ; j++) {
-            printColor(down_face[i][j]);
+            drawColor(down_face[i][j]);
             printf(" ");
         }
         printf("│\n");
@@ -512,12 +512,144 @@ static void printColorCube(ColorCube cc) {
     printf("        └───────┘\n");
 }
 
-void printCube(Cube128 c) {
+void drawCube(Cube128 c) {
     ColorCube cc = toColor(c);
-    printColorCube(cc);
+    drawColorCube(cc);
 }
 
-void printMove(Move m) {
+static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, char cD) {
+    if (x == cU) {
+        return U;
+    }
+    else if (x == cL) {
+        return L;
+    }
+    else if (x == cF) {
+        return F;
+    }
+    else if (x == cR) {
+        return R;
+    }
+    else if (x == cB) {
+        return B;
+    }
+    else if (x == cD) {
+        return D;
+    }
+    return NOP;
+}
+
+int parseCubeStr(Cube128 *c, char *str) {
+    ColorCube cc = toColor(*c);
+    int i;
+    for (i=0 ; i<54 ; i++) {
+        ColorFace *face;
+        switch (i/9) {
+            case 0: face = &cc.U; break;
+            case 1: face = &cc.L; break;
+            case 2: face = &cc.F; break;
+            case 3: face = &cc.R; break;
+            case 4: face = &cc.B; break;
+            case 5: face = &cc.D; break;
+        }
+        
+        Color *color;
+        switch (i%9) {
+            case 0: color = &face->UL; break;
+            case 1: color = &face->U; break;
+            case 2: color = &face->UR; break;
+            case 3: color = &face->L; break;
+            case 4: color = &face->C; break;
+            case 5: color = &face->R; break;
+            case 6: color = &face->DL; break;
+            case 7: color = &face->D; break;
+            case 8: color = &face->DR; break;
+        }
+
+        *color = charToColor(*(str+i), *(str+4), *(str+13), *(str+22), *(str+31), *(str+40), *(str+49));
+        if (*color == NOP) {
+            return i+1;
+        }
+    }
+
+    *c = fromColor(cc);
+    return 0;
+}
+
+void printCube(Cube128 c) {
+    char str[55];
+    ColorCube cc = toColor(c);
+    int i;
+    for (i=0 ; i<54 ; i++) {
+        ColorFace *face;
+        switch (i/9) {
+            case 0: face = &cc.U; break;
+            case 1: face = &cc.L; break;
+            case 2: face = &cc.F; break;
+            case 3: face = &cc.R; break;
+            case 4: face = &cc.B; break;
+            case 5: face = &cc.D; break;
+        }
+        
+        Color *color;
+        switch (i%9) {
+            case 0: color = &face->UL; break;
+            case 1: color = &face->U; break;
+            case 2: color = &face->UR; break;
+            case 3: color = &face->L; break;
+            case 4: color = &face->C; break;
+            case 5: color = &face->R; break;
+            case 6: color = &face->DL; break;
+            case 7: color = &face->D; break;
+            case 8: color = &face->DR; break;
+        }
+
+        str[i] = *color == U ? 'U' : *color == L ? 'L' : *color == F ? 'F' : *color == R ? 'R' : *color == B ? 'B' : *color == D ? 'D' : '?';
+    }
+    str[i] = '\0';
+    printf(str);
+}
+
+int parseMoveStr(Move *m, char *str) {
+    Move mm = 0;
+
+    // check first character
+    switch (*str++) {
+        case 'U': mm |= U; break;
+        case 'D': mm |= D; break;
+        case 'F': mm |= F; break;
+        case 'B': mm |= B; break;
+        case 'R': mm |= R; break;
+        case 'L': mm |= L; break;
+        default: 
+            return -1;
+    }
+
+    // check second character
+    if (*str == '\0') {
+        *m = mm;
+        return 0;
+    }
+    else if (*str == '\'') {
+        mm |= I;
+    }
+    else if (*str == '2') {
+        mm |= H;
+    }
+    else {
+        return -1;
+    }
+    
+    // check for trailing characters
+    if (*(str+1) != '\0') {
+        return -1;
+    }
+
+    *m = mm;
+    return 0;
+}
+
+static void printMove(Move m) {
     if (m & U) {
         printf("U");
     }
@@ -555,133 +687,4 @@ void printMoves(Move *ms, int n) {
         printf(n == 0 ? "" : " ");
     }
     printf("\n");
-}
-
-static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, char cD) {
-    if (x == cU) {
-        return U;
-    }
-    else if (x == cL) {
-        return L;
-    }
-    else if (x == cF) {
-        return F;
-    }
-    else if (x == cR) {
-        return R;
-    }
-    else if (x == cB) {
-        return B;
-    }
-    else if (x == cD) {
-        return D;
-    }
-    return NOP;
-}
-
-int decodeCube(Cube128 *c, char *str) {
-    ColorCube cc = toColor(*c);
-    int i;
-    for (i=0 ; i<54 ; i++) {
-        ColorFace *face;
-        switch (i/9) {
-            case 0: face = &cc.U; break;
-            case 1: face = &cc.L; break;
-            case 2: face = &cc.F; break;
-            case 3: face = &cc.R; break;
-            case 4: face = &cc.B; break;
-            case 5: face = &cc.D; break;
-        }
-        
-        Color *color;
-        switch (i%9) {
-            case 0: color = &face->UL; break;
-            case 1: color = &face->U; break;
-            case 2: color = &face->UR; break;
-            case 3: color = &face->L; break;
-            case 4: color = &face->C; break;
-            case 5: color = &face->R; break;
-            case 6: color = &face->DL; break;
-            case 7: color = &face->D; break;
-            case 8: color = &face->DR; break;
-        }
-
-        *color = charToColor(*(str+i), *(str+4), *(str+13), *(str+22), *(str+31), *(str+40), *(str+49));
-        if (*color == NOP) {
-            return i;
-        }
-    }
-
-    *c = fromColor(cc);
-    return 0;
-}
-
-void encodeCube(Cube128 *c, char *str) {
-    ColorCube cc = toColor(*c);
-    int i;
-    for (i=0 ; i<54 ; i++) {
-        ColorFace *face;
-        switch (i/9) {
-            case 0: face = &cc.U; break;
-            case 1: face = &cc.L; break;
-            case 2: face = &cc.F; break;
-            case 3: face = &cc.R; break;
-            case 4: face = &cc.B; break;
-            case 5: face = &cc.D; break;
-        }
-        
-        Color *color;
-        switch (i%9) {
-            case 0: color = &face->UL; break;
-            case 1: color = &face->U; break;
-            case 2: color = &face->UR; break;
-            case 3: color = &face->L; break;
-            case 4: color = &face->C; break;
-            case 5: color = &face->R; break;
-            case 6: color = &face->DL; break;
-            case 7: color = &face->D; break;
-            case 8: color = &face->DR; break;
-        }
-
-        *str++ = *color == U ? 'U' : *color == L ? 'L' : *color == F ? 'F' : *color == R ? 'R' : *color == B ? 'B' : *color == D ? 'D' : '?';
-    }
-}
-
-int decodeMove(Move *m, char *str) {
-    Move mm = 0;
-
-    // check first character
-    switch (*str++) {
-        case 'U': mm |= U; break;
-        case 'D': mm |= D; break;
-        case 'F': mm |= F; break;
-        case 'B': mm |= B; break;
-        case 'R': mm |= R; break;
-        case 'L': mm |= L; break;
-        default: 
-            return -1;
-    }
-
-    // check second character
-    if (*str == '\0') {
-        *m = mm;
-        return 0;
-    }
-    else if (*str == '\'') {
-        mm |= I;
-    }
-    else if (*str == '2') {
-        mm |= H;
-    }
-    else {
-        return -1;
-    }
-    
-    // check for trailing characters
-    if (*(str+1) != '\0') {
-        return -1;
-    }
-
-    *m = mm;
-    return 0;
 }

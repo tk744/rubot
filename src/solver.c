@@ -497,5 +497,5 @@ int solve(Cube128 c, Move *ms) {
     fclose(lt);
 
     // check if solved
-    return areEqual(c, cubeSolved()) ? num_moves : -1;
+    return equalCubes(c, cubeSolved()) ? num_moves : -1;
 }
