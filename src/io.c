@@ -20,7 +20,7 @@ static Int8 cornerTetrad(CubieEnum ce) {
     }
 }
 
-static Int8 encodeCubie(ColorCube cc, CubieEnum ce, int isEdge) {
+static Int8 cubieFromColor(ColorCube cc, CubieEnum ce, int isEdge) {
     Int8 permutation, orientation;
     
     Color colors[3] = {};
@@ -183,7 +183,7 @@ static Int8 encodeCubie(ColorCube cc, CubieEnum ce, int isEdge) {
     return cubie;
 }
 
-static Color decodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color f) {
+static Color cubieToColor(Cube128 c, CubieEnum ce, int isEdge, Color f) {
     Int8 cubie = getCubie(isEdge ? c.edges : c.corners, ce);
     Int8 permutation = getPermutation(cubie, isEdge);
     Int8 orientation = getOrientation(cubie, isEdge);
@@ -335,21 +335,21 @@ static Color decodeCubie(Cube128 c, CubieEnum ce, int isEdge, Color f) {
     return colors[idx];
 }
 
-static Cube128 encodeCube(ColorCube cc) {
+static Cube128 fromColor(ColorCube cc) {
     Cube128 c = { 0, 0 };
 
     Int64 i;
     for(i=0 ; i<NUM_EDGES ; i++) {
-        setCubie(&c.edges, i, encodeCubie(cc, i, 1));
+        setCubie(&c.edges, i, cubieFromColor(cc, i, 1));
     }
     for(i=0 ; i<NUM_CORNERS ; i++) {
-        setCubie(&c.corners, i, encodeCubie(cc, i, 0));
+        setCubie(&c.corners, i, cubieFromColor(cc, i, 0));
     }
 
     return c;
 }
 
-static ColorCube decodeCube(Cube128 c) {
+static ColorCube toColor(Cube128 c) {
     ColorCube cc;
     
     // set center cubies
@@ -361,56 +361,56 @@ static ColorCube decodeCube(Cube128 c) {
     cc.L.C = L;
     
     // set edge cubies
-    cc.U.D = decodeCubie(c, UF, 1, U);
-    cc.F.U = decodeCubie(c, UF, 1, F);
-    cc.U.U = decodeCubie(c, UB, 1, U);
-    cc.B.U = decodeCubie(c, UB, 1, B);
-    cc.U.R = decodeCubie(c, UR, 1, U);
-    cc.R.U = decodeCubie(c, UR, 1, R);
-    cc.U.L = decodeCubie(c, UL, 1, U);
-    cc.L.U = decodeCubie(c, UL, 1, L);
-    cc.D.U = decodeCubie(c, DF, 1, D);
-    cc.F.D = decodeCubie(c, DF, 1, F);
-    cc.D.D = decodeCubie(c, DB, 1, D);
-    cc.B.D = decodeCubie(c, DB, 1, B);
-    cc.D.R = decodeCubie(c, DR, 1, D);
-    cc.R.D = decodeCubie(c, DR, 1, R);
-    cc.D.L = decodeCubie(c, DL, 1, D);
-    cc.L.D = decodeCubie(c, DL, 1, L);
-    cc.F.R = decodeCubie(c, FR, 1, F);
-    cc.R.L = decodeCubie(c, FR, 1, R);
-    cc.F.L = decodeCubie(c, FL, 1, F);
-    cc.L.R = decodeCubie(c, FL, 1, L);
-    cc.B.L = decodeCubie(c, BR, 1, B);
-    cc.R.R = decodeCubie(c, BR, 1, R);
-    cc.B.R = decodeCubie(c, BL, 1, B);
-    cc.L.L = decodeCubie(c, BL, 1, L);
+    cc.U.D = cubieToColor(c, UF, 1, U);
+    cc.F.U = cubieToColor(c, UF, 1, F);
+    cc.U.U = cubieToColor(c, UB, 1, U);
+    cc.B.U = cubieToColor(c, UB, 1, B);
+    cc.U.R = cubieToColor(c, UR, 1, U);
+    cc.R.U = cubieToColor(c, UR, 1, R);
+    cc.U.L = cubieToColor(c, UL, 1, U);
+    cc.L.U = cubieToColor(c, UL, 1, L);
+    cc.D.U = cubieToColor(c, DF, 1, D);
+    cc.F.D = cubieToColor(c, DF, 1, F);
+    cc.D.D = cubieToColor(c, DB, 1, D);
+    cc.B.D = cubieToColor(c, DB, 1, B);
+    cc.D.R = cubieToColor(c, DR, 1, D);
+    cc.R.D = cubieToColor(c, DR, 1, R);
+    cc.D.L = cubieToColor(c, DL, 1, D);
+    cc.L.D = cubieToColor(c, DL, 1, L);
+    cc.F.R = cubieToColor(c, FR, 1, F);
+    cc.R.L = cubieToColor(c, FR, 1, R);
+    cc.F.L = cubieToColor(c, FL, 1, F);
+    cc.L.R = cubieToColor(c, FL, 1, L);
+    cc.B.L = cubieToColor(c, BR, 1, B);
+    cc.R.R = cubieToColor(c, BR, 1, R);
+    cc.B.R = cubieToColor(c, BL, 1, B);
+    cc.L.L = cubieToColor(c, BL, 1, L);
             
     // set corner cubies
-    cc.U.DR = decodeCubie(c, UFR, 0, U);
-    cc.F.UR = decodeCubie(c, UFR, 0, F);
-    cc.R.UL = decodeCubie(c, UFR, 0, R);
-    cc.U.DL = decodeCubie(c, UFL, 0, U);
-    cc.F.UL = decodeCubie(c, UFL, 0, F);
-    cc.L.UR = decodeCubie(c, UFL, 0, L);
-    cc.U.UR = decodeCubie(c, UBR, 0, U);
-    cc.B.UL = decodeCubie(c, UBR, 0, B);
-    cc.R.UR = decodeCubie(c, UBR, 0, R);
-    cc.U.UL = decodeCubie(c, UBL, 0, U);
-    cc.B.UR = decodeCubie(c, UBL, 0, B);
-    cc.L.UL = decodeCubie(c, UBL, 0, L);
-    cc.D.UR = decodeCubie(c, DFR, 0, D);
-    cc.F.DR = decodeCubie(c, DFR, 0, F);
-    cc.R.DL = decodeCubie(c, DFR, 0, R);
-    cc.D.UL = decodeCubie(c, DFL, 0, D);
-    cc.F.DL = decodeCubie(c, DFL, 0, F);
-    cc.L.DR = decodeCubie(c, DFL, 0, L);
-    cc.D.DR = decodeCubie(c, DBR, 0, D);
-    cc.B.DL = decodeCubie(c, DBR, 0, B);
-    cc.R.DR = decodeCubie(c, DBR, 0, R);
-    cc.D.DL = decodeCubie(c, DBL, 0, D);
-    cc.B.DR = decodeCubie(c, DBL, 0, B);
-    cc.L.DL = decodeCubie(c, DBL, 0, L);
+    cc.U.DR = cubieToColor(c, UFR, 0, U);
+    cc.F.UR = cubieToColor(c, UFR, 0, F);
+    cc.R.UL = cubieToColor(c, UFR, 0, R);
+    cc.U.DL = cubieToColor(c, UFL, 0, U);
+    cc.F.UL = cubieToColor(c, UFL, 0, F);
+    cc.L.UR = cubieToColor(c, UFL, 0, L);
+    cc.U.UR = cubieToColor(c, UBR, 0, U);
+    cc.B.UL = cubieToColor(c, UBR, 0, B);
+    cc.R.UR = cubieToColor(c, UBR, 0, R);
+    cc.U.UL = cubieToColor(c, UBL, 0, U);
+    cc.B.UR = cubieToColor(c, UBL, 0, B);
+    cc.L.UL = cubieToColor(c, UBL, 0, L);
+    cc.D.UR = cubieToColor(c, DFR, 0, D);
+    cc.F.DR = cubieToColor(c, DFR, 0, F);
+    cc.R.DL = cubieToColor(c, DFR, 0, R);
+    cc.D.UL = cubieToColor(c, DFL, 0, D);
+    cc.F.DL = cubieToColor(c, DFL, 0, F);
+    cc.L.DR = cubieToColor(c, DFL, 0, L);
+    cc.D.DR = cubieToColor(c, DBR, 0, D);
+    cc.B.DL = cubieToColor(c, DBR, 0, B);
+    cc.R.DR = cubieToColor(c, DBR, 0, R);
+    cc.D.DL = cubieToColor(c, DBL, 0, D);
+    cc.B.DR = cubieToColor(c, DBL, 0, B);
+    cc.L.DL = cubieToColor(c, DBL, 0, L);
     
     return cc;
 }
@@ -483,106 +483,8 @@ static void printColorCube(ColorCube cc) {
     printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
 }
 
-static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, char cD) {
-    if (x == cU) {
-        return U;
-    }
-    else if (x == cL) {
-        return L;
-    }
-    else if (x == cF) {
-        return F;
-    }
-    else if (x == cR) {
-        return R;
-    }
-    else if (x == cB) {
-        return B;
-    }
-    else if (x == cD) {
-        return D;
-    }
-    return NOP;
-}
-
-int parseCube(Cube128 *c, char *str) {
-    ColorCube cc;
-    int i;
-    for (i=0 ; i<54 ; i++) {
-        ColorFace *face;
-        switch (i/9) {
-            case 0: face = &cc.U; break;
-            case 1: face = &cc.L; break;
-            case 2: face = &cc.F; break;
-            case 3: face = &cc.R; break;
-            case 4: face = &cc.B; break;
-            case 5: face = &cc.D; break;
-        }
-        
-        Color *color;
-        switch (i%9) {
-            case 0: color = &face->UL; break;
-            case 1: color = &face->U; break;
-            case 2: color = &face->UR; break;
-            case 3: color = &face->L; break;
-            case 4: color = &face->C; break;
-            case 5: color = &face->R; break;
-            case 6: color = &face->DL; break;
-            case 7: color = &face->D; break;
-            case 8: color = &face->DR; break;
-        }
-
-        *color = charToColor(*(str+i), *(str+4), *(str+13), *(str+22), *(str+31), *(str+40), *(str+49));
-        if (*color == NOP) {
-            return i;
-        }
-    }
-
-    *c = encodeCube(cc);
-    return 0;
-}
-
-int parseMove(Move *m, char *str) {
-    Move mm = 0;
-
-    // check first character
-    switch (*str++) {
-        case 'U': mm |= U; break;
-        case 'D': mm |= D; break;
-        case 'F': mm |= F; break;
-        case 'B': mm |= B; break;
-        case 'R': mm |= R; break;
-        case 'L': mm |= L; break;
-        default: 
-            return -1;
-    }
-
-    // check second character
-    if (*str == '\0') {
-        *m = mm;
-        return 0;
-    }
-    else if (*str == '\'') {
-        mm |= I;
-    }
-    else if (*str == '2') {
-        mm |= H;
-    }
-    else {
-        return -1;
-    }
-    
-    // check for trailing characters
-    if (*(str+1) != '\0') {
-        return -1;
-    }
-
-    *m = mm;
-    return 0;
-}
-
 void printCube(Cube128 c) {
-    ColorCube cc = decodeCube(c);
+    ColorCube cc = toColor(c);
     printColorCube(cc);
 }
 
@@ -624,4 +526,133 @@ void printMoves(Move *ms, int n) {
         printf(n == 0 ? "" : " ");
     }
     printf("\n");
+}
+
+static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, char cD) {
+    if (x == cU) {
+        return U;
+    }
+    else if (x == cL) {
+        return L;
+    }
+    else if (x == cF) {
+        return F;
+    }
+    else if (x == cR) {
+        return R;
+    }
+    else if (x == cB) {
+        return B;
+    }
+    else if (x == cD) {
+        return D;
+    }
+    return NOP;
+}
+
+int decodeCube(Cube128 *c, char *str) {
+    ColorCube cc = toColor(*c);
+    int i;
+    for (i=0 ; i<54 ; i++) {
+        ColorFace *face;
+        switch (i/9) {
+            case 0: face = &cc.U; break;
+            case 1: face = &cc.L; break;
+            case 2: face = &cc.F; break;
+            case 3: face = &cc.R; break;
+            case 4: face = &cc.B; break;
+            case 5: face = &cc.D; break;
+        }
+        
+        Color *color;
+        switch (i%9) {
+            case 0: color = &face->UL; break;
+            case 1: color = &face->U; break;
+            case 2: color = &face->UR; break;
+            case 3: color = &face->L; break;
+            case 4: color = &face->C; break;
+            case 5: color = &face->R; break;
+            case 6: color = &face->DL; break;
+            case 7: color = &face->D; break;
+            case 8: color = &face->DR; break;
+        }
+
+        *color = charToColor(*(str+i), *(str+4), *(str+13), *(str+22), *(str+31), *(str+40), *(str+49));
+        if (*color == NOP) {
+            return i;
+        }
+    }
+
+    *c = fromColor(cc);
+    return 0;
+}
+
+void encodeCube(Cube128 *c, char *str) {
+    ColorCube cc = toColor(*c);
+    int i;
+    for (i=0 ; i<54 ; i++) {
+        ColorFace *face;
+        switch (i/9) {
+            case 0: face = &cc.U; break;
+            case 1: face = &cc.L; break;
+            case 2: face = &cc.F; break;
+            case 3: face = &cc.R; break;
+            case 4: face = &cc.B; break;
+            case 5: face = &cc.D; break;
+        }
+        
+        Color *color;
+        switch (i%9) {
+            case 0: color = &face->UL; break;
+            case 1: color = &face->U; break;
+            case 2: color = &face->UR; break;
+            case 3: color = &face->L; break;
+            case 4: color = &face->C; break;
+            case 5: color = &face->R; break;
+            case 6: color = &face->DL; break;
+            case 7: color = &face->D; break;
+            case 8: color = &face->DR; break;
+        }
+
+        *str++ = *color == U ? 'U' : *color == L ? 'L' : *color == F ? 'F' : *color == R ? 'R' : *color == B ? 'B' : *color == D ? 'D' : '?';
+    }
+}
+
+int decodeMove(Move *m, char *str) {
+    Move mm = 0;
+
+    // check first character
+    switch (*str++) {
+        case 'U': mm |= U; break;
+        case 'D': mm |= D; break;
+        case 'F': mm |= F; break;
+        case 'B': mm |= B; break;
+        case 'R': mm |= R; break;
+        case 'L': mm |= L; break;
+        default: 
+            return -1;
+    }
+
+    // check second character
+    if (*str == '\0') {
+        *m = mm;
+        return 0;
+    }
+    else if (*str == '\'') {
+        mm |= I;
+    }
+    else if (*str == '2') {
+        mm |= H;
+    }
+    else {
+        return -1;
+    }
+    
+    // check for trailing characters
+    if (*(str+1) != '\0') {
+        return -1;
+    }
+
+    *m = mm;
+    return 0;
 }
