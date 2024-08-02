@@ -39,7 +39,10 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // 1 string arg: get solution moves from initial colors
+    // initialize cube state from args
+    Cube128 c = cubeSolved();
+
+    // 1 string arg: set colors
     int arg1_len = strlen(argv[1]);
     if (argc == 2 && arg1_len != 1 && arg1_len != 2) {
         if (arg1_len != 54) {
@@ -47,23 +50,15 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        Cube128 c = cubeSolved();
         int idx_error = parseCube(&c, argv[1]);
         if (idx_error) {
             printf("ERROR: Invalid color '%c' in position %d.\n", *(argv[1]+idx_error), idx_error);
             return -1;
         }
-        printCube(c);
-
-        Move ms[MAX_MOVES];
-        int n = solve(c, ms);
-        printMoves(ms, n);
-        return 0;
     }
 
-    // 1+ string args: get solution moves from initial move
-    if (argc > 1) {
-        Cube128 c = cubeSolved();
+    // 1+ string args: apply move sequence
+    else {
         while (--argc > 0) {
             Move m;
             if ((parseMove(&m, *(++argv))) == -1) {
@@ -72,10 +67,15 @@ int main(int argc, char *argv[]) {
             }
             c = applyMove(c, m);
         }
-
-        Move ms[MAX_MOVES];
-        int n = solve(c, ms);
-        printMoves(ms, n);
-        return 0;
     }
+
+    // solve cube
+    Move ms[MAX_MOVES];
+    int l = solve(c, ms);
+    if (l == -1) {
+        printf("Invalid cube\n");
+        return 1;
+    }
+    printMoves(ms, l);
+    return 0;
 }
