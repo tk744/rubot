@@ -23,18 +23,18 @@ For a full list of commands, check `rubot -h`.
 - From a color string:
     ```
     $ ./rubot PBBWWBRGGWRWPPRBBRGPPGGWYYPYWWGRPBRYRPGWBYBRRGGWYYBYYP
-    D' F' R L' U R L F R2 U2 F L R2 D2 R2 F U2 F R2 B2 D2 B U2 R2 U2 F2 R2 U2 F2 U2 L2 B2 L2 U2
+    Di Fi R Li U R L F R2 U2 F L R2 D2 R2 F U2 F R2 B2 D2 B U2 R2 U2 F2 R2 U2 F2 U2 L2 B2 L2 U2
     ```
 - From a scramble sequence: 
     ```
-    $ ./rubot L D2 R L\' R\' B F D L\' U\'
-    U L D U2 F' B' R D2 R' U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
+    $ ./rubot L D2 R Li Ri B F D Li Ui
+    U L D U2 Fi Bi R D2 Ri U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
     ```
 
 `rubot` can also print the state of the scrambled cube using one of two flags:
 - (`-c`) print the color string:
     ```
-    $ ./rubot -c L D2 R L\' R\' B F D L\' U\'
+    $ ./rubot -c L D2 R Li Ri B F D Li Ui
     LURRURDBUUBRLLBUUBFDBLFFLLFLDDURDDFFBRFFBUULRDDLBDRBFR
     ```
 
@@ -51,7 +51,7 @@ For a full list of commands, check `rubot -h`.
 - Pass the number of moves to generate, optionally followed by an RNG seed:
     ```
     $ ./rubot 25 5
-    D2 U F' B D F U' F' U' F2 D B F' D2 U R' B' F R L2 B2 D' B U' B'
+    D2 U Fi B D F Ui Fi Ui F2 D B Fi D2 U Ri Bi F R L2 B2 Di B Ui Bi
     ```
 
 - As with cube solving, we can use the `-c` or `-d` flag to print the state of the scrambled cube:
