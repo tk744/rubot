@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     }
 
     // flags
-    int d_flag = 0;
+    int c_flag = 0, d_flag = 0;
     if (*argv[1] == '-') {
         // -b: benchmark
         if (!strcmp(argv[1], "-b") || !strcmp(argv[1], "--benchmark")) {
@@ -52,7 +52,13 @@ int main(int argc, char *argv[]) {
             benchmark(n);
             return 0;
         }
-        // -d: display cube
+        // -c: color
+        else if (!strcmp(argv[1], "-c") || !strcmp(argv[1], "--color")) {
+            c_flag = 1;
+            argc--;
+            argv++;
+        }            
+        // -d: display
         else if (!strcmp(argv[1], "-d") || !strcmp(argv[1], "--display")) {
             d_flag = 1;
             argc--;
@@ -89,11 +95,21 @@ int main(int argc, char *argv[]) {
 
         Move ms[n];
         setRandomMoves(ms, n);
+        c = applyMoves(c, ms, n);
+        
         if (d_flag) {
-            c = applyMoves(c, ms, n);
             printCube(c);
         }
-        printMoves(ms, n);
+
+        if (c_flag) {
+            char str[54];
+            encodeCube(&c, str);
+            printf("%s\n", str);
+        }
+        else {
+            printMoves(ms, n);
+        }
+
         return 0;
     }
 
@@ -105,7 +121,7 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        int idx_error = parseCube(&c, argv[1]);
+        int idx_error = decodeCube(&c, argv[1]);
         if (idx_error) {
             printf("ERROR: Invalid color '%c' in position %d.\n", *(argv[1]+idx_error), idx_error);
             return -1;
@@ -116,7 +132,7 @@ int main(int argc, char *argv[]) {
     else {
         while (--argc > 0) {
             Move m;
-            if ((parseMove(&m, *(++argv))) == -1) {
+            if ((decodeMove(&m, *(++argv))) == -1) {
                 printf("ERROR: Invalid move '%s'.\n", *argv);
                 return -1;
             }
@@ -131,9 +147,19 @@ int main(int argc, char *argv[]) {
         printf("Invalid cube\n");
         return 1;
     }
-    else if (d_flag) {
+
+    if (d_flag) {
         printCube(c);
     }
-    printMoves(ms, l);
+
+    if (c_flag) {
+        char str[54];
+        encodeCube(&c, str);
+        printf("%s\n", str);
+    }
+    else {
+        printMoves(ms, l);
+    }
+
     return 0;
 }
