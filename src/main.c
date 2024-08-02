@@ -21,8 +21,8 @@ static int benchmark(int n) {
         total_time += (double)(clock() - clock_start) / CLOCKS_PER_SEC;
     }
 
-    printf("Throughput: %.2f cubes per second\n", n / total_time);
-    printf(" Solutions: %.2f moves per cube\n", (double)total_length / n);
+    printf("Throughput: %.2f solves per second\n", n / total_time);
+    printf("Length: %.2f moves per solve\n", (double)total_length / n);
 }
 
 int main(int argc, char *argv[]) {
