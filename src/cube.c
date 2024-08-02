@@ -170,6 +170,6 @@ void setOrientation(Int8 *cubie, int isEdge, Int8 orientation) {
     setPermutation(cubie, isEdge, permutation);
 }
 
-int areEqual(Cube128 c1, Cube128 c2) {
+int equalCubes(Cube128 c1, Cube128 c2) {
     return (c1.edges == c2.edges && c1.corners == c2.corners);
 }

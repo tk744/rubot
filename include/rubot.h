@@ -22,29 +22,15 @@ typedef struct {
     Int64 corners;
 } Cube128;
 
+// Return a solved Cube128.
 Cube128 cubeSolved();
-
-
-// Decode the string representation of a cube `str` into a Cube128 `c`.
-// `str` must be an array of length 54.
-// Returns 0 on success, or the position of the first invalid character if the representation is invalid.
-int decodeCube(Cube128 *c, char *str);
-
-// Encode a Cube128 `c` into a string representation `str`.
-// `str` must be an array of length 54.
-void encodeCube(Cube128 *c, char *str);
-
-// Decode the string representation of a move `str` into a Move `m`.
-// Returns 0 on success, or -1 if the representation is invalid.
-int decodeMove(Move *m, char *str);
 
 // Find a sequence of moves which solve `c` and store them in `ms`.
 // Return the number of moves in `ms`, or -1 if no solution was found.
 int solve(Cube128 c, Move *ms);
 
-// Generate a random sequence of `n` non-redundant moves and store them in `ms`.
-// `ms` must be an array of length `n`.
-void setRandomMoves(Move *ms, int n);
+// Return 1 if `c1` and `c2` are equal, 0 otherwise.
+int equalCubes(Cube128 c1, Cube128 c2);
 
 // Returns a new Cube128 with the move `m` applied to `c`.
 Cube128 applyMove(Cube128 c, Move m);
@@ -53,33 +39,44 @@ Cube128 applyMove(Cube128 c, Move m);
 // `n` is the number of moves in `ms`.
 Cube128 applyMoves(Cube128 c, Move *ms, int n);
 
-// Return the cubie at position `ce` in the encoding.
+// Return the cubie at index `ce` in the encoding.
 Int8 getCubie(Int64 encoding, CubieEnum ce);
 
-// Return the permutation from the cubie encoding.
-// Edges have permutation 0-11, corners have permutation 0-7.
-Int8 getPermutation(Int8 cubie, int isEdge);
-
-// Return the orientation from the cubie encoding.
-// Edges have orientation 0 or 1, corners have orientation 0, 1, or 2.
-Int8 getOrientation(Int8 cubie, int isEdge);
-
-// Set the cubie at position `ce` in the encoding to `cubie`.
+// Set the cubie at index `ce` in the encoding to `cubie`.
 void setCubie(Int64 *encoding, CubieEnum ce, Int8 cubie);
 
+// Return the permutation from the cubie encoding.
+Int8 getPermutation(Int8 cubie, int isEdge);
+
 // Set the permutation of the cubie encoding.
-// Edges have permutation 0-11, corners have permutation 0-7.
 void setPermutation(Int8 *cubie, int isEdge, Int8 permutation);
 
+// Return the orientation from the cubie encoding.
+Int8 getOrientation(Int8 cubie, int isEdge);
+
 // Set the orientation of the cubie encoding.
-// Edges have orientation 0 or 1, corners have orientation 0, 1, or 2.
 void setOrientation(Int8 *cubie, int isEdge, Int8 orientation);
 
-// Return 1 if `c1` and `c2` are equal, 0 otherwise.
-int areEqual(Cube128 c1, Cube128 c2);
+// Generate a random sequence of `n` non-redundant moves and store them in `ms`.
+// `ms` must be an array of length `n`.
+void setRandomMoves(Move *ms, int n);
 
+// Parse the string representation of a cube `str` into a Cube128 `c`.
+// `str` must be an array of length 54.
+// Returns 0 on success, or 1+index of the first invalid character if the representation is invalid.
+int parseCubeStr(Cube128 *c, char *str);
+
+// Parse the string representation of a move `str` into a Move `m`.
+// Returns 0 on success, or -1 if the representation is invalid.
+int parseMoveStr(Move *m, char *str);
+
+// Print the string representation of a Cube128 `c`.
 void printCube(Cube128 c);
 
-void printMove(Move m);
-
+// Print the string representation of the move sequence `ms`
+// `n` is the number of moves in `ms`.
 void printMoves(Move *ms, int n);
+
+// Print an ANSII graphic representation of a Cube128 `c`.
+// Requires a terminal with ANSI escape codes.
+void drawCube(Cube128 c);

@@ -112,12 +112,10 @@ int main(int argc, char *argv[]) {
         c = applyMoves(c, ms, n);
         
         if (d_flag) {
-            printCube(c);
+            drawCube(c);
         }
         else if (c_flag) {
-            char str[54];
-            encodeCube(&c, str);
-            printf("%s\n", str);
+            printCube(c);
         }
         else {
             printMoves(ms, n);
@@ -134,9 +132,9 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        int idx_error = decodeCube(&c, argv[1]);
-        if (idx_error) {
-            printf("ERROR: Invalid color '%c' in position %d.\n", *(argv[1]+idx_error), idx_error);
+        int error_code;
+        if (error_code = parseCubeStr(&c, argv[1])) {
+            printf("ERROR: Invalid color '%c' at index %d.\n", *(argv[1]+error_code-1), error_code-1);
             return -1;
         }
     }
@@ -145,7 +143,7 @@ int main(int argc, char *argv[]) {
     else {
         while (--argc > 0) {
             Move m;
-            if ((decodeMove(&m, *(++argv))) == -1) {
+            if ((parseMoveStr(&m, *(++argv))) == -1) {
                 printf("ERROR: Invalid move '%s'.\n", *argv);
                 return -1;
             }
@@ -162,12 +160,10 @@ int main(int argc, char *argv[]) {
     }
 
     if (d_flag) {
-        printCube(c);
+        drawCube(c);
     }
     else if (c_flag) {
-        char str[54];
-        encodeCube(&c, str);
-        printf("%s\n", str);
+        printCube(c);
     }
     else {
         printMoves(ms, l);
