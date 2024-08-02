@@ -482,13 +482,6 @@ int solve(Cube128 c, Move *ms) {
                 }
             }
 
-            // TODO: optimization
-            // if best_move and parent move are on same face, then reduce
-            // e.g. R and R2 -> R'
-            // e.g. R' and R2 -> R
-            // e.g. R and R' -> NOP (do num_moves--)
-            // e.g. R2 and R2 -> NOP (do num_moves--)
-
             // apply move
             c = applyMove(c, best_move);
             ms[num_moves++] = best_move;
