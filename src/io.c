@@ -438,49 +438,78 @@ static void printColor(Color color) {
 }
 
 static void printColorCube(ColorCube cc) {
-    ColorFace faces[6] = { cc.U, cc.L, cc.F, cc.R, cc.B, cc.D };
-
-    printf("┌──┤U├──┬──┤L├──┬──┤F├──┬──┤R├──┬──┤B├──┬──┤D├──┐\n");
-
-    int i, j, k; // i = row, j = face, k = column
+    int i, j; // i = row, j = column
+    Color up_face[3][3] = {
+        { cc.U.UL, cc.U.U, cc.U.UR },
+        { cc.U.L, cc.U.C, cc.U.R },
+        { cc.U.DL, cc.U.D, cc.U.DR }
+    };
+    printf("        ┌───────┐\n");
     for (i=0 ; i<3 ; i++) {
-        for (j=0 ; j<6 ; j++) {
+        printf("        │ ");
+        for (j=0 ; j<3 ; j++) {
+            printColor(up_face[i][j]);
+            printf(" ");
+        }
+        printf("│\n");
+    }
+
+    printf("┌───────┼───────┼───────┬───────┐\n");
+    ColorFace faces[4] = { cc.L, cc.F, cc.R, cc.B };
+    int k; // k = face
+    for (i=0 ; i<3 ; i++) {
+        for (k=0 ; k<4 ; k++) {
             printf("│ ");
-            for (k=0 ; k<3 ; k++) {
-                if (i==0 && k==0) {
-                    printColor(faces[j].UL);
+            for (j=0 ; j<3 ; j++) {
+                if (i==0 && j==0) {
+                    printColor(faces[k].UL);
                 }
-                else if (i==0 && k==1) {
-                    printColor(faces[j].U);
+                else if (i==0 && j==1) {
+                    printColor(faces[k].U);
                 }
-                else if (i==0 && k==2) {
-                    printColor(faces[j].UR);
+                else if (i==0 && j==2) {
+                    printColor(faces[k].UR);
                 }
-                else if (i==1 && k==0) {
-                    printColor(faces[j].L);
+                else if (i==1 && j==0) {
+                    printColor(faces[k].L);
                 }
-                else if (i==1 && k==1) {
-                    printColor(faces[j].C);
+                else if (i==1 && j==1) {
+                    printColor(faces[k].C);
                 }
-                else if (i==1 && k==2) {
-                    printColor(faces[j].R);
+                else if (i==1 && j==2) {
+                    printColor(faces[k].R);
                 }
-                else if (i==2 && k==0) {
-                    printColor(faces[j].DL);
+                else if (i==2 && j==0) {
+                    printColor(faces[k].DL);
                 }
-                else if (i==2 && k==1) {
-                    printColor(faces[j].D);
+                else if (i==2 && j==1) {
+                    printColor(faces[k].D);
                 }
-                else if (i==2 && k==2) {
-                    printColor(faces[j].DR);
+                else if (i==2 && j==2) {
+                    printColor(faces[k].DR);
                 }
                 printf(" ");
             }
         }
         printf("│\n");
     }
+    printf("└───────┼───────┼───────┴───────┘\n");
 
-    printf("└───────┴───────┴───────┴───────┴───────┴───────┘\n");
+    Color down_face[3][3] = {
+        { cc.D.UL, cc.D.U, cc.D.UR },
+        { cc.D.L, cc.D.C, cc.D.R },
+        { cc.D.DL, cc.D.D, cc.D.DR }
+    };
+    for (i=0 ; i<3 ; i++) {
+        printf("        │ ");
+        for (j=0 ; j<3 ; j++) {
+            printColor(down_face[i][j]);
+            printf(" ");
+        }
+        printf("│\n");
+    }
+
+    printf("        └───────┘\n");
 }
 
 void printCube(Cube128 c) {
