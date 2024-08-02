@@ -28,10 +28,24 @@ static int benchmark(int n) {
 int main(int argc, char *argv[]) {
     // 0 args or -h: help
     if (argc == 1 || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
-        printf("Usage: %s [n <s>|ms|cs]\n", argv[0]);
-        printf("    n: (int) get n random moves, optionally seed with s\n");
-        printf("   ms: (str) whitespace-seperated list of moves\n");
-        printf("   cs: (str) 54-length string of colors\n");
+        printf("Usage:\n");
+        printf("    %s [-d] [-c] COLOR_STRING\n", argv[0]);
+        printf("    %s [-d] [-c] MOVES ...\n", argv[0]);
+        printf("    %s [-d] [-c] N [SEED]\n", argv[0]);
+        printf("    %s -b N\n", argv[0]);
+        printf("    %s -h\n", argv[0]);
+        // printf("\n");
+        printf("Arguments:\n");
+        printf("    COLOR_STRING: 54-length string of colors\n");
+        printf("    MOVES:        sequence of scrambling moves\n");
+        printf("    N:            number of random moves to generate\n");
+        printf("    SEED:         seed for random number generator\n");
+        // printf("\n");
+        printf("Options:\n");
+        printf("    -h: show this text\n");
+        printf("    -d: draw unsolved cube\n");
+        printf("    -c: print color string\n");
+        printf("    -b: benchmark on N scrambles\n");
         return 0;
     }
 
