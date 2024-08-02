@@ -15,13 +15,13 @@ Build the executable `rubot` from source by running `make`.
 $ ./rubot PBBWWBRGGWRWPPRBBRGPPGGWYYPYWWGRPBRYRPGWBYBRRGGWYYBYYP
 D' F' R L' U R L F R2 U2 F L R2 D2 R2 F U2 F R2 B2 D2 B U2 R2 U2 F2 R2 U2 F2 U2 L2 B2 L2 U2
 ```
-The cube is represented by a 54-character string: 6 segments (one per face) of 9 characters (one per tile). The faces are arranged in the order U, L, F, R, B, D, and the tiles in each face are arranged in row-major order. `rubot` is flexible and does not specify a fixed set of characters to use for each color. The graphic below depicts the index of each tile in the string representation.
+The cube is represented by a 54-character string: 6 substrings (one per face) of 9 characters (one per tile). The faces are arranged in the order U, L, F, R, B, D, and the tiles in each face are arranged in row-major order. `rubot` is flexible and does not specify a fixed set of characters to use for each color. The graphic below depicts the index of each tile in the string representation.
 
 <p align="center"><img alt="cube string encoding" src="cube-encoding.png" width="500"></p>
 
 ## Solving a Scramble Sequence
 
-`rubot` also accepts the sequence of moves used to scramble the cube. It does not simply reverse this sequence to provide a solution.
+`rubot` also accepts a sequence of moves used to scramble the cube. It does not simply reverse this sequence to provide a solution.
 ```
 $ ./rubot L D2 R L\' R\' B F D L\' U\'
 U L D U2 F' B' R D2 R' U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
@@ -39,7 +39,7 @@ U L D U2 F' B' R D2 R' U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
 
 - `-h`/`--help`: Displays the help screen.
 - `-p`/`--print`: Prints the cube representation before solving, or after generating a scramble sequence. This is useful for checking that the representation is what you expect.
-- `-b`/`--benchmark`: Runs a benchmark and prints the throughput and average solution length. Takes an integer argument for the number of cubes to solve.
+- `-b`/`--benchmark`: Takes an integer argument and runs a benchmark by solving that many scrambled cubes, reporting the throughput and average solution length at the end.
 
 <!-- TODO:
 # Performance
