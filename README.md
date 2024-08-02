@@ -1,14 +1,12 @@
 # Overview
 
-`rubot` is a blazing fast Rubik's cube solver written in C. Utilizing a highly efficient 1MB lookup table, it delivers instantations solutions with a max of 46 moves and an average of 32 moves.
+`rubot` is a blazing fast Rubik's cube solver written in C. Using  a highly efficient 1MB lookup table, it delivers instantations solutions with an average of 32 moves and a max of 46 moves.
 
 # Usage
 
 ## Installation
 
 Build the executable `rubot` by running `make`.
-
-*NOTE: This program will generate a 1MB lookup table the first time it is run, which will take a few extra seconds (my Intel Core i7-13700K takes about 17.5 seconds).*
 
 ## Solving a Cube Representation
 
@@ -43,7 +41,7 @@ U L D U2 F' B' R D2 R' U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
 
 *NOTE: This is a very high-level overview of a beautiful group theory algorithm, and really does not do it justice beyond setting up a motivation for implementation details. The interested reader should absolutely do further research and investigate the code for more information.*
 
-This program implements [Thistletwaite's algorithm](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Thistlethwaite's_algorithm) because it provides the optimal compromise between speed and memory. The algorithm divides the solving process into four phases, each with an increasingly restrictive moveset to prevent destroying progress made in a previous phase. The state space of possible cubes in each phase is relatively small, so we can explore it once and store it in a lookup table. Then when presented with a new cube, we simply lookup the next move in the lookup table for each phase until we arrive at the solved cube. This is just a high-level overview of a beautiful group theory idea which should be researched further if interesting to the reader.
+This program implements [Thistletwaite's algorithm](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Thistlethwaite's_algorithm) because it provides the optimal compromise between speed and memory. The algorithm divides the solving process into four phases, each with an increasingly restrictive moveset to prevent destroying progress made in a previous phase. The state space of possible cubes in each phase is relatively small, so we can explore it once and store it in a lookup table. Then when presented with a new cube, we simply lookup the next move in the lookup table for each phase until we arrive at the solved cube.
 
 <!-- TODO: elaborate
 - To achieve maximum performance, we encode cubes into 128-bits. This is critical because generating the lookup table requires exploring approximately 50 million cube states.
