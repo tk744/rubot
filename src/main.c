@@ -29,29 +29,28 @@ int main(int argc, char *argv[]) {
     // 0 args or -h/--help
     if (argc == 1 || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
         printf("Usage:\n");
-        printf("    %s [-c|m|d] COLOR_STRING\n", argv[0]);
-        printf("    %s [-c|m|d] MOVES ...\n", argv[0]);
-        printf("    %s [-c|m|d] N [SEED]\n", argv[0]);
+        printf("    %s [-d|c] COLOR_STRING\n", argv[0]);
+        printf("    %s [-d|c] MOVES ...\n", argv[0]);
+        printf("    %s [-d|c] N [SEED]\n", argv[0]);
         printf("    %s -b N\n", argv[0]);
         printf("    %s -h\n", argv[0]);
         // printf("\n");
         printf("Arguments:\n");
-        printf("    COLOR_STRING: 54-length string of colors\n");
-        printf("    MOVES:        sequence of scrambling moves\n");
+        printf("    COLOR_STRING: 54-length color string\n");
+        printf("    MOVES:        scramble move sequence\n");
         printf("    N:            number of random moves to generate\n");
-        printf("    SEED:         seed for random number generator\n");
+        printf("    SEED:         random number generator seed\n");
         // printf("\n");
         printf("Options:\n");
         printf("    -h: display this text\n");
-        printf("    -c: output color string\n");
-        printf("    -m: output move sequence\n");
-        printf("    -d: draw unsolved cube\n");
+        printf("    -d: draw scrambled cube\n");
+        printf("    -c: print color string\n");
         printf("    -b: benchmark on N solves\n");
         return 0;
     }
 
     // flags
-    int c_flag = 0, d_flag = 0, m_flag = 0;
+    int c_flag = 0, d_flag = 0;
     if (*argv[1] == '-') {
         // -b: benchmark
         if (!strcmp(argv[1], "-b")) {
@@ -70,12 +69,6 @@ int main(int argc, char *argv[]) {
         // -c
         else if (!strcmp(argv[1], "-c")) {
             c_flag = 1;
-            argc--;
-            argv++;
-        }
-        // -m
-        else if (!strcmp(argv[1], "-m")) {
-            m_flag = 1;
             argc--;
             argv++;
         }
