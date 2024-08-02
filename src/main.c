@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
             argv++;
         }            
         // -d: display
-        else if (!strcmp(argv[1], "-d") || !strcmp(argv[1], "--display")) {
+        else if (!strcmp(argv[1], "-g") || !strcmp(argv[1], "--graphic")) {
             d_flag = 1;
             argc--;
             argv++;
