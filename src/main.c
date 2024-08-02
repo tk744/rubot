@@ -26,12 +26,12 @@ static int benchmark(int n) {
 }
 
 int main(int argc, char *argv[]) {
-    // 0 args or -h: help
+    // 0 args or -h/--help
     if (argc == 1 || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
         printf("Usage:\n");
-        printf("    %s [-d] [-c] COLOR_STRING\n", argv[0]);
-        printf("    %s [-d] [-c] MOVES ...\n", argv[0]);
-        printf("    %s [-d] [-c] N [SEED]\n", argv[0]);
+        printf("    %s [-c|m|d] COLOR_STRING\n", argv[0]);
+        printf("    %s [-c|m|d] MOVES ...\n", argv[0]);
+        printf("    %s [-c|m|d] N [SEED]\n", argv[0]);
         printf("    %s -b N\n", argv[0]);
         printf("    %s -h\n", argv[0]);
         // printf("\n");
@@ -42,15 +42,16 @@ int main(int argc, char *argv[]) {
         printf("    SEED:         seed for random number generator\n");
         // printf("\n");
         printf("Options:\n");
-        printf("    -h: show this text\n");
+        printf("    -h: display this text\n");
+        printf("    -c: output color string\n");
+        printf("    -m: output move sequence\n");
         printf("    -d: draw unsolved cube\n");
-        printf("    -c: print color string\n");
-        printf("    -b: benchmark on N scrambles\n");
+        printf("    -b: benchmark on N solves\n");
         return 0;
     }
 
     // flags
-    int c_flag = 0, d_flag = 0;
+    int c_flag = 0, d_flag = 0, m_flag = 0;
     if (*argv[1] == '-') {
         // -b: benchmark
         if (!strcmp(argv[1], "-b")) {
@@ -66,13 +67,19 @@ int main(int argc, char *argv[]) {
             benchmark(n);
             return 0;
         }
-        // -c: color
+        // -c
         else if (!strcmp(argv[1], "-c")) {
             c_flag = 1;
             argc--;
             argv++;
-        }            
-        // -d: draw
+        }
+        // -m
+        else if (!strcmp(argv[1], "-m")) {
+            m_flag = 1;
+            argc--;
+            argv++;
+        }
+        // -d
         else if (!strcmp(argv[1], "-d")) {
             d_flag = 1;
             argc--;
@@ -114,8 +121,7 @@ int main(int argc, char *argv[]) {
         if (d_flag) {
             printCube(c);
         }
-
-        if (c_flag) {
+        else if (c_flag) {
             char str[54];
             encodeCube(&c, str);
             printf("%s\n", str);
@@ -165,8 +171,7 @@ int main(int argc, char *argv[]) {
     if (d_flag) {
         printCube(c);
     }
-
-    if (c_flag) {
+    else if (c_flag) {
         char str[54];
         encodeCube(&c, str);
         printf("%s\n", str);
