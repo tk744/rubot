@@ -78,5 +78,5 @@ void printCube(Cube c);
 void printMoves(Move *ms, int n);
 
 // Print an ANSII graphic representation of a Cube `c`.
-// Requires a terminal with ANSI escape codes.
+// Requires a terminal with ANSII escape codes.
 void drawCube(Cube c);
