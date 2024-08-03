@@ -1,6 +1,6 @@
 # Overview
 
-`rubot` is a blazing fast Rubik's cube library written in C. It uses a highly efficient 1MB lookup table to deliver instantations solutions with an average of 32 moves and a max of 46 moves.
+`rubot` is a blazing fast Rubik's cube library written in C. It uses a highly compact 1MB lookup table to deliver instantations solutions with an average of 32 moves and a max of 46 moves.
 
 Since `rubot` was originally designed for use in embedded systems, it implements [Thistletwaite's algorithm](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Thistlethwaite's_algorithm) which uses much smaller lookup tables compared to algorithms that produce even fewer moves.
 
@@ -13,9 +13,11 @@ Build the executable `rubot` by running `make`.
 For a full list of commands, run `rubot -h`.
 
 
-## Color Strings
+## Data Formats
 
-`rubot` serializes cube states into color strings. A color string is 54 characters long, and is encoded as 6 substrings (one per face) of 9 characters (one per tile). The faces are arranged in the order U, L, F, R, B, D, and the tiles in each face are arranged in row-major order. It does not matter what characters are used for each color, as long as they are consistent. The figure below depicts the index of each tile in a color string:
+`rubot` encodes a **move sequence** as a whitespace-separated list of moves described using [standard notation](https://ruwix.com/the-rubiks-cube/notation/). The six base moves are `U`, `L`, `F`, `R`, `B`, and `D`, representing a quarter clockwise turn on that face. Each base move can be suffixed by `i` to represent a counter-clockwise (i.e. inverse) turn, or `2` to represent a half turn.
+
+`rubot` serializes cube states into **color strings**. A color string is 54 characters long, and is encoded as 6 substrings (one per face) of 9 characters (one per tile). The faces are arranged in the order U, L, F, R, B, D, and the tiles in each face are arranged in row-major order. It does not matter what characters are used for each color, as long as they are consistent. The figure below depicts the index of each tile in a color string:
 
 <p align="center"><img alt="cube string encoding" src="cube-string.png" width="500"></p>
 
@@ -29,21 +31,21 @@ For a full list of commands, run `rubot -h`.
     ```
 - From a scramble sequence.
     ```
-    $ ./rubot L D2 R Li Ri B F D Li Ui
-    U L D U2 Fi Bi R D2 Ri U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
+    $ ./rubot F L2 D F B L2 U2 R U2 F D2 Fi B U B
+    U R F2 B D U2 R2 Bi Ri U2 Li Fi R F D2 F2 D2 R2 F R2 B R2 U2 F2 L2 F2 L2 B2 U2 L2
     ```
 
 `rubot` can also print the state of the scrambled cube using one of two flags:
 - `-c`: print the color string.
     ```
-    $ ./rubot -c L D2 R Li Ri B F D Li Ui
-    LURRURDBUUBRLLBUUBFDBLFFLLFLDDURDDFFBRFFBUULRDDLBDRBFR
+    $ ./rubot -c D2 L B D B U2 Fi L B D U D Fi Di R
+    FBURURBFDUFRULBFUDDLFLFLBDDLDRURLFUUBRRDBFLBULFRRDBLDB
     ```
 
 - `-d`: draw a colored 2D graphic (requires a terminal with ANSI escape codes).
     ```
-    $ ./rubot -d LURRURDBUUBRLLBUUBFDBLFFLLFLDDURDDFFBRFFBUULRDDLBDRBFR
-    <graphic not shown>
+    $ ./rubot -d PBBWWBRGGWRWPPRBBRGPPGGWYYPYWWGRPBRYRPGWBYBRRGGWYYBYYP
+    <try it in a terminal>
     ```
 
 ## Cube Scrambling
