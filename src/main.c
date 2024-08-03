@@ -36,16 +36,16 @@ int main(int argc, char *argv[]) {
         printf("    %s -h\n", argv[0]);
         // printf("\n");
         printf("Arguments:\n");
-        printf("    COLOR_STRING: 54-length color string\n");
-        printf("    MOVES:        scramble move sequence\n");
+        printf("    COLOR_STRING: 54-char color string\n");
+        printf("    MOVES:        whitespace-separated scramble sequence\n");
         printf("    N:            number of random moves to generate\n");
         printf("    SEED:         random number generator seed\n");
         // printf("\n");
         printf("Options:\n");
-        printf("    -h: display this text\n");
         printf("    -d: draw scrambled cube\n");
         printf("    -c: print color string\n");
         printf("    -b: benchmark on N solves\n");
+        printf("    -h: display this text\n");
         return 0;
     }
 
