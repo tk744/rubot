@@ -7,7 +7,7 @@
 static int benchmark(int n) {
     int scramble = 100;
     Move ms[scramble];
-    Cube128 c = cubeSolved();
+    Cube c = cubeSolved();
     
     double total_time = 0;
     int total_length = 0;
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     }
 
     // cube for printing or solving
-    Cube128 c = cubeSolved();
+    Cube c = cubeSolved();
 
     // 1-2 int args: get shuffled moves
     int n, seed;
