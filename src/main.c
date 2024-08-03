@@ -4,7 +4,70 @@
 #include <string.h>
 #include <time.h>
 
-static int benchmark(int n) {
+static int C_FLAG = 0;
+static int D_FLAG = 0;
+
+static int run_help(char *prog_name) {
+    printf("Usage:\n");
+    printf("    %s [-d|c] COLOR_STRING\n", prog_name);
+    printf("    %s [-d|c] MOVES ...\n", prog_name);
+    printf("    %s [-d|c] N [SEED]\n", prog_name);
+    printf("    %s -b N\n", prog_name);
+    printf("    %s -h\n", prog_name);
+    printf("Arguments:\n");
+    printf("    COLOR_STRING: 54-char color string\n");
+    printf("    MOVES:        whitespace-separated scramble sequence\n");
+    printf("    N:            number of random moves to generate\n");
+    printf("    SEED:         random number generator seed\n");
+    printf("Options:\n");
+    printf("    -h: display this text\n");
+    printf("    -d: draw scrambled cube\n");
+    printf("    -c: print color string\n");
+    printf("    -b: benchmark on N solves\n");
+    return 0;
+}
+
+static int run_solve(Cube c) {
+    Move ms[MAX_MOVES];
+    int n = solve(c, ms);
+    if (n == -1) {
+        fprintf(stderr, "No solution found.\n");
+        return 1;
+    }
+
+    if (D_FLAG) {
+        drawCube(c);
+    }
+    else if (C_FLAG) {
+        printCube(c);
+    }
+    else {
+        printMoves(ms, n);
+    }
+
+    return 0;
+}
+
+static int run_scramble(int n) {
+    Cube c = cubeSolved();
+    Move ms[n];
+    setRandomMoves(ms, n);
+    c = applyMoves(c, ms, n);
+    
+    if (C_FLAG) {
+        printCube(c);
+    }
+    else if (D_FLAG) {
+        drawCube(c);
+    }
+    else {
+        printMoves(ms, n);
+    }
+    
+    return 0;
+}
+
+static int run_benchmark(int n) {
     int scramble = 100;
     Move ms[scramble];
     Cube c = cubeSolved();
@@ -26,34 +89,27 @@ static int benchmark(int n) {
 }
 
 int main(int argc, char *argv[]) {
-    // 0 args or -h/--help
-    if (argc == 1 || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
-        printf("Usage:\n");
-        printf("    %s [-d|c] COLOR_STRING\n", argv[0]);
-        printf("    %s [-d|c] MOVES ...\n", argv[0]);
-        printf("    %s [-d|c] N [SEED]\n", argv[0]);
-        printf("    %s -b N\n", argv[0]);
-        printf("    %s -h\n", argv[0]);
-        // printf("\n");
-        printf("Arguments:\n");
-        printf("    COLOR_STRING: 54-char color string\n");
-        printf("    MOVES:        whitespace-separated scramble sequence\n");
-        printf("    N:            number of random moves to generate\n");
-        printf("    SEED:         random number generator seed\n");
-        // printf("\n");
-        printf("Options:\n");
-        printf("    -h: display this text\n");
-        printf("    -d: draw scrambled cube\n");
-        printf("    -c: print color string\n");
-        printf("    -b: benchmark on N solves\n");
-        return 0;
+    // 0 args
+    if (argc == 1) {
+        return run_help(argv[0]);
     }
 
     // flags
-    int c_flag = 0, d_flag = 0;
     if (*argv[1] == '-') {
-        // -b: benchmark
-        if (!strcmp(argv[1], "-b")) {
+        if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
+            return run_help(argv[0]);
+        }
+        if (!strcmp(argv[1], "-c")) {
+            C_FLAG = 1;
+            argc--;
+            argv++;
+        }
+        else if (!strcmp(argv[1], "-d")) {
+            D_FLAG = 1;
+            argc--;
+            argv++;
+        }
+        else if (!strcmp(argv[1], "-b")) {
             if (argc != 3) {
                 fprintf(stderr, "Error: Expected 1 argument to %s, recieved %i.\n", argv[1], argc-2);
                 return -1;
@@ -63,20 +119,8 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: Invalid argument. Expected integer, recieved '%s'.\n", argv[2]);
                 return -1;
             }
-            benchmark(n);
+            run_benchmark(n);
             return 0;
-        }
-        // -c
-        else if (!strcmp(argv[1], "-c")) {
-            c_flag = 1;
-            argc--;
-            argv++;
-        }
-        // -d
-        else if (!strcmp(argv[1], "-d")) {
-            d_flag = 1;
-            argc--;
-            argv++;
         }
         else {
             fprintf(stderr, "Error: Invalid flag '%s'.\n", argv[1]);
@@ -84,16 +128,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // cube for printing or solving
-    Cube c = cubeSolved();
-
-    // 1-2 int args: get shuffled moves
-    int n, seed;
-    if (sscanf(argv[1], "%i", &n)) {
+    // scramble
+    int n, arg1_len = strlen(argv[1]);
+    if (sscanf(argv[1], "%i", &n) && n != 54) {
         if (argc == 2) {
             srand(time(NULL));
         }
         else if (argc == 3) {
+            int seed;
             if (sscanf(argv[2], "%i", &seed)) {
                 srand(seed);
             }
@@ -106,27 +148,12 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Error: Too many integer arguments. Expected 1 or 2, recieved %i.\n", argc-1);
             return -1;
         }
-
-        Move ms[n];
-        setRandomMoves(ms, n);
-        c = applyMoves(c, ms, n);
-        
-        if (d_flag) {
-            drawCube(c);
-        }
-        else if (c_flag) {
-            printCube(c);
-        }
-        else {
-            printMoves(ms, n);
-        }
-
-        return 0;
+        return run_scramble(n);
     }
 
-    // 1 string arg: set colors
-    int arg1_len = strlen(argv[1]);
-    if (argc == 2 && arg1_len != 1 && arg1_len != 2) {
+    // solve from color string
+    if (argc == 2 && arg1_len > 2) {
+        Cube c = cubeSolved();
         if (arg1_len != 54) {
             fprintf(stderr, "Error: Invalid color string length. Expected 54, recieved %i.\n", arg1_len);
             return -1;
@@ -137,10 +164,13 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Error: Invalid color '%c' at index %d.\n", *(argv[1]+error_code-1), error_code-1);
             return -1;
         }
+        return run_solve(c);
     }
 
-    // 1+ string args: apply move sequence
+    // solve from scramble sequence
     else {
+        Cube c = cubeSolved();
+        int i;
         while (--argc > 0) {
             Move m;
             if ((parseMoveStr(&m, *(++argv))) == -1) {
@@ -149,25 +179,6 @@ int main(int argc, char *argv[]) {
             }
             c = applyMove(c, m);
         }
+        return run_solve(c);
     }
-
-    // solve cube
-    Move ms[MAX_MOVES];
-    int l = solve(c, ms);
-    if (l == -1) {
-        fprintf(stderr, "No solution found.\n");
-        return 1;
-    }
-
-    if (d_flag) {
-        drawCube(c);
-    }
-    else if (c_flag) {
-        printCube(c);
-    }
-    else {
-        printMoves(ms, l);
-    }
-
-    return 0;
 }
