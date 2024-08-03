@@ -11,7 +11,7 @@ Phase 4: (4! * 4! * 4P2) * (4! * 4P1) = 663552
 */
 
 typedef struct {
-    Cube128 cube;
+    Cube cube;
     Move move;
     Int4 depth;
 } Node;
@@ -124,7 +124,7 @@ static int phaseSize(int phase) {
     return (1 <= phase && phase <= 4) ? phase_size[phase-1] : 0;
 }
 
-static int cubeRank(Cube128 c, int phase) {
+static int cubeRank(Cube c, int phase) {
     int i;
     // rank by edge orientation
     if (phase == 1) {
@@ -353,7 +353,7 @@ static int cubeRank(Cube128 c, int phase) {
     return 0;
 }
 
-static int cubeIndex(Cube128 c, int phase) {
+static int cubeIndex(Cube c, int phase) {
     int i, size = 0;
     for (i=1 ; i<phase ; i++) {
         size += phaseSize(i);
@@ -428,7 +428,7 @@ static int buildLT(FILE *lt) {
                 }
 
                 // create child node
-                Cube128 cube = applyMove(root_node.cube, m);
+                Cube cube = applyMove(root_node.cube, m);
                 Node node = { cube, m, root_node.depth+1 };
                 int index = cubeIndex(cube, phase);
 
@@ -456,7 +456,7 @@ static FILE *openLT() {
     return lt;
 }
 
-int solve(Cube128 c, Move *ms) {
+int solve(Cube c, Move *ms) {
     // open lookup table file
     FILE *lt = openLT();
 
@@ -473,7 +473,7 @@ int solve(Cube128 c, Move *ms) {
             int i = 0, n = setPhaseMoves(moveset, phase);
             while (i < n) {
                 Move m = moveset[i++];
-                Cube128 child_cube = applyMove(c, m);
+                Cube child_cube = applyMove(c, m);
                 Int4 child_depth = indexLT(lt, cubeIndex(child_cube, phase));
 
                 if (best_move == NOP || child_depth < best_depth) {

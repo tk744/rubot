@@ -183,7 +183,7 @@ static Int8 cubieFromColor(ColorCube cc, CubieEnum ce, int isEdge) {
     return cubie;
 }
 
-static Color cubieToColor(Cube128 c, CubieEnum ce, int isEdge, Color f) {
+static Color cubieToColor(Cube c, CubieEnum ce, int isEdge, Color f) {
     Int8 cubie = getCubie(isEdge ? c.edges : c.corners, ce);
     Int8 permutation = getPermutation(cubie, isEdge);
     Int8 orientation = getOrientation(cubie, isEdge);
@@ -335,8 +335,8 @@ static Color cubieToColor(Cube128 c, CubieEnum ce, int isEdge, Color f) {
     return colors[idx];
 }
 
-static Cube128 fromColor(ColorCube cc) {
-    Cube128 c = { 0, 0 };
+static Cube fromColor(ColorCube cc) {
+    Cube c = { 0, 0 };
 
     Int64 i;
     for(i=0 ; i<NUM_EDGES ; i++) {
@@ -349,7 +349,7 @@ static Cube128 fromColor(ColorCube cc) {
     return c;
 }
 
-static ColorCube toColor(Cube128 c) {
+static ColorCube toColor(Cube c) {
     ColorCube cc;
     
     // set center cubies
@@ -512,7 +512,7 @@ static void drawColorCube(ColorCube cc) {
     printf("        └───────┘\n");
 }
 
-void drawCube(Cube128 c) {
+void drawCube(Cube c) {
     ColorCube cc = toColor(c);
     drawColorCube(cc);
 }
@@ -539,7 +539,7 @@ static Color charToColor(char x, char cU, char cL, char cF, char cR, char cB, ch
     return NOP;
 }
 
-int parseCubeStr(Cube128 *c, char *str) {
+int parseCubeStr(Cube *c, char *str) {
     ColorCube cc = toColor(*c);
     int i;
     for (i=0 ; i<54 ; i++) {
@@ -576,7 +576,7 @@ int parseCubeStr(Cube128 *c, char *str) {
     return 0;
 }
 
-void printCube(Cube128 c) {
+void printCube(Cube c) {
     char str[55];
     ColorCube cc = toColor(c);
     int i;

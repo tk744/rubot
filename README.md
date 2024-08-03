@@ -20,41 +20,41 @@ For a full list of commands, check `rubot -h`.
 ## Cube Solving
 
 `rubot` can take a scrambled cube and return a solution sequence in one of two ways:
-- From a color string:
+- From a color string.
     ```
     $ ./rubot PBBWWBRGGWRWPPRBBRGPPGGWYYPYWWGRPBRYRPGWBYBRRGGWYYBYYP
     Di Fi R Li U R L F R2 U2 F L R2 D2 R2 F U2 F R2 B2 D2 B U2 R2 U2 F2 R2 U2 F2 U2 L2 B2 L2 U2
     ```
-- From a scramble sequence: 
+- From a scramble sequence.
     ```
     $ ./rubot L D2 R Li Ri B F D Li Ui
     U L D U2 Fi Bi R D2 Ri U2 F2 R2 F2 B2 R2 F2 D2 F2 B2
     ```
 
 `rubot` can also print the state of the scrambled cube using one of two flags:
-- (`-c`) print the color string:
+- `-c`: print the color string.
     ```
     $ ./rubot -c L D2 R Li Ri B F D Li Ui
     LURRURDBUUBRLLBUUBFDBLFFLLFLDDURDDFFBRFFBUULRDDLBDRBFR
     ```
 
-- (`-d`) draw an ANSII graphic:
+- `-d`: draw a colored 2D graphic (requires a terminal with ANSI escape codes).
     ```
     $ ./rubot -d LURRURDBUUBRLLBUUBFDBLFFLLFLDDURDDFFBRFFBUULRDDLBDRBFR
-    TODO
+    <graphic not shown>
     ```
 
 ## Cube Scrambling
 
-`rubot` also provides functionality for generating random scramble sequences.
+`rubot` also provides functionality for generating random scramble sequences:
 
-- Pass the number of moves to generate, optionally followed by an RNG seed:
+- Pass the number of moves to generate, optionally followed by an RNG seed.
     ```
     $ ./rubot 25 5
     D2 U Fi B D F Ui Fi Ui F2 D B Fi D2 U Ri Bi F R L2 B2 Di B Ui Bi
     ```
 
-- As with cube solving, we can use the `-c` or `-d` flag to print the state of the scrambled cube:
+- As with cube solving, we can use the `-c` or `-d` flag to print the state of the scrambled cube.
     ```
     $ ./rubot -c 1000
     URBFULFDULLRULRLDBUBLFFBRBDFUDLRDRUDLDBFBFFUDURBLDBFRR
@@ -62,9 +62,8 @@ For a full list of commands, check `rubot -h`.
 
 ## Performance Benchmarking
 
-`rubot` can even run a performance benchmark by solving a large number of cubes.
-
-- (`-b N`) benchmark on `N` scrambled cubes (output from my i7-13700K):
+`rubot` can even test its performance by solving a large number of scrambled cubes:
+- `-b N`: benchmark on `N` scrambled cubes (output from my i7-13700K).
     ```
     $ ./rubot -b 250000
     Throughput: 4585.70 solves per second

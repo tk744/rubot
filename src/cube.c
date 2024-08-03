@@ -2,8 +2,8 @@
 
 #define CUBIE_BITS 5
 
-Cube128 cubeSolved() {
-    Cube128 c = { 0, 0 };
+Cube cubeSolved() {
+    Cube c = { 0, 0 };
 
     Int64 i;
     for(i=0 ; i<NUM_EDGES ; i++) {
@@ -17,7 +17,7 @@ Cube128 cubeSolved() {
     return c;
 }
 
-Cube128 applyMove(Cube128 c, Move m) {
+Cube applyMove(Cube c, Move m) {
     // recursive calls for double and inverse rotations
     if (m & H) {
         m &= ~(H|I);
@@ -76,7 +76,7 @@ Cube128 applyMove(Cube128 c, Move m) {
     }
 
     // update permutations and orientations of affected cubies
-    Cube128 old_c = c;
+    Cube old_c = c;
     int i, isEdge;
     for (i=0 ; i<4 ; i++) {
         // alternate between edge and corner cubies
@@ -106,7 +106,7 @@ Cube128 applyMove(Cube128 c, Move m) {
     return c;
 }
 
-Cube128 applyMoves(Cube128 c, Move *ms, int n) {
+Cube applyMoves(Cube c, Move *ms, int n) {
     while(n-- > 0) {
         c = applyMove(c, *ms++);
     }
@@ -134,7 +134,7 @@ void setRandomMoves(Move *ms, int n) {
     }
 }
 
-Cube128 scramble(Cube128 c, Move *ms, int n) {
+Cube scramble(Cube c, Move *ms, int n) {
     int i;
     for(i=0 ; i<n ; i++) {
         *(ms+i) = randomMove(i == 0 ? NOP : *(ms+i-1));
@@ -170,6 +170,6 @@ void setOrientation(Int8 *cubie, int isEdge, Int8 orientation) {
     setPermutation(cubie, isEdge, permutation);
 }
 
-int equalCubes(Cube128 c1, Cube128 c2) {
+int equalCubes(Cube c1, Cube c2) {
     return (c1.edges == c2.edges && c1.corners == c2.corners);
 }

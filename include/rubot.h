@@ -20,24 +20,24 @@ static const CubieEnum
 typedef struct {
     Int64 edges;
     Int64 corners;
-} Cube128;
+} Cube;
 
-// Return a solved Cube128.
-Cube128 cubeSolved();
+// Return a solved Cube.
+Cube cubeSolved();
 
-// Find a sequence of moves which solve `c` and store them in `ms`.
+// Find a sequence of moves which solve Cube `c` and store them in `ms`.
 // Return the number of moves in `ms`, or -1 if no solution was found.
-int solve(Cube128 c, Move *ms);
+int solve(Cube c, Move *ms);
 
 // Return 1 if `c1` and `c2` are equal, 0 otherwise.
-int equalCubes(Cube128 c1, Cube128 c2);
+int equalCubes(Cube c1, Cube c2);
 
-// Returns a new Cube128 with the move `m` applied to `c`.
-Cube128 applyMove(Cube128 c, Move m);
+// Returns a new Cube with the move `m` applied to Cube `c`.
+Cube applyMove(Cube c, Move m);
 
-// Returns a new Cube128 with the moves `ms` applied to `c`.
+// Returns a new Cube with the moves `ms` applied to Cube `c`.
 // `n` is the number of moves in `ms`.
-Cube128 applyMoves(Cube128 c, Move *ms, int n);
+Cube applyMoves(Cube c, Move *ms, int n);
 
 // Return the cubie at index `ce` in the encoding.
 Int8 getCubie(Int64 encoding, CubieEnum ce);
@@ -61,22 +61,22 @@ void setOrientation(Int8 *cubie, int isEdge, Int8 orientation);
 // `ms` must be an array of length `n`.
 void setRandomMoves(Move *ms, int n);
 
-// Parse the string representation of a cube `str` into a Cube128 `c`.
+// Parse the string representation of a cube `str` into a Cube `c`.
 // `str` must be an array of length 54.
 // Returns 0 on success, or 1+index of the first invalid character if the representation is invalid.
-int parseCubeStr(Cube128 *c, char *str);
+int parseCubeStr(Cube *c, char *str);
 
 // Parse the string representation of a move `str` into a Move `m`.
 // Returns 0 on success, or -1 if the representation is invalid.
 int parseMoveStr(Move *m, char *str);
 
-// Print the string representation of a Cube128 `c`.
-void printCube(Cube128 c);
+// Print the string representation of a Cube `c`.
+void printCube(Cube c);
 
 // Print the string representation of the move sequence `ms`
 // `n` is the number of moves in `ms`.
 void printMoves(Move *ms, int n);
 
-// Print an ANSII graphic representation of a Cube128 `c`.
+// Print an ANSII graphic representation of a Cube `c`.
 // Requires a terminal with ANSI escape codes.
-void drawCube(Cube128 c);
+void drawCube(Cube c);
