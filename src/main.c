@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
     Move ms[MAX_MOVES];
     int l = solve(c, ms);
     if (l == -1) {
-        printf("No solution found.\n");
+        fprintf(stderr, "No solution found.\n");
         return 1;
     }
 
