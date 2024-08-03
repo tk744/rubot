@@ -2,13 +2,15 @@
 
 `rubot` is a blazing fast Rubik's cube library written in C. It uses a highly efficient 1MB lookup table to deliver instantations solutions with an average of 32 moves and a max of 46 moves.
 
+Since `rubot` was originally designed for use in embedded systems, it implements [Thistletwaite's algorithm](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Thistlethwaite's_algorithm) which uses much smaller lookup tables compared to algorithms that produce even fewer moves.
+
 # Installation
 
 Build the executable `rubot` by running `make`.
 
 # Usage
 
-For a full list of commands, check `rubot -h`.
+For a full list of commands, run `rubot -h`.
 
 
 ## Color Strings
@@ -60,9 +62,9 @@ For a full list of commands, check `rubot -h`.
     URBFULFDULLRULRLDBUBLFFBRBDFUDLRDRUDLDBFBFFUDURBLDBFRR
     ```
 
-## Performance Benchmarking
+## Benchmarking
 
-`rubot` can even test its performance by solving a large number of scrambled cubes:
+`rubot` can even benchmark its performance by solving a large number of scrambled cubes:
 - `-b N`: benchmark on `N` scrambled cubes (output from my i7-13700K).
     ```
     $ ./rubot -b 250000
@@ -70,13 +72,13 @@ For a full list of commands, check `rubot -h`.
     Length: 32.19 moves per solve
     ```
 
+<!-- TODO: elaborate
 # How It Works
 
-*NOTE: This is a very high-level overview of a beautiful group theory algorithm, and really does not do it justice beyond setting up a motivation for implementation details. The interested reader should absolutely do further research and investigate the code for more information.*
+*NOTE: This is a very high-level overview of a beautiful group theory algorithm, and really does not do it justice beyond setting up the motivation for implementation details. The interested reader should absolutely do further research and investigate the code for more information.*
 
 This program implements [Thistletwaite's algorithm](https://en.wikipedia.org/wiki/Optimal_solutions_for_Rubik%27s_Cube#Thistlethwaite's_algorithm) to solve Rubik's cubes because it provides an optimal compromise between solution length and memory. The algorithm divides the solving process into four phases, each with an increasingly restrictive moveset to prevent destroying progress made in a previous phase. The state space of possible cubes in each phase is relatively small, so we can explore it once and store it in a lookup table. Then when presented with a new cube, we simply lookup the next move in the lookup table for each phase until we arrive at the solved cube.
 
-<!-- TODO: elaborate
 - To achieve maximum performance, we encode cubes into 128-bits. This is critical because generating the lookup table requires exploring approximately 50 million cube states.
 
 - To achieve maximum memory efficiency, we encode two enties per byte in the lookup table. This is possible because the depth cannot exceed 15 for any phase, so it can be encoded into 4 bits.
