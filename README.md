@@ -64,6 +64,21 @@ For a full list of commands, run `rubot -h`.
     URBFULFDULLRULRLDBUBLFFBRBDFUDLRDRUDLDBFBFFUDURBLDBFRR
     ```
 
+## Error Handling
+
+`rubot` will print to stderr and return a non-zero value if the input is invalid or if the cube is unsolvable:
+- Return -1 on invalid inputs with a descriptive error message.
+    ```
+    $ ./rubot UUUUUUUUULLLxLLLLLFFFFFFFFFRRRRRRRRRBBBBBBBBBDDDDDDDDD
+    Error: Invalid color 'x' at index 12.
+    ```
+    
+- Return 1 on unsolvable cubes, regardless of the operation.
+    ```
+    ./rubot -d DUUUUUUUULLLLLLLLLFFFFFFFFFRRRRRRRRRBBBBBBBBBDDDDDDDDU
+    No solution found.
+    ```
+
 ## Benchmarking
 
 `rubot` can even benchmark its performance by solving a large number of scrambled cubes:
