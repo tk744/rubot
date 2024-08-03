@@ -42,10 +42,10 @@ int main(int argc, char *argv[]) {
         printf("    SEED:         random number generator seed\n");
         // printf("\n");
         printf("Options:\n");
+        printf("    -h: display this text\n");
         printf("    -d: draw scrambled cube\n");
         printf("    -c: print color string\n");
         printf("    -b: benchmark on N solves\n");
-        printf("    -h: display this text\n");
         return 0;
     }
 
@@ -55,12 +55,12 @@ int main(int argc, char *argv[]) {
         // -b: benchmark
         if (!strcmp(argv[1], "-b")) {
             if (argc != 3) {
-                printf("ERROR: Expected 1 argument to %s, recieved %i.\n", argv[1], argc-2);
+                fprintf(stderr, "Error: Expected 1 argument to %s, recieved %i.\n", argv[1], argc-2);
                 return -1;
             }
             int n;
             if (!sscanf(argv[2], "%i", &n)) {
-                printf("ERROR: Invalid argument. Expected integer, recieved '%s'.\n", argv[2]);
+                fprintf(stderr, "Error: Invalid argument. Expected integer, recieved '%s'.\n", argv[2]);
                 return -1;
             }
             benchmark(n);
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
             argv++;
         }
         else {
-            printf("ERROR: Invalid flag '%s'.\n", argv[1]);
+            fprintf(stderr, "Error: Invalid flag '%s'.\n", argv[1]);
             return -1;
         }
     }
@@ -98,12 +98,12 @@ int main(int argc, char *argv[]) {
                 srand(seed);
             }
             else {
-                printf("ERROR: Invalid seed. Expected integer, recieved '%s'.\n", argv[2]);
+                fprintf(stderr, "Error: Invalid seed. Expected integer, recieved '%s'.\n", argv[2]);
                 return -1;
             }
         }
         else {
-            printf("ERROR: Too many integer arguments. Expected 1 or 2, recieved %i.\n", argc-1);
+            fprintf(stderr, "Error: Too many integer arguments. Expected 1 or 2, recieved %i.\n", argc-1);
             return -1;
         }
 
@@ -128,13 +128,13 @@ int main(int argc, char *argv[]) {
     int arg1_len = strlen(argv[1]);
     if (argc == 2 && arg1_len != 1 && arg1_len != 2) {
         if (arg1_len != 54) {
-            printf("ERROR: Invalid color string length. Expected 54, recieved %i.\n", arg1_len);
+            fprintf(stderr, "Error: Invalid color string length. Expected 54, recieved %i.\n", arg1_len);
             return -1;
         }
 
         int error_code;
         if (error_code = parseCubeStr(&c, argv[1])) {
-            printf("ERROR: Invalid color '%c' at index %d.\n", *(argv[1]+error_code-1), error_code-1);
+            fprintf(stderr, "Error: Invalid color '%c' at index %d.\n", *(argv[1]+error_code-1), error_code-1);
             return -1;
         }
     }
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
         while (--argc > 0) {
             Move m;
             if ((parseMoveStr(&m, *(++argv))) == -1) {
-                printf("ERROR: Invalid move '%s'.\n", *argv);
+                fprintf(stderr, "Error: Invalid move '%s'.\n", *argv);
                 return -1;
             }
             c = applyMove(c, m);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
     Move ms[MAX_MOVES];
     int l = solve(c, ms);
     if (l == -1) {
-        printf("Invalid cube\n");
+        printf("No solution found.\n");
         return 1;
     }
 
