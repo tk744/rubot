@@ -18,9 +18,6 @@ CPPFLAGS := $(INC_FLAGS)
 # Add C standard to compiler flags
 CFLAGS := -std=gnu89
 
-# Get args from command-line
-ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-
 # Build target executable from .o files
 $(TARGET_EXEC): $(O_FILES)
 	$(CC) $(O_FILES) -o $@ $(LDFLAGS)
@@ -34,11 +31,3 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 .PHONY: clean
 clean:
 	rm -r $(TARGET_EXEC) $(BUILD_DIR) $(BIN_FILE)
-
-# Run the target executable with args
-.PHONY: run
-run: $(TARGET_EXEC)
-	$(TARGET_EXEC) $(ARGS)
-
-$(ARGS):
-	@true
