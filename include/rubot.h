@@ -62,7 +62,7 @@ void setOrientation(Int8 *cubie, int isEdge, Int8 orientation);
 void setRandomMoves(Move *ms, int n);
 
 // Parse the string representation of a cube `str` into a Cube `c`.
-// `str` must be an array of length 54.
+// `str` must contain exactly 54 characters.
 // Returns 0 on success, or 1+index of the first invalid character if the representation is invalid.
 int parseCubeStr(Cube *c, char *str);
 
@@ -73,7 +73,7 @@ int parseMoveStr(Move *m, char *str);
 // Print the string representation of a Cube `c`.
 void printCube(Cube c);
 
-// Print the string representation of the move sequence `ms`
+// Print the string representation of the move sequence `ms`.
 // `n` is the number of moves in `ms`.
 void printMoves(Move *ms, int n);
 
