@@ -1,5 +1,4 @@
-TARGET_EXEC = ./rubot
-BIN_FILE = ./4PHASE.bin
+TARGET_EXEC = rubot
 
 # .c, .h, and .o files
 SRC_DIR := ./src
@@ -30,4 +29,14 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 # Remove all build and executable files
 .PHONY: clean
 clean:
-	rm -r $(TARGET_EXEC) $(BUILD_DIR) $(BIN_FILE)
+	rm -r $(TARGET_EXEC) $(BUILD_DIR)
+
+# Install to Linux system
+.SILENT: install
+install: $(TARGET_EXEC)
+	install -m 755 $(TARGET_EXEC) /usr/bin
+
+# Uninstall from Linux system
+.SILENT: uninstall
+uninstall: $(TARGET_EXEC)
+	rm -f /usr/bin/$(TARGET_EXEC)

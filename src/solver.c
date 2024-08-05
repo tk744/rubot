@@ -1,7 +1,9 @@
 #include "rubot.h"
 #include <stdio.h>
 
-#define BIN_FILE "4PHASE.bin"
+#define LT_FILE "lt.h"
+#include LT_FILE
+
 #define NUM_STATES 2100965
 /*
 Phase 1: 2^11 = 2048
@@ -372,14 +374,7 @@ static Int4 readNibble(const Int8 *table, int index) {
     return table[index/2] >> 4 * (index % 2) & 0b1111;
 }
 
-static Int4 indexLT(FILE *lt, int index) {
-    Int8 byte;
-    fseek(lt, index/2, SEEK_SET);
-    fread(&byte, 1, 1, lt);
-    return byte >> 4 * (index % 2) & 0b1111;
-}
-
-static int buildLT(FILE *lt) {
+void generateLookupTable() {
     // initialize table
     int i, size = (NUM_STATES/2)+(NUM_STATES%2);
     Int8 table[size];
@@ -441,30 +436,25 @@ static int buildLT(FILE *lt) {
         }
     }
 
-    // write table to file
-    return fwrite(table, 1, size, lt);
-}
-
-static FILE *openLT() {
-    FILE *lt = fopen(BIN_FILE, "rb");
-    if (!lt) {
-        lt = fopen(BIN_FILE, "w+b");
-        buildLT(lt);
-        fclose(lt);
-        lt = fopen(BIN_FILE, "rb");
+    // write table to header file
+    #define LT_H_FILE "include/" LT_FILE
+    FILE *h_file = fopen(LT_H_FILE, "w");
+    fprintf(h_file, "static const unsigned char LT[%d] = {", size);
+    for (i=0 ; i<size ; i++) {
+        fprintf(h_file, "%d,", table[i]);
     }
-    return lt;
+    fprintf(h_file, "};");
+    fclose(h_file);
+
+    fprintf(stderr, "Regenerated lookup table.\nRebuild the executable for changes to take effect.\n");
 }
 
 int solve(Cube c, Move *ms) {
-    // open lookup table file
-    FILE *lt = openLT();
-
     // iterate through phases
     int num_moves = 0, phase = 0;
     while (++phase <= 4) {
         // iterate until phase depth is 0
-        while (indexLT(lt, cubeIndex(c, phase))) {
+        while (readNibble(LT, cubeIndex(c, phase))) {
             Move best_move = NOP;
             Int4 best_depth;
 
@@ -474,7 +464,7 @@ int solve(Cube c, Move *ms) {
             while (i < n) {
                 Move m = moveset[i++];
                 Cube child_cube = applyMove(c, m);
-                Int4 child_depth = indexLT(lt, cubeIndex(child_cube, phase));
+                Int4 child_depth = readNibble(LT, cubeIndex(child_cube, phase));
 
                 if (best_move == NOP || child_depth < best_depth) {
                     best_move = m;
@@ -494,7 +484,7 @@ int solve(Cube c, Move *ms) {
     }
 
     exit: 
-    fclose(lt);
+    // fclose(lt);
 
     // check if solved
     return equalCubes(c, cubeSolved()) ? num_moves : -1;
