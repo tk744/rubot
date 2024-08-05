@@ -6,9 +6,26 @@ Since `rubot` was originally designed for use in embedded systems, it implements
 
 # Installation
 
-Build the executable `rubot` by running `make`.
+### Linux
 
-# Command-Line Interface
+- Install (default location is `/usr/local/bin`):
+    ```
+    git clone https://github.com/tk744/rubot
+    cd rubot
+    sudo make install
+    ```
+
+- Uninstall:
+
+    ```
+    sudo make uninstall
+    ```
+
+### Build from Source
+
+Build the executable `rubot` from source by running `make`.
+
+# Usage
 
 For a full list of commands, run `rubot -h`.
 
