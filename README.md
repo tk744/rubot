@@ -8,7 +8,7 @@ Since `rubot` was originally designed for use in embedded systems, it implements
 
 ### Linux
 
-- Install (default location is `/usr/local/bin`):
+- Install (default location is `/usr/bin`):
     ```
     git clone https://github.com/tk744/rubot
     cd rubot
@@ -52,7 +52,7 @@ A cube is serialized as a **color string**:
 
 - From a color string.
     ```
-    $ ./rubot LBBUUBRFFURULLRBBRFLLFFUDDLDUUFRLBRDRLFUBDBRRFFUDDBDDL
+    $ ./rubot PBBWWBRGGWRWPPRBBRGPPGGWYYPYWWGRPBRYRPGWBYBRRGGWYYBYYP
     Di Fi R Li U R L F R2 U2 F L R2 D2 R2 F U2 F R2 B2 D2 B U2 R2 U2 F2 R2 U2 F2 U2 L2 B2 L2 U2
     ```
 
